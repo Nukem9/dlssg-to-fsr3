@@ -1,0 +1,14 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "config-envvars",
+      "hidden": true,
+      "environment": {
+        "___GAME_ROOT_DIRECTORY": "C:/Program Files (x86)/Steam/steamapps/common/Cyberpunk 2077/bin/x64",
+        "VS_DEBUGGER_REQUEST": "vsjitdebugger.exe -p ",
+        "VS_DEBUGGER_PROC": "kernel32!CreateProcessA"
+      }
+    }
+  ]
+}

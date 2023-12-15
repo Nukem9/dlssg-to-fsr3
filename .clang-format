@@ -1,0 +1,93 @@
+---
+AlignOperands: Align
+AllowAllArgumentsOnNextLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: None
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: Yes
+AllowAllParametersOfDeclarationOnNextLine: false
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterFunction: true
+  AfterEnum: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterObjCDeclaration: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  AfterControlStatement: Always
+  BeforeLambdaBody: true
+  BeforeElse: true
+  BeforeWhile: false
+AlignEscapedNewlines: Left
+IndentCaseBlocks: false
+IndentCaseLabels: false
+IndentExternBlock: Indent
+InsertNewlineAtEOF: true
+IndentRequiresClause: false
+IndentPPDirectives: None
+LineEnding: DeriveCRLF
+PointerAlignment: Right
+ReferenceAlignment: Left
+RemoveSemicolon: false
+RequiresClausePosition: OwnLine
+SortIncludes: Never
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeParens: ControlStatementsExceptControlMacros
+Standard: Auto
+AlignAfterOpenBracket: AlwaysBreak
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
+BreakBeforeBraces: Custom
+AlignConsecutiveMacros:
+  Enabled: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeCaseColon: false
+SpaceBeforeAssignmentOperators: true
+SpaceAroundPointerQualifiers: Default
+SpacesInAngles: Never
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceBeforeCpp11BracedList: true
+RequiresExpressionIndentation: OuterScope
+Language: Cpp
+Cpp11BracedListStyle: false
+IndentWrappedFunctionNames: false
+LambdaBodyIndentation: OuterScope
+SpaceAfterLogicalNot: false
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+TabWidth: 4
+UseTab: Always
+IndentWidth: 4
+ColumnLimit: 140
+NamespaceIndentation: All
+AccessModifierOffset: -4
+SpacesBeforeTrailingComments: 1
+QualifierAlignment: Leave
+FixNamespaceComments: false
+BitFieldColonSpacing: Both
+BreakBeforeConceptDeclarations: Always
+IndentGotoLabels: true
+BinPackArguments: false
+BinPackParameters: false
+PackConstructorInitializers: CurrentLine
+AlignConsecutiveBitFields:
+  Enabled: true
+PenaltyBreakAssignment: 900
+PenaltyReturnTypeOnItsOwnLine: 9001

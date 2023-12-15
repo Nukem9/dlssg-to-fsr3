@@ -1,0 +1,81 @@
+{
+  "version": 6,
+  "include": [
+    "CMakeUserEnvVars.json"
+  ],
+  "configurePresets": [
+    {
+      "name": "config-base-vcpkg",
+      "hidden": true,
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "VCPKG_OVERLAY_PORTS": "${sourceDir}/vcpkg-ports"
+      }
+    },
+    {
+      "name": "config-base-cmake",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/bin/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE": "TRUE"
+      }
+    },
+    {
+      "name": "config-base-ninja",
+      "hidden": true,
+      "generator": "Ninja Multi-Config",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "/MP /diagnostics:caret",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+      }
+    },
+    {
+      "name": "config-base-msvc2022",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64"
+      },
+      "inherits": [
+        "config-base-ninja"
+      ]
+    },
+    {
+      "name": "final",
+      "inherits": [
+        "config-base-vcpkg",
+        "config-base-cmake",
+        "config-base-ninja",
+        "config-envvars"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "final-debug",
+      "configurePreset": "final",
+      "configuration": "Debug",
+      "displayName": "Debug x64"
+    },
+    {
+      "name": "final-release",
+      "configurePreset": "final",
+      "configuration": "Release",
+      "displayName": "Release x64"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "final",
+      "displayName": "Package Final",
+      "configurePreset": "final",
+      "packageDirectory": "${sourceDir}/bin/built-packages"
+    }
+  ]
+}

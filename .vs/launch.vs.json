@@ -1,0 +1,29 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "isDefaultConfiguration": true,
+      "noDebug": true,
+      "type": "dll",
+      "name": "CMakeLists.txt",
+      "project": "CMakeLists.txt",
+      "projectTarget": "",
+      "currentDir": "${env.GAME_ROOT_DIRECTORY}",
+      "exe": "${env.ComSpec}",
+      "args": [
+        "/C \"${env.GAME_ROOT_DIRECTORY}/Cyberpunk2077.exe\" && taskkill /F /IM VsDebugConsole.exe"
+      ],
+      "environment": [
+        {
+          "name": "VS_DEBUGGER_REQUEST",
+          "value": "${env.VS_DEBUGGER_REQUEST}"
+        },
+        {
+          "name": "VS_DEBUGGER_PROC",
+          "value": "${env.VS_DEBUGGER_PROC}"
+        }
+      ]
+    }
+  ]
+}

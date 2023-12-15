@@ -1,0 +1,9 @@
+# Visual Studio/Visual Studio Code cache and options directories
+.vscode/*
+.vs/*
+
+# Launch.vs.json isn't user-specific in this repo
+!.vs/launch.vs.json
+
+# Artifacts
+bin/*
