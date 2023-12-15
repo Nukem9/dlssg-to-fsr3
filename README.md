@@ -1,19 +1,7 @@
-# DLSS-G to FSR3
+# Removed.
 
-### A drop-in replacement library to enable AMD [FSR3](https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/blob/release-FSR3-3.0.3) frame generation in place of Nvidia DLSS-G frame generation.
+While in theory [ffxFrameInterpolationDispatch can consume depth/MV inputs from other sources](https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/blob/release-FSR3-3.0.3/docs/techniques/frame-interpolation.md#estimate-interpolated-frame-depth), or [can use a custom pass](https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK/blob/release-FSR3-3.0.3/docs/techniques/super-resolution-temporal.md#reconstruct-and-dilate), it's not designed to do so and won't work in its current state. FSR3 FG code relies on internal logic and upscaling structures. Can they be decoupled? Maybe, but I don't have the time right now.
 
-<br>
+So why did this seem to generate frames? Because [these functions always return FFX_OK](source/maindll/FFXInterpolator.h#L240), which is a flat out lie. Optical flow analysis succeeds. The debug overlay looks fine. Yet for some reason there are no interpolated frames, only copies of the previous. Seems familiar.
 
-## Installation
-
-- Place `dbghelp.dll` and `dlssg_to_fsr3_amd_is_better.dll` in the same folder as the game's executable. Create backup copies of old DLLs if necessary.
-
-## Requirements
-
-- A game that supports Streamline and the corresponding `nvngx_dlsss.dll` library.
-- An Nvidia graphics card.
-
-## License
-
-- [GPLv3](LICENSE.md)
-- Dependencies are under their respective licenses.
+Repository left intact since it's an experiment.
