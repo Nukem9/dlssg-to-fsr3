@@ -220,8 +220,8 @@ private:
 		auto& desc = *OutParameters;
 		desc.commandList = ffxGetCommandListDX12(CommandList);
 
-		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.color, FFX_RESOURCE_STATE_COMPUTE_READ);
-		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color); // Intentional override
+		if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color))
+			LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.color, FFX_RESOURCE_STATE_COMPUTE_READ);
 
 		desc.opticalFlowVector = SharedBackendInterface.fpGetResource(
 			&SharedBackendInterface,
