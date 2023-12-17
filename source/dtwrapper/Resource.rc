@@ -1,0 +1,28 @@
+
+1 VERSIONINFO
+FILEVERSION 3,5,10,0
+PRODUCTVERSION 3,5,10,0
+FILEOS 0x0
+FILETYPE 0x0
+{
+BLOCK "StringFileInfo"
+{
+	BLOCK "040904E4"
+	{
+		VALUE "FileDescription", "Unofficial FSR3"
+		VALUE "FileVersion", "3,5,10"
+		VALUE "InternalName", "Unofficial FSR3"
+		VALUE "ProductName", "Unofficial FSR3"
+		VALUE "ProductVersion", "3,5,10,0"
+		VALUE "NGXMinimumDriverVersion", "520.00"
+		VALUE "NGXAppId", "241534723"
+		VALUE "NGXGpuArchitecture", "NV_GPU_ARCHITECTURE_GV100"
+		VALUE "NGXApiVersion", "0x0000013"
+	}
+}
+
+BLOCK "VarFileInfo"
+{
+	VALUE "Translation", 0x0409 0x04E4  
+}
+}
