@@ -36,7 +36,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_GetDriverVersionEx(uint32_t *Versions, uint32_t
 
 NGXDLLEXPORT uint32_t NVSDK_NGX_GetGPUArchitecture()
 {
-	return 0x140; // NGXGpuArchitecture NV_GPU_ARCHITECTURE_TU100 (0x190 -> 0x140)
+	return NGXHardcodedArchitecture; // NGXGpuArchitecture NV_GPU_ARCHITECTURE_AD100 (0x190)
 }
 
 NGXDLLEXPORT uint32_t NVSDK_NGX_GetSnippetVersion()

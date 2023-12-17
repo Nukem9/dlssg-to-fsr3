@@ -7,6 +7,8 @@ struct ID3D12Resource;
 using NGXResult = uint32_t;
 constexpr NGXResult NGX_SUCCESS = 1;
 
+constexpr uint32_t NGXHardcodedArchitecture = 0xC0;
+
 struct NGXHandle // See _nvngx.dll
 {
 	uint32_t InternalId = 0;

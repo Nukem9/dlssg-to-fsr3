@@ -77,7 +77,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adap
 		return 0xBAD00005;
 
 	RequirementInfo->Flags = 0;
-	RequirementInfo->RequiredGPUArchitecture = 0;
+	RequirementInfo->RequiredGPUArchitecture = NGXHardcodedArchitecture;
 	strcpy_s(RequirementInfo->RequiredOperatingSystemVersion, "10.0.0");
 
 	return NGX_SUCCESS;
