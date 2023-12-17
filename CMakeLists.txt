@@ -2,12 +2,22 @@ cmake_minimum_required(VERSION 3.26)
 
 project(
     dlssg-to-fsr3
-    VERSION 0.2
+    VERSION 0.21
     LANGUAGES CXX)
 
 set(PROJECT_DEPENDENCIES_PATH "${CMAKE_CURRENT_LIST_DIR}/dependencies")
 set(PROJECT_RESOURCES_PATH "${CMAKE_CURRENT_LIST_DIR}/resources")
 set(PROJECT_SOURCE_PATH "${CMAKE_CURRENT_LIST_DIR}/source")
+
+#
+# Store the current git commit hash for later use
+#
+execute_process(
+    COMMAND git log -1 --format=%h
+    WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
+    OUTPUT_VARIABLE BUILD_GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 #
 # Set up the actual library
@@ -29,11 +39,8 @@ if(BUILD_FOR_DLSSTWEAKS)
             DESTINATION "/"
     )
 
-    install(
-        FILES
-            "${PROJECT_RESOURCES_PATH}/READ ME (DLSSTweaks).txt"
-        DESTINATION "/"
-    )
+    install(FILES "${PROJECT_RESOURCES_PATH}/READ ME (DLSSTweaks).txt" DESTINATION "/")
+    install(FILES "${PROJECT_RESOURCES_PATH}/binary_dist_license.txt" DESTINATION "/" RENAME "LICENSE.txt")
 else()
     add_subdirectory("${PROJECT_SOURCE_PATH}/sigbreaker")
 
@@ -46,11 +53,8 @@ else()
             DESTINATION "/"
     )
 
-    install(
-        FILES
-            "${PROJECT_RESOURCES_PATH}/READ ME.txt"
-        DESTINATION "/"
-    )
+    install(FILES "${PROJECT_RESOURCES_PATH}/READ ME.txt" DESTINATION "/")
+    install(FILES "${PROJECT_RESOURCES_PATH}/binary_dist_license.txt" DESTINATION "/" RENAME "LICENSE.txt")
 endif()
 
 install(

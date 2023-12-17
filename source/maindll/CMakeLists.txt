@@ -95,6 +95,8 @@ target_compile_definitions(
 		NOMINMAX
 		VC_EXTRALEAN
 		WIN32_LEAN_AND_MEAN
+
+		BUILD_GIT_COMMIT_HASH="${BUILD_GIT_COMMIT_HASH}"
 )
 
 #
