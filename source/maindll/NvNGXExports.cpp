@@ -31,7 +31,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_GetDriverVersionEx(uint32_t *Versions, uint32_t
 			Versions[1] = 0;
 	}
 
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT uint32_t NVSDK_NGX_GetGPUArchitecture()
@@ -46,15 +46,15 @@ NGXDLLEXPORT uint32_t NVSDK_NGX_GetSnippetVersion()
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_ProcessCommand(const char *Command, const char *Value, void *Unknown)
 {
-	return 1; // Command gets logged but otherwise does nothing
+	return NGX_SUCCESS; // Command gets logged but otherwise does nothing
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_SetInfoCallback(void *Callback)
 {
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_SetTelemetryEvaluateCallback(void *Callback)
 {
-	return 1;
+	return NGX_SUCCESS;
 }

@@ -5,14 +5,15 @@
 struct ID3D12Resource;
 
 using NGXResult = uint32_t;
+constexpr NGXResult NGX_SUCCESS = 1;
 
-struct NGXHandle
+struct NGXHandle // See _nvngx.dll
 {
 	uint32_t InternalId = 0;
 	uint32_t InternalFeatureId = 0;
 };
 
-struct NGXFeatureRequirementInfo
+struct NGXFeatureRequirementInfo // See nvngx_dlssg.dll
 {
 	uint32_t Flags;
 	uint32_t RequiredGPUArchitecture;

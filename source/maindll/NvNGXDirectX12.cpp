@@ -28,6 +28,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	uint32_t backbufferFormat = 0;
 	Parameters->Get5("DLSSG.BackbufferFormat", &backbufferFormat);
 
+	Parameters->Set4("DLSSG.MustCallEval", 1);
+
 	// Grab the device from the command list
 	ID3D12Device *device = nullptr;
 
@@ -46,7 +48,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	}
 	NGXInstanceHandleLock.unlock();
 
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList *CommandList, NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
@@ -65,8 +67,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 		instance = itr->second;
 	}
 
-	instance->Evaluate(CommandList, Parameters);
-	return 1;
+	instance->Dispatch(CommandList, Parameters);
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adapter, void *FeatureDiscoveryInfo, NGXFeatureRequirementInfo *RequirementInfo)
@@ -78,7 +80,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adap
 	RequirementInfo->RequiredGPUArchitecture = 0;
 	strcpy_s(RequirementInfo->RequiredOperatingSystemVersion, "10.0.0");
 
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(void *Unknown1, void *Unknown2, uint64_t *OutBufferSize)
@@ -86,7 +88,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(void *Unknown1, void
 	if (OutBufferSize)
 	{
 		*OutBufferSize = 0;
-		return 1;
+		return NGX_SUCCESS;
 	}
 
 	return 0xBAD00005;
@@ -97,14 +99,14 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path,
 	if (!D3DDevice)
 		return 0xBAD00005;
 
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *, const wchar_t *Path, void *, uint32_t Unknown4, NGXInstanceParameters *Parameters)
 {
 	// Seems to create the base instance but does nothing with the parameters other than
 	// setting up logging
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
@@ -115,7 +117,7 @@ NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParam
 	Parameters->Set4("DLSSG.MustCallEval", 1);
 	Parameters->Set4("DLSSG.BurstCaptureRunning", 0);
 
-	return 1;
+	return NGX_SUCCESS;
 }
 
 void EstimateVRAMCallback()
@@ -131,7 +133,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateParameters_Impl(NGXInstanceParame
 	Parameters->SetVoidPointer("DLSSG.GetCurrentSettingsCallback", &GetCurrentSettingsCallback);
 	Parameters->SetVoidPointer("DLSSG.EstimateVRAMCallback", &EstimateVRAMCallback);
 
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
@@ -152,12 +154,12 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 		return 0xBAD00004;
 
 	// Node is handled by RAII. Apparently, InstanceHandle isn't supposed to be deleted.
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Shutdown()
 {
-	return 1;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Shutdown1(ID3D12Device *D3DDevice)
@@ -165,5 +167,5 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Shutdown1(ID3D12Device *D3DDevice)
 	if (!D3DDevice)
 		return 0xBAD00005;
 
-	return 1;
+	return NGX_SUCCESS;
 }
