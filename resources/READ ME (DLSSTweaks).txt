@@ -1,0 +1,24 @@
+dlssg-to-fsr3 has been tested with DLSSTweaks in Cyberpunk 2077 and The Witcher 3 only.
+
+DLSSTweaks may be obtained from: https://github.com/emoose/DLSSTweaks
+dlssg-to-fsr3 may be obtained from: https://github.com/Nukem9/dlssg-to-fsr3
+
+================================
+===== Install instructions =====
+================================
+
+1. Locate your game's installation directory with DLSSTweaks (e.g. _nvngx.dll) installed.
+
+2. Copy "dlssg_dlsstweaks_wrapper.dll" and "dlssg_to_fsr3_amd_is_better.dll" to your game's installation directory.
+
+3. Find "dlsstweaks.ini" and open it in Notepad.
+
+4. Find the line "[DLLPathOverrides]" after scrolling down to the middle of the INI file.
+
+5. Find the line ";nvngx_dlssg = C:\Users\Username\...\nvngx_dlssg.dll" underneath.
+
+6. Replace the line with "nvngx_dlssg = C:\Path\To\The\Game\dlssg_dlsstweaks_wrapper.dll".
+
+   You MUST TYPE THE FULL DLL PATH and remove the ";" at the beginning. Dlssg-to-fsr3 may not work otherwise.
+
+7. Done. Launch the game. You'll see a message box on startup.

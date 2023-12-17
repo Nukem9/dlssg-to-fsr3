@@ -5,6 +5,10 @@ Import-Module (Get-ChildItem $vsPath -Recurse -File -Filter Microsoft.VisualStud
 Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64'
 
 # Then build with VS
-& cmake --preset final
-& cmake --build --preset final-release
-& cpack --preset final
+& cmake --preset final-dtwrapper
+& cmake --build --preset final-dtwrapper-release
+& cpack --preset final-dtwrapper
+
+& cmake --preset final-dbghelpwrapper
+& cmake --build --preset final-dbghelpwrapper-release
+& cpack --preset final-dbghelpwrapper

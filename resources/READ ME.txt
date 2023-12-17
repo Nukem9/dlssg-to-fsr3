@@ -1,0 +1,15 @@
+dlssg-to-fsr3 has been tested in Cyberpunk 2077 and The Witcher 3 only.
+
+dlssg-to-fsr3 may be obtained from: https://github.com/Nukem9/dlssg-to-fsr3
+
+================================
+===== Install instructions =====
+================================
+
+1. Locate your game's installation directory. For Cyberpunk 2077, this would be the folder containing Cyberpunk2077.exe.
+
+2. Find "dbghelp.dll" and create an old backup copy if necessary.
+
+3. Copy "dlssg_to_fsr3_amd_is_better.dll" and the new "dbghelp.dll" to your game's installation directory.
+
+4. Done. Launch the game. You'll see a message box on startup.

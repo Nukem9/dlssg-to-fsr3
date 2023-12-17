@@ -47,34 +47,71 @@
       ]
     },
     {
-      "name": "final",
+      "name": "configuration-final",
+      "hidden": true,
       "inherits": [
         "config-base-vcpkg",
         "config-base-cmake",
         "config-base-ninja",
         "config-envvars"
       ]
+    },
+    {
+      "name": "final-dtwrapper",
+      "cacheVariables": {
+        "BUILD_FOR_DLSSTWEAKS": "TRUE"
+      },
+      "inherits": [
+        "configuration-final"
+      ]
+    },
+    {
+      "name": "final-dbghelpwrapper",
+      "cacheVariables": {
+        "BUILD_FOR_DLSSTWEAKS": "FALSE"
+      },
+      "inherits": [
+        "configuration-final"
+      ]
     }
   ],
   "buildPresets": [
     {
-      "name": "final-debug",
-      "configurePreset": "final",
+      "name": "final-dtwrapper-debug",
+      "configurePreset": "final-dtwrapper",
       "configuration": "Debug",
-      "displayName": "Debug x64"
+      "displayName": "DTweaks Debug x64"
     },
     {
-      "name": "final-release",
-      "configurePreset": "final",
+      "name": "final-dtwrapper-release",
+      "configurePreset": "final-dtwrapper",
       "configuration": "Release",
-      "displayName": "Release x64"
+      "displayName": "DTweaks Release x64"
+    },
+    {
+      "name": "final-dbghelpwrapper-debug",
+      "configurePreset": "final-dtwrapper",
+      "configuration": "Debug",
+      "displayName": "Dbghelp Debug x64"
+    },
+    {
+      "name": "final-dbghelpwrapper-release",
+      "configurePreset": "final-dbghelpwrapper",
+      "configuration": "Release",
+      "displayName": "Dbghelp Release x64"
     }
   ],
   "packagePresets": [
     {
-      "name": "final",
-      "displayName": "Package Final",
-      "configurePreset": "final",
+      "name": "final-dtwrapper",
+      "displayName": "Package Final DTweaks",
+      "configurePreset": "final-dtwrapper",
+      "packageDirectory": "${sourceDir}/bin/built-packages"
+    },
+    {
+      "name": "final-dbghelpwrapper",
+      "displayName": "Package Final Dbghelp",
+      "configurePreset": "final-dbghelpwrapper",
       "packageDirectory": "${sourceDir}/bin/built-packages"
     }
   ]
