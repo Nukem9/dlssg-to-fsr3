@@ -31,7 +31,7 @@ __declspec(noinline) void *GetImplementationDll()
 		const auto mod = LoadLibraryW(path);
 
 		if (!mod)
-			MessageBoxW(nullptr, L"Failed to load dlssg_to_fsr3_amd_is_better.dll.", L"Fatal Error", MB_ICONERROR);
+			MessageBoxW(nullptr, path, L"dlssg-to-fsr3 failed to load implementation DLL.", MB_ICONERROR);
 
 		return mod;
 	}();
