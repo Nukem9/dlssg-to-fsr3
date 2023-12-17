@@ -9,7 +9,7 @@
       "hidden": true,
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
         "VCPKG_OVERLAY_PORTS": "${sourceDir}/vcpkg-ports"
       }
     },
@@ -32,7 +32,7 @@
       },
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "/MP /diagnostics:caret",
-        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
       }
     },
     {
