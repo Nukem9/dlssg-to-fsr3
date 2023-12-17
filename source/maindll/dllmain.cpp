@@ -34,6 +34,16 @@ BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+	if (fdwReason == DLL_PROCESS_ATTACH)
+	{
+		const wchar_t *message = L"dlssg-to-fsr3 is loaded. AMD FSR 3 Frame Generation will replace Nvidia DLSS-G Frame Generation."
+								 L"\n\nPlease note this is experimental software and is subject to bugs and/or crashes. This does "
+								 L"NOT represent a native implementation of AMD's FSR 3.";
+
+		MessageBoxW(nullptr, message, L"dlssg-to-fsr3", MB_OK);
+		return TRUE;
+	}
+
 	return TRUE;
 }
 
