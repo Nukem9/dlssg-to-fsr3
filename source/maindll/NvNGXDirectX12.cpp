@@ -120,9 +120,13 @@ NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParam
 	return NGX_SUCCESS;
 }
 
-void EstimateVRAMCallback()
+NGXResult EstimateVRAMCallback(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, size_t *EstimatedSize)
 {
-	__debugbreak();
+	if (!EstimatedSize)
+		return 0xBAD00005;
+
+	*EstimatedSize = 150 * 1024 * 1024; // Assume 150MB
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateParameters_Impl(NGXInstanceParameters *Parameters)
