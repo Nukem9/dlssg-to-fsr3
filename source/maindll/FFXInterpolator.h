@@ -4,7 +4,10 @@
 #include <FidelityFX/host/ffx_opticalflow.h>
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
 #include <FidelityFX/gpu/fsr3/ffx_fsr3_resources.h>
+#include <numbers>
 #include "nvngx.h"
+#include "FFXCommon.h"
+#include "FFXDilation.h"
 
 #ifdef _DEBUG
 #pragma comment(lib, "../../dependencies/ffx-sdk/ffx_fsr3_x64d.lib")
@@ -17,9 +20,6 @@
 #pragma comment(lib, "../../dependencies/ffx-sdk/ffx_frameinterpolation_x64.lib")
 #pragma comment(lib, "../../dependencies/ffx-sdk/ffx_opticalflow_x64.lib")
 #endif
-
-#include "FFXCommon.h"
-#include "FFXDilation.h"
 
 class FFXInterpolator
 {
@@ -282,13 +282,16 @@ private:
 		desc.opticalFlowBlockSize = 8;
 		desc.opticalFlowScale = { 1.0f / desc.displaySize.width, 1.0f / desc.displaySize.height };
 
-		desc.frameTimeDelta = 1000.0f / 60.0f; // TODO: This is wrong. It's also 100% unused.
+		desc.frameTimeDelta = 1000.0f / 60.0f; // Unused
 		desc.reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
+		// Games require a rad2deg fixup because...reasons
+		desc.cameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0);
+		if (desc.cameraFovAngleVertical > 10.0f)
+			desc.cameraFovAngleVertical *= std::numbers::pi_v<float> / 180.0f;
 		desc.cameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0);
 		desc.cameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0);
 		desc.viewSpaceToMetersFactor = 0.0f; // TODO: upscaleDesc->viewSpaceToMetersFactor;
-		desc.cameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0);
 
 		desc.interpolationRect.left = 0;
 		desc.interpolationRect.top = 0;
