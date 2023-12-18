@@ -1,0 +1,13 @@
+Windows Registry Editor Version 5.00
+
+;
+; sl.common.dll (or any NGXCore component):
+;
+; Find "*** Signature override detected..."
+; The call to StringFromGUID2 contains the secret GUID.
+;
+[HKEY_LOCAL_MACHINE\SOFTWARE\NVIDIA Corporation\Global]
+"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}"=-
+
+[HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\nvlddmkm]
+"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}"=-
