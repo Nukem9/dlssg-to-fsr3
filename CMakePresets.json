@@ -59,7 +59,7 @@
     {
       "name": "final-dtwrapper",
       "cacheVariables": {
-        "BUILD_FOR_DLSSTWEAKS": "TRUE"
+        "BUILD_OUTPUT_WRAPPER": "DLSSTWEAKS"
       },
       "inherits": [
         "configuration-final"
@@ -68,7 +68,16 @@
     {
       "name": "final-dbghelpwrapper",
       "cacheVariables": {
-        "BUILD_FOR_DLSSTWEAKS": "FALSE"
+        "BUILD_OUTPUT_WRAPPER": "DBGHELP"
+      },
+      "inherits": [
+        "configuration-final"
+      ]
+    },
+    {
+      "name": "final-nvngxwrapper",
+      "cacheVariables": {
+        "BUILD_OUTPUT_WRAPPER": "NVNGX"
       },
       "inherits": [
         "configuration-final"
@@ -99,6 +108,18 @@
       "configurePreset": "final-dbghelpwrapper",
       "configuration": "Release",
       "displayName": "Dbghelp Release x64"
+    },
+    {
+      "name": "final-nvngxwrapper-debug",
+      "configurePreset": "final-nvngxwrapper",
+      "configuration": "Debug",
+      "displayName": "Nvngx Debug x64"
+    },
+    {
+      "name": "final-nvngxwrapper-release",
+      "configurePreset": "final-nvngxwrapper",
+      "configuration": "Release",
+      "displayName": "Nvngx Release x64"
     }
   ],
   "packagePresets": [
@@ -112,6 +133,12 @@
       "name": "final-dbghelpwrapper",
       "displayName": "Package Final Dbghelp",
       "configurePreset": "final-dbghelpwrapper",
+      "packageDirectory": "${sourceDir}/bin/built-packages"
+    },
+    {
+      "name": "final-nvngxwrapper",
+      "displayName": "Package Final Nvngx",
+      "configurePreset": "final-nvngxwrapper",
       "packageDirectory": "${sourceDir}/bin/built-packages"
     }
   ]

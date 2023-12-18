@@ -9,6 +9,6 @@ Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments 
 & cmake --build --preset final-dtwrapper-release
 & cpack --preset final-dtwrapper
 
-& cmake --preset final-dbghelpwrapper
-& cmake --build --preset final-dbghelpwrapper-release
-& cpack --preset final-dbghelpwrapper
+& cmake --preset final-nvngxwrapper
+& cmake --build --preset final-nvngxwrapper-release
+& cpack --preset final-nvngxwrapper
