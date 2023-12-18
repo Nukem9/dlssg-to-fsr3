@@ -149,7 +149,7 @@ public:
 		barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		barriers[1].Transition.pResource = static_cast<ID3D12Resource *>(fsrFiDispatchDesc.currentBackBuffer.resource); // Source
 		barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
 
 		CommandList->ResourceBarrier(2, barriers);
@@ -174,8 +174,8 @@ private:
 		auto& desc = *OutParameters;
 		desc.CommandList = ffxGetCommandListDX12(CommandList);
 
-		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &desc.InputDepth, FFX_RESOURCE_STATE_COMMON);
-		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors);
+		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &desc.InputDepth, FFX_RESOURCE_STATE_COPY_DEST);
+		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST);
 
 		desc.OutputDilatedDepth = SharedBackendInterface.fpGetResource(
 			&SharedBackendInterface,
@@ -220,7 +220,7 @@ private:
 		auto& desc = *OutParameters;
 		desc.commandList = ffxGetCommandListDX12(CommandList);
 
-		if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color))
+		if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color, FFX_RESOURCE_STATE_COPY_DEST))
 			LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.color, FFX_RESOURCE_STATE_COMPUTE_READ);
 
 		desc.opticalFlowVector = SharedBackendInterface.fpGetResource(
@@ -251,7 +251,7 @@ private:
 		desc.commandList = ffxGetCommandListDX12(CommandList);
 
 		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.currentBackBuffer, FFX_RESOURCE_STATE_COMPUTE_READ);
-		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.currentBackBuffer_HUDLess);
+		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.currentBackBuffer_HUDLess, FFX_RESOURCE_STATE_COPY_DEST);
 		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.OutputInterpolated", &desc.output);
 
 		desc.dilatedDepth = SharedBackendInterface.fpGetResource(
