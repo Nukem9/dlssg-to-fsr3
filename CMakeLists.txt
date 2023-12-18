@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 
 project(
     dlssg-to-fsr3
-    VERSION 0.21
+    VERSION 0.3
     LANGUAGES CXX)
 
 set(PROJECT_DEPENDENCIES_PATH "${CMAKE_CURRENT_LIST_DIR}/dependencies")
@@ -32,12 +32,7 @@ if(BUILD_FOR_DLSSTWEAKS)
 
     set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR} (DLSSTweaks Edition)")
 
-    install(
-        TARGETS
-            dlsstweaks_wrapper_output_dll
-        RUNTIME
-            DESTINATION "/"
-    )
+    install(TARGETS dlsstweaks_wrapper_output_dll RUNTIME DESTINATION "/")
 
     install(FILES "${PROJECT_RESOURCES_PATH}/READ ME (DLSSTweaks).txt" DESTINATION "/")
     install(FILES "${PROJECT_RESOURCES_PATH}/binary_dist_license.txt" DESTINATION "/" RENAME "LICENSE.txt")
@@ -46,13 +41,7 @@ else()
 
     set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}")
 
-    install(
-        TARGETS
-            sigbreaker_output_dll
-        RUNTIME
-            DESTINATION "/"
-    )
-
+    install(TARGETS sigbreaker_output_dll RUNTIME DESTINATION "/")
     install(FILES "${PROJECT_RESOURCES_PATH}/READ ME.txt" DESTINATION "/")
     install(FILES "${PROJECT_RESOURCES_PATH}/binary_dist_license.txt" DESTINATION "/" RENAME "LICENSE.txt")
 endif()

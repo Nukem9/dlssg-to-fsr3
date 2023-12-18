@@ -90,7 +90,7 @@
     },
     {
       "name": "final-dbghelpwrapper-debug",
-      "configurePreset": "final-dtwrapper",
+      "configurePreset": "final-dbghelpwrapper",
       "configuration": "Debug",
       "displayName": "Dbghelp Debug x64"
     },
