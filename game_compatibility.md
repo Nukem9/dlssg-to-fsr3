@@ -13,3 +13,4 @@
 | Dying Light 2               | ❓      | 0.5         | both methods            | ❌     | ❓ | both install methods reported not working   |
 | Portal RTX / Prelude        | ❓      | 0.5         | both methods            | ❌     | ❓ | both install methods reported not working, no FG available or crashing   |
 | STAR WARS Jedi: Survivor    | 7.5     | 0.5         | DLSSTweaks ini method  | ✅     | ✅ | User had to rename nvngx.dll to dxgi.dll to make it work   |
+| Starfield                   | newest❓ | 0.5        | both methods           | ✅     | ✅ | Looks to be okay, but nvngx.dll method can crash when travelling between planets, dlsstweaks ini does not  |
