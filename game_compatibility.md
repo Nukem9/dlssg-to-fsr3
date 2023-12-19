@@ -10,7 +10,7 @@
 | Alan Wake 2                 | 1.0.13  | 0.5         | nvngx.dll method       | ✅     | ✅          | Ghosting around player character in DLSS upscale mode  |
 | Spider-Man: Miles Morales   | v1.1130.0.0  | 0.5    | DLSSTweaks ini method  | ✅     | ❓ | Looks like no issues                          |
 | Hogwarts Legacy             | ❓(newest steam)  | 0.41, 0.5  | nvngx.dll method  | ✅ | ❓ | No UI artifacts, can not use DLSS Sharpening with FG, causes game crash  |
-| Dying Light 2               | ❓      | 0.5         | both methods            | ❌     | ❓ | both install methods reported not working   |
+| Dying Light 2               | ❓      | 0.5         | both methods            | ❌/❓   | ❓ | both install methods reported not working / some people report nvngx.dll method works |
 | Portal RTX / Prelude        | ❓      | 0.5         | both methods            | ❌     | ❓ | both install methods reported not working, no FG available or crashing   |
 | STAR WARS Jedi: Survivor    | 7.5     | 0.5         | DLSSTweaks ini method  | ✅     | ❓ | User had to rename nvngx.dll to dxgi.dll to make it work   |
 | Starfield                   | newest  | 0.5        | both methods           | ✅     | ❓ | Looks to be okay, but nvngx.dll method can crash when travelling between planets, dlsstweaks ini does not  |
