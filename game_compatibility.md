@@ -1,3 +1,7 @@
+✅ - reported as working
+❓ - user could not test due to lack of HDR display
+❌ - reported not working
+
 | Game                        | Game Version | Mod version | Mod install | FrameGen Works | Ingame HDR | Other issues                                                         |
 |-----------------------------|---------|-------------|-------------|-------|------------|----------------------------------------------------------------------|
 | Cyberpunk 2077              | 2.1     | 0.5         | DLSSTweaks ini method  | ✅     | ✅          | Ghosting/artifact line at the bottem of the screen when driving fast |
