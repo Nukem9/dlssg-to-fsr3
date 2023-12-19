@@ -9,4 +9,4 @@
 | Ratchet & Clank: Rift Apart | v1.922  | 0.5         | DLSSTweaks ini method  | ✅     | ✅          | Garbled UI                                                           |
 | Alan Wake 2                 | 1.0.13  | 0.5         | nvngx.dll method       | ✅     | ✅          | Ghosting around player character                                     |
 | Spider-Man: Miles Morales   | v1.1130.0.0  | 0.5         | DLSSTweaks ini method       | ✅     | ❓          | Looks like no issues                                     |
-| Hogwarts Legacy   | ❓  | 0.41, 0.5         | nvngx.dll method       | ✅     | ❓          | Looks like no issues                                     |
+| Hogwarts Legacy   | ❓(newest probably)  | 0.41, 0.5         | nvngx.dll method       | ✅     | ❓          | Looks like no issues                                     |
