@@ -10,3 +10,4 @@
 | Alan Wake 2                 | 1.0.13  | 0.5         | nvngx.dll method       | ✅     | ✅          | Ghosting around player character in DLSS upscale mode  |
 | Spider-Man: Miles Morales   | v1.1130.0.0  | 0.5         | DLSSTweaks ini method       | ✅     | ❓ | Looks like no issues                          |
 | Hogwarts Legacy             | ❓(newest steam)  | 0.41, 0.5     | nvngx.dll method     | ✅     | ❓ | No UI artifacts, can not use DLSS Sharpening with FG, causes game crash  |
+| Dying Light 2             | ❓  | 0.5     | both method     | ❌     | ❓ | both install methods reported not working   |
