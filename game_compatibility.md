@@ -19,3 +19,4 @@
 | Warhammer 40000: Darktide   | 1.2.1763.0 (Xbox store) | 0.5 | nvngx.dll method | ✅     | ✅ Windows Auto HDR, no ingame HDR support | Ghosting in UI, as well as weapon model but only when turning fast. Doesn't ghost while running/walking or turning slowly |
 | A Plague Tale: Requiem      | 1.06 (latest)    | 0.5        | nvngx.dll method       | ✅     | ❓ | UI ghosting when moving, subtitles not readable  |
 | Deliver Us Mars             | newest (epic store)  | 0.5 | DLSSTweaks ini method | ✅ | ❓ | Reported working, small amount of shimmering around hairs etc reported, game must be run from EXE directly, not via epic launcher |
+| Microsoft Flight Simulator 2020 | ❓   | ❓         | ❓                       | ✅ | ❓ | Reported working, but with heavy UI artifacts |
