@@ -18,3 +18,4 @@
 | Slender: The Arrival        | newest  | 0.41       | DLSSTweaks ini method  | ✅     | ❓ | Looks like no issues |
 | Warhammer 40000: Darktide   | 1.2.1763.0 (Xbox store) | 0.5 | nvngx.dll method | ✅     | ✅ Windows Auto HDR, no ingame HDR support | Ghosting in UI, as well as weapon model but only when turning fast. Doesn't ghost while running/walking or turning slowly |
 | A Plague Tale: Requiem      | ❓      | ❓          | ❓                     | ✅     | ❓ | Reported working, without details except for garbled UI  |
+| Deliver Us Mars             | newest (epic store)  | 0.5 | DLSSTweaks ini method | ✅ | ❓ | Reported working, small amount of shimmering around hairs etc reported  |
