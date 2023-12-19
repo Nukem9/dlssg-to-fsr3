@@ -12,3 +12,4 @@
 | Hogwarts Legacy             | ❓(newest steam)  | 0.41, 0.5     | nvngx.dll method     | ✅     | ❓ | No UI artifacts, can not use DLSS Sharpening with FG, causes game crash  |
 | Dying Light 2             | ❓  | 0.5     | both method     | ❌     | ❓ | both install methods reported not working   |
 | Portal RTX / Prelude             | ❓  | 0.5     | both method     | ❌     | ❓ | both install methods reported not working, no FG available or crashing   |
+| Portal RTX / Prelude             | 7.5  | 0.5     | DLSSTweaks ini method     | ✅     | ✅ | User had to rename nvngx.dll to dxgi.dll to make it work   |
