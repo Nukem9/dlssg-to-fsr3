@@ -20,3 +20,4 @@
 | A Plague Tale: Requiem      | 1.06 (latest)    | 0.5        | nvngx.dll method       | ✅     | ❓ | UI ghosting when moving, subtitles not readable  |
 | Deliver Us Mars             | newest (epic store)  | 0.5 | DLSSTweaks ini method | ✅ | ❓ | Reported working, small amount of shimmering around hairs etc reported, game must be run from EXE directly, not via epic launcher |
 | Microsoft Flight Simulator 2020 | ❓   | ❓         | ❓                       | ✅ | ❓ | Reported working, but with heavy UI artifacts |
+| Jusant                      | v1.02.1431188 | 0.60 | DLSSTweaks ini method | ✅ | ❓ | Reported frametime consistency seems worse, compared to earlier versions of the mod (but they had severe flickering at times) |
