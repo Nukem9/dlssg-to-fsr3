@@ -1,5 +1,7 @@
 #include <Windows.h>
 #include <string_view>
+#include <mutex>
+#include <unordered_set>
 #include "Hooking/Hooks.h"
 
 //
@@ -8,6 +10,7 @@
 // _nvngx.dll         loads  nvngx_dlssg.dll  <- intercept this stage
 //
 constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.common.dll", L"_nvngx.dll" };
+constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
 void PatchImportForModule(const wchar_t *Path, HMODULE ModuleHandle);
@@ -18,20 +21,21 @@ void *LoadImplementationDll()
 	wchar_t path[2048] = {};
 	HMODULE thisModuleHandle = nullptr;
 
-	GetModuleHandleExW(
-		GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-		reinterpret_cast<LPCWSTR>(&LoadImplementationDll),
-		&thisModuleHandle);
-
-	if (GetModuleFileNameW(thisModuleHandle, path, ARRAYSIZE(path)))
+	if (GetModuleHandleExW(
+			GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			reinterpret_cast<LPCWSTR>(&LoadImplementationDll),
+			&thisModuleHandle))
 	{
-		// Chop off the file name
-		for (auto i = (ptrdiff_t)wcslen(path) - 1; i > 0; i--)
+		if (GetModuleFileNameW(thisModuleHandle, path, ARRAYSIZE(path)))
 		{
-			if (path[i] == L'\\' || path[i] == L'/')
+			// Chop off the file name
+			for (auto i = (ptrdiff_t)wcslen(path) - 1; i > 0; i--)
 			{
-				path[i + 1] = 0;
-				break;
+				if (path[i] == L'\\' || path[i] == L'/')
+				{
+					path[i + 1] = 0;
+					break;
+				}
 			}
 		}
 	}
@@ -54,7 +58,7 @@ void *LoadImplementationDll()
 
 HMODULE RedirectModule(const wchar_t *Path)
 {
-	if (Path && std::wstring_view(Path).ends_with(L"nvngx_dlssg.dll"))
+	if (Path && std::wstring_view(Path).ends_with(TargetImplementationDll))
 		return static_cast<HMODULE>(LoadImplementationDll());
 
 	return nullptr;
@@ -82,6 +86,21 @@ HMODULE WINAPI HookedLoadLibraryW(LPCWSTR lpLibFileName)
 	return libraryHandle;
 }
 
+bool ModuleRequiresPatching(HMODULE ModuleHandle)
+{
+	static std::mutex trackerLock;
+	static std::unordered_set<HMODULE> trackedModules;
+
+	trackerLock.lock();
+	if (trackedModules.size() > 100)
+		trackedModules.clear();
+
+	const bool wasInserted = trackedModules.emplace(ModuleHandle).second;
+	trackerLock.unlock();
+
+	return wasInserted;
+}
+
 void PatchImportForModule(const wchar_t *Path, HMODULE ModuleHandle)
 {
 	if (!Path || !ModuleHandle)
@@ -94,12 +113,15 @@ void PatchImportForModule(const wchar_t *Path, HMODULE ModuleHandle)
 		if (!libFileName.ends_with(targetName))
 			continue;
 
-		OutputDebugStringW(L"Patching imports for a new module: ");
-		OutputDebugStringW(Path);
-		OutputDebugStringW(L"...\n");
+		if (ModuleRequiresPatching(ModuleHandle))
+		{
+			OutputDebugStringW(L"Patching imports for a new module: ");
+			OutputDebugStringW(Path);
+			OutputDebugStringW(L"...\n");
 
-		Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
-		Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);
+			Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
+			Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);
+		}
 	}
 }
 
