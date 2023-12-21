@@ -49,7 +49,7 @@ FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Pa
 
 	desc.currentBackBuffer = Parameters.InputColorBuffer;
 	desc.currentBackBuffer_HUDLess = Parameters.InputHUDLessColorBuffer;
-	desc.output = Parameters.OutputColorBuffer;
+	desc.output = Parameters.OutputInterpolatedColorBuffer;
 	desc.dilatedDepth = Parameters.InputDilatedDepth;
 	desc.dilatedMotionVectors = Parameters.InputDilatedMotionVectors;
 	desc.reconstructPrevNearDepth = Parameters.InputReconstructedPreviousNearDepth;

@@ -21,7 +21,7 @@ struct FFInterpolatorDispatchParameters
     FfxFloatCoords2D OpticalFlowScale;
     int OpticalFlowBlockSize;
 
-    FfxResource OutputColorBuffer;
+    FfxResource OutputInterpolatedColorBuffer;
 
 	bool HDR;
 	bool DepthInverted;
@@ -41,7 +41,6 @@ class FFInterpolator
 private:
 	const uint32_t m_MaxRenderWidth;
 	const uint32_t m_MaxRenderHeight;
-
 
 	FfxInterface m_BackendInterface = {};
 	uint32_t m_EffectContextId = 0;

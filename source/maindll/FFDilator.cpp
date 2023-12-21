@@ -6,7 +6,7 @@
 // This file is licensed under a compatible license found in LICENSE.md in the root directory of this
 // project.
 //
-#include "FFXCommon.h"
+#include "FFExt.h"
 #include "FFDilator.h"
 
 FFDilator::FFDilator(const FfxInterface& BackendInterface, uint32_t m_MaxRenderWidth, uint32_t m_MaxRenderHeight)
