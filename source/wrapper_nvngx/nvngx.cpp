@@ -12,7 +12,7 @@ constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_
 
 void PatchImportForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
-void *LoadImplementationDll()
+auto LoadImplementationDll()
 {
 	// Use the same directory as the current DLL
 	wchar_t path[2048] = {};

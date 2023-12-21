@@ -1,6 +1,6 @@
 #include <windows.h>
 
-void *CustomLibraryResolverCallback();
+auto CustomLibraryResolverCallback();
 
 #define DLL_PROXY_EXPORT_LISTING_FILE "ExportListing.inc"                   // List of exported functions
 #define DLL_PROXY_TLS_CALLBACK_AUTOINIT                                     // Enable automatic initialization through a thread local storage callback
@@ -8,7 +8,7 @@ void *CustomLibraryResolverCallback();
 #define DLL_PROXY_LIBRARY_RESOLVER_CALLBACK CustomLibraryResolverCallback   // Custom DLL path resolver
 #include "DllProxy.h"
 
-void *CustomLibraryResolverCallback()
+auto CustomLibraryResolverCallback()
 {
 	// Avoid using the CRT at all, including thread-local variable init
 	constinit static HMODULE NVNGXModuleHandle = nullptr;

@@ -30,7 +30,7 @@ namespace Hooks
 	}
 
 	bool RedirectImport(
-		void *ModuleHandle,
+		auto ModuleHandle,
 		const char *ImportModuleName,
 		std::variant<const char *, int> ImportName,
 		const void *CallbackFunction,

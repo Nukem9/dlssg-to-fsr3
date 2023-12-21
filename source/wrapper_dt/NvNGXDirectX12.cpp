@@ -7,7 +7,7 @@ struct ID3D12GraphicsCommandList;
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	ID3D12CommandList *CommandList,
-	void *Unknown,
+	auto Unknown,
 	NGXInstanceParameters *Parameters,
 	NGXHandle **OutInstanceHandle)
 {

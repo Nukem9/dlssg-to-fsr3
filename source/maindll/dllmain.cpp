@@ -51,4 +51,4 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	return TRUE;
 }
 
-extern "C" extern decltype(&RawDllMain) const _pRawDllMain = RawDllMain;
+auto const _pRawDllMain = RawDllMain;

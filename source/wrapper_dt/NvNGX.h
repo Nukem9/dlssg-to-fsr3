@@ -13,11 +13,11 @@ struct NGXHandle;				  // See _nvngx.dll
 struct NGXFeatureRequirementInfo; // See nvngx_dlssg.dll
 class NGXInstanceParameters;	  // See sl.common.dll exports
 
-void *GetImplementationDll();
-void *GetOriginalExport(const char *name);
+auto GetImplementationDll();
+auto GetOriginalExport(const char *name);
 
 template<typename = decltype([]{})>
-void *GetOriginalExportCached(const char *name)
+auto GetOriginalExportCached(const char *name)
 {
 	static auto impl = GetOriginalExport(name);
 	return impl;

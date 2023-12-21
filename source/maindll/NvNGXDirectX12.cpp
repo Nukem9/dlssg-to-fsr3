@@ -7,7 +7,7 @@ std::unordered_map<uint32_t, std::shared_ptr<FFXInterpolator>> NGXInstanceHandle
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	ID3D12CommandList *CommandList,
-	void *Unknown,
+	auto Unknown,
 	NGXInstanceParameters *Parameters,
 	NGXHandle **OutInstanceHandle)
 {
@@ -71,7 +71,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 	return NGX_SUCCESS;
 }
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adapter, void *FeatureDiscoveryInfo, NGXFeatureRequirementInfo *RequirementInfo)
+NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adapter, auto FeatureDiscoveryInfo, NGXFeatureRequirementInfo *RequirementInfo)
 {
 	if (!FeatureDiscoveryInfo || !RequirementInfo)
 		return 0xBAD00005;
@@ -83,7 +83,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adap
 	return NGX_SUCCESS;
 }
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(void *Unknown1, void *Unknown2, uint64_t *OutBufferSize)
+NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(auto Unknown1, auto Unknown2, uint64_t *OutBufferSize)
 {
 	if (OutBufferSize)
 	{
@@ -94,7 +94,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(void *Unknown1, void
 	return 0xBAD00005;
 }
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path, ID3D12Device *D3DDevice, uint32_t Unknown3)
+NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(auto Unknown1, const wchar_t *Path, ID3D12Device *D3DDevice, uint32_t Unknown3)
 {
 	if (!D3DDevice)
 		return 0xBAD00005;
