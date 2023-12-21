@@ -92,7 +92,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 		return NGX_SUCCESS;
 
 	case FFX_ERROR_INVALID_ARGUMENT:
-		return 0xBAD00004;
+		return 0xBAD00005;
 	}
 
 	return 0xBAD00005;

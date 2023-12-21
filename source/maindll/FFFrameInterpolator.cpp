@@ -181,6 +181,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 		CommandList->Close();
 	}
 
+	NGXParameters->Set4("DLSSG.FlushRequired", 0);
 	return dispatchStatus;
 }
 
