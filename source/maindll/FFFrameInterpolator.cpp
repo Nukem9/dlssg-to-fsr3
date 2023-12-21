@@ -102,6 +102,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 
 		const static bool doDebugOverlay = Util::GetSetting(L"Debug", L"EnableDebugOverlay", false);
 		const static bool doDebugTearLines = Util::GetSetting(L"Debug", L"EnableDebugTearLines", false);
+		const static bool doInterpolatedOnly = Util::GetSetting(L"Debug", L"EnableInterpolatedFramesOnly", false);
 
 		fsrFiDispatchDesc.DebugView = doDebugOverlay;
 		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
@@ -135,7 +136,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 		status = FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
 		FFX_RETURN_ON_FAIL(status);
 
-		if (fsrFiDispatchDesc.DebugView)
+		if (fsrFiDispatchDesc.DebugView || doInterpolatedOnly)
 			ffxRealOutputResource = fsrFiDispatchDesc.OutputInterpolatedColorBuffer;
 		else
 			ffxRealOutputResource = fsrFiDispatchDesc.InputColorBuffer;
