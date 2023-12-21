@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <charconv>
+#include "Util.h"
 
 BOOL WINAPI RawDllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -38,12 +39,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	{
 		OutputDebugStringW(L"DEBUG: Built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
 
-		const wchar_t *message = L"dlssg-to-fsr3 is loaded. AMD FSR 3 Frame Generation will replace Nvidia DLSS-G Frame Generation."
-								 L"\n\nPlease note this is experimental software and is subject to bugs and/or crashes. This does "
-								 L"NOT represent a native implementation of AMD's FSR 3.\n\nReport issues at "
-								 L"https://github.com/Nukem9/dlssg-to-fsr3\n\nWARNING: DO NOT USE IN MULTIPLAYER GAMES.";
+		const auto message = "dlssg-to-fsr3 is loaded. AMD FSR 3 Frame Generation will replace Nvidia DLSS-G Frame Generation."
+								 "\n\nPlease note this is experimental software and is subject to bugs and/or crashes. This does "
+								 "NOT represent a native implementation of AMD's FSR 3.\n\nReport issues at "
+								 "https://github.com/Nukem9/dlssg-to-fsr3\n\nWARNING: DO NOT USE IN MULTIPLAYER GAMES.\n";
 
-		MessageBoxW(nullptr, message, L"dlssg-to-fsr3", MB_OK);
+		Util::Log(message);
 		return TRUE;
 	}
 
