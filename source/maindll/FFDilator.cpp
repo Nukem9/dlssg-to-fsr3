@@ -7,9 +7,9 @@
 // project.
 //
 #include "FFXCommon.h"
-#include "FFXDilation.h"
+#include "FFDilator.h"
 
-FFXDilation::FFXDilation(const FfxInterface& BackendInterface, uint32_t m_MaxRenderWidth, uint32_t m_MaxRenderHeight)
+FFDilator::FFDilator(const FfxInterface& BackendInterface, uint32_t m_MaxRenderWidth, uint32_t m_MaxRenderHeight)
 	: m_MaxRenderWidth(m_MaxRenderWidth),
 	  m_MaxRenderHeight(m_MaxRenderHeight),
 	  m_BackendInterface(BackendInterface)
@@ -18,7 +18,7 @@ FFXDilation::FFXDilation(const FfxInterface& BackendInterface, uint32_t m_MaxRen
 	FFX_THROW_ON_FAIL(m_BackendInterface.fpCreateBackendContext(&m_BackendInterface, &m_EffectContextId));
 }
 
-FFXDilation::~FFXDilation()
+FFDilator::~FFDilator()
 {
 	for (auto& pipeline : m_DispatchPipelineStates)
 		m_BackendInterface.fpDestroyPipeline(&m_BackendInterface, &pipeline.second, m_EffectContextId);
@@ -28,7 +28,7 @@ FFXDilation::~FFXDilation()
 }
 
 // clang-format off
-FfxFsr3UpscalerSharedResourceDescriptions FFXDilation::GetSharedResourceDescriptions() const
+FfxFsr3UpscalerSharedResourceDescriptions FFDilator::GetSharedResourceDescriptions() const
 {
 	FfxFsr3UpscalerSharedResourceDescriptions descs = {};
 
@@ -80,7 +80,7 @@ FfxFsr3UpscalerSharedResourceDescriptions FFXDilation::GetSharedResourceDescript
 	return descs;
 }
 
-FfxErrorCode FFXDilation::Dispatch(const FFXDilationDispatchParameters& Parameters)
+FfxErrorCode FFDilator::Dispatch(const FFDilatorDispatchParameters& Parameters)
 {
 	auto registerResource = [&](const FfxResource& Resource, uint32_t Index, bool UAV)
 	{
@@ -127,7 +127,7 @@ FfxErrorCode FFXDilation::Dispatch(const FFXDilationDispatchParameters& Paramete
 	return FFX_OK;
 }
 
-void FFXDilation::UpdateConstantBuffers(const FFXDilationDispatchParameters& Parameters, Fsr3UpscalerConstants& Constants)
+void FFDilator::UpdateConstantBuffers(const FFDilatorDispatchParameters& Parameters, Fsr3UpscalerConstants& Constants)
 {
 	Constants.renderSize[0] = Parameters.RenderSize.width;
 	Constants.renderSize[1] = Parameters.RenderSize.height;
@@ -165,7 +165,7 @@ void FFXDilation::UpdateConstantBuffers(const FFXDilationDispatchParameters& Par
 	memcpy(&m_DispatchConstantBuffer.data, &m_CurrentConstants, m_DispatchConstantBuffer.num32BitEntries * sizeof(uint32_t));
 }
 
-FfxErrorCode FFXDilation::ScheduleComputeDispatch(const FfxPipelineState& Pipeline, uint32_t DispatchX, uint32_t DispatchY, uint32_t DispatchZ)
+FfxErrorCode FFDilator::ScheduleComputeDispatch(const FfxPipelineState& Pipeline, uint32_t DispatchX, uint32_t DispatchY, uint32_t DispatchZ)
 {
 	FfxComputeJobDescription jobDescriptor = {};
 	{
@@ -204,7 +204,7 @@ FfxErrorCode FFXDilation::ScheduleComputeDispatch(const FfxPipelineState& Pipeli
 	return m_BackendInterface.fpScheduleGpuJob(&m_BackendInterface, &job);
 }
 
-FfxPipelineState& FFXDilation::GetPipelineStateForParameters(const FFXDilationDispatchParameters& Parameters)
+FfxPipelineState& FFDilator::GetPipelineStateForParameters(const FFDilatorDispatchParameters& Parameters)
 {
 	uint32_t flags = 0;
 
@@ -230,7 +230,7 @@ FfxPipelineState& FFXDilation::GetPipelineStateForParameters(const FFXDilationDi
 	return InternalCreatePipelineState(flags);
 }
 
-FfxPipelineState& FFXDilation::InternalCreatePipelineState(uint32_t PassFlags)
+FfxPipelineState& FFDilator::InternalCreatePipelineState(uint32_t PassFlags)
 {
 	FfxPipelineDescription pipelineDescription =
 	{
@@ -303,7 +303,7 @@ FfxPipelineState& FFXDilation::InternalCreatePipelineState(uint32_t PassFlags)
 	return pipelineState;
 }
 
-FfxErrorCode FFXDilation::RemapResourceBindings(FfxPipelineState& InOutPipeline)
+FfxErrorCode FFDilator::RemapResourceBindings(FfxPipelineState& InOutPipeline)
 {
 	auto doRemap = []<typename T, typename U>(T *PipelineBindings, size_t PipelineBindCount, const U *NameTable, size_t NameTableCount)
 	{
@@ -334,7 +334,7 @@ FfxErrorCode FFXDilation::RemapResourceBindings(FfxPipelineState& InOutPipeline)
 	return error;
 }
 
-uint32_t FFXDilation::GetPipelinePermutationFlags(uint32_t ContextFlags, bool Fp16, bool Force64)
+uint32_t FFDilator::GetPipelinePermutationFlags(uint32_t ContextFlags, bool Fp16, bool Force64)
 {
 	uint32_t flags = 0;
 	flags |= (ContextFlags & FFX_FSR3UPSCALER_ENABLE_HIGH_DYNAMIC_RANGE) ? FSR3UPSCALER_SHADER_PERMUTATION_HDR_COLOR_INPUT : 0;

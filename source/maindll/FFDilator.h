@@ -11,7 +11,7 @@
 #include <FidelityFX/host/ffx_fsr3upscaler.h>
 #include <FidelityFX/components/fsr3upscaler/ffx_fsr3upscaler_private.h>
 
-struct FFXDilationDispatchParameters
+struct FFDilatorDispatchParameters
 {
 	FfxCommandList CommandList;
 
@@ -33,7 +33,7 @@ struct FFXDilationDispatchParameters
 	FfxFloatCoords2D MotionVectorJitterOffsets;
 };
 
-class FFXDilation
+class FFDilator
 {
 private:
 	struct ResourceIndex
@@ -93,18 +93,18 @@ private:
 	FfxResourceInternal m_UAVResources[ResourceIndex::Count] = {};
 
 public:
-	FFXDilation(const FfxInterface& BackendInterface, uint32_t m_MaxRenderWidth, uint32_t m_MaxRenderHeight);
-	FFXDilation(const FFXDilation&) = delete;
-	FFXDilation(FFXDilation&&) = delete;
-	~FFXDilation();
+	FFDilator(const FfxInterface& BackendInterface, uint32_t m_MaxRenderWidth, uint32_t m_MaxRenderHeight);
+	FFDilator(const FFDilator&) = delete;
+	FFDilator& operator=(const FFDilator&) = delete;
+	~FFDilator();
 
 	FfxFsr3UpscalerSharedResourceDescriptions GetSharedResourceDescriptions() const;
-	FfxErrorCode Dispatch(const FFXDilationDispatchParameters& Parameters);
+	FfxErrorCode Dispatch(const FFDilatorDispatchParameters& Parameters);
 
 private:
-	void UpdateConstantBuffers(const FFXDilationDispatchParameters& Parameters, Fsr3UpscalerConstants& Constants);
+	void UpdateConstantBuffers(const FFDilatorDispatchParameters& Parameters, Fsr3UpscalerConstants& Constants);
 	FfxErrorCode ScheduleComputeDispatch(const FfxPipelineState& Pipeline, uint32_t DispatchX, uint32_t DispatchY, uint32_t DispatchZ);
-	FfxPipelineState& GetPipelineStateForParameters(const FFXDilationDispatchParameters& Parameters);
+	FfxPipelineState& GetPipelineStateForParameters(const FFDilatorDispatchParameters& Parameters);
 	FfxPipelineState& InternalCreatePipelineState(uint32_t PassFlags);
 	FfxErrorCode RemapResourceBindings(FfxPipelineState& InOutPipeline);
 
