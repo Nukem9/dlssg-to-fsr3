@@ -6,8 +6,10 @@
 #include <FidelityFX/gpu/fsr3/ffx_fsr3_resources.h>
 #include <numbers>
 #include "nvngx.h"
-#include "FFXCommon.h"
-#include "FFXDilation.h"
+#include "FFExt.h"
+#include "FFDilator.h"
+#include "FFInterpolator.h"
+#include "Util.h"
 
 #ifdef _DEBUG
 #pragma comment(lib, "../../dependencies/ffx-sdk/ffx_fsr3_x64d.lib")

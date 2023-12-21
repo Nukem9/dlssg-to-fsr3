@@ -3,7 +3,7 @@
 #include <FidelityFX/host/ffx_frameinterpolation.h>
 #include <FidelityFX/components/frameinterpolation/ffx_frameinterpolation_private.h>
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
-#include "FFXCommon.h"
+#include "FFExt.h"
 
 struct FFInterpolatorDispatchParameters
 {
