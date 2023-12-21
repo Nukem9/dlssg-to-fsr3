@@ -1,0 +1,73 @@
+#pragma once
+
+#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
+#include <FidelityFX/host/ffx_opticalflow.h>
+#include <FidelityFX/gpu/fsr3/ffx_fsr3_resources.h>
+#include "FFDilator.h"
+#include "FFInterpolator.h"
+
+class NGXInstanceParameters;
+
+class FFFrameInterpolator
+{
+private:
+	const uint32_t SwapchainWidth; // Final image presented to the screen
+	const uint32_t SwapchainHeight;
+
+	uint32_t RenderWidth = 0; // GBuffer dimensions
+	uint32_t RenderHeight = 0;
+
+	ID3D12Fence *SwapChainInUseFence = nullptr;
+	uint64_t SwapChainInUseCounter = 0;
+
+	FfxInterface FrameInterpolationBackendInterface = {};
+	FfxInterface SharedBackendInterface = {};
+	FfxUInt32 SharedBackendEffectContextId = 0;
+
+	std::unique_ptr<FFDilator> DilationContext;
+	FfxOpticalflowContext OpticalFlowContext = {};
+	std::unique_ptr<FFInterpolator> FrameInterpolatorContext;
+
+	FfxResourceInternal GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_COUNT] = {};
+	std::vector<std::unique_ptr<uint8_t[]>> ScratchMemoryBuffers;
+
+public:
+	FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight, DXGI_FORMAT BackBufferFormat);
+	FFFrameInterpolator(const FFFrameInterpolator&) = delete;
+	FFFrameInterpolator& operator=(const FFFrameInterpolator&) = delete;
+	~FFFrameInterpolator();
+
+	bool AnyResourcesInUse() const;
+
+public:
+	void Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *Parameters);
+
+private:
+	bool BuildDilationParameters(
+		FFDilatorDispatchParameters *OutParameters,
+		ID3D12GraphicsCommandList *CommandList,
+		NGXInstanceParameters *NGXParameters);
+
+	bool BuildOpticalFlowParameters(
+		FfxOpticalflowDispatchDescription *OutParameters,
+		ID3D12GraphicsCommandList *CommandList,
+		NGXInstanceParameters *NGXParameters);
+
+	bool BuildFrameInterpolationParameters(
+		FFInterpolatorDispatchParameters *OutParameters,
+		ID3D12GraphicsCommandList *CommandList,
+		NGXInstanceParameters *NGXParameters);
+
+	static bool LoadResourceFromNGXParameters(
+		NGXInstanceParameters *Parameters,
+		const char *Name,
+		FfxResource *OutFfxResource,
+		FfxResourceStates State);
+
+	void CreateBackend(ID3D12Device *Device);
+	void DestroyBackend();
+	void CreateDilationContext();
+	void DestroyDilationContext();
+	void CreateOpticalFlowContext();
+	void DestroyOpticalFlowContext();
+};

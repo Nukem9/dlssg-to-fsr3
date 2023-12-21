@@ -1,0 +1,465 @@
+#include <numbers>
+#include "nvngx.h"
+#include "FFExt.h"
+#include "Util.h"
+#include "FFFrameInterpolator.h"
+
+#ifdef _DEBUG
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_fsr3_x64d.lib")
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_backend_dx12_x64d.lib")
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_frameinterpolation_x64d.lib")
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_opticalflow_x64d.lib")
+#else
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_fsr3_x64.lib")
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_backend_dx12_x64.lib")
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_frameinterpolation_x64.lib")
+#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_opticalflow_x64.lib")
+#endif
+
+D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
+
+FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight, DXGI_FORMAT BackBufferFormat)
+	: SwapchainWidth(OutputWidth),
+	  SwapchainHeight(OutputHeight)
+{
+	if (FAILED(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&SwapChainInUseFence))))
+		throw std::runtime_error("Failed to create swap chain in-use fence");
+
+	CreateBackend(Device);
+	CreateDilationContext();
+	CreateOpticalFlowContext();
+
+	FrameInterpolatorContext = std::make_unique<FFInterpolator>(FrameInterpolationBackendInterface, SwapchainWidth, SwapchainHeight);
+}
+
+FFFrameInterpolator::~FFFrameInterpolator()
+{
+	SwapChainInUseFence->Release();
+
+	FrameInterpolatorContext.reset();
+	DestroyOpticalFlowContext();
+	DestroyDilationContext();
+	DestroyBackend();
+}
+
+bool FFFrameInterpolator::AnyResourcesInUse() const
+{
+	return SwapChainInUseFence->GetCompletedValue() < SwapChainInUseCounter;
+}
+
+void FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *Parameters)
+{
+	const bool enableInterpolation = Parameters->GetUIntOrDefault("DLSSG.EnableInterp", 0) != 0;
+	const bool isRecordingCommands = Parameters->GetUIntOrDefault("DLSSG.IsRecording", 0) != 0;
+
+	if (!isRecordingCommands)
+	{
+		ID3D12CommandQueue *recordingQueue = nullptr;
+		Parameters->GetVoidPointer("DLSSG.CmdQueue", reinterpret_cast<void **>(&recordingQueue));
+
+		ID3D12CommandAllocator *recordingAllocator = nullptr;
+		Parameters->GetVoidPointer("DLSSG.CmdAlloc", reinterpret_cast<void **>(&recordingAllocator));
+
+		static bool once = [&]()
+		{
+			Util::Log(
+				"Command list wasn't recording. Resetting state: %d %p %p %p\n",
+				enableInterpolation,
+				CommandList,
+				recordingQueue,
+				recordingAllocator);
+
+			return false;
+		}();
+
+		CommandList->Reset(recordingAllocator, nullptr);
+	}
+
+	FfxResource ffxRealOutputResource = {};
+
+	if (enableInterpolation)
+	{
+		// As far as I know there aren't any direct ways to fetch the current gbuffer dimensions from NGX. I guess
+		// pulling it from the depth buffer is enough.
+		{
+			ID3D12Resource *depthResource = nullptr;
+			Parameters->GetVoidPointer("DLSSG.Depth", reinterpret_cast<void **>(&depthResource));
+			auto desc = depthResource->GetDesc();
+
+			RenderWidth = Parameters->GetUIntOrDefault("DLSSG.DepthSubrectWidth", static_cast<uint32_t>(desc.Width));
+			RenderHeight = Parameters->GetUIntOrDefault("DLSSG.DepthSubrectHeight", desc.Height);
+		}
+
+		// Depth, MV dilation, and previous depth reconstruction
+		FFDilatorDispatchParameters fsrDilationDesc = {};
+		BuildDilationParameters(&fsrDilationDesc, CommandList, Parameters);
+
+		// Optical flow
+		FfxOpticalflowDispatchDescription fsrOfDispatchDesc = {};
+		BuildOpticalFlowParameters(&fsrOfDispatchDesc, CommandList, Parameters);
+
+		// Frame interpolation
+		FFInterpolatorDispatchParameters fsrFiDispatchDesc = {};
+		BuildFrameInterpolationParameters(&fsrFiDispatchDesc, CommandList, Parameters);
+
+#if 0
+		auto setObjectDebugName = [](ID3D12Object *Object, const char *Name)
+		{
+			if (!Object || !Name || strlen(Name) <= 0)
+				return;
+
+			wchar_t tempOut[1024];
+			if (mbstowcs_s(nullptr, tempOut, Name, _TRUNCATE) == 0)
+				Object->SetName(tempOut);
+		};
+
+		setObjectDebugName(static_cast<ID3D12Resource *>(fsrDilationDesc.InputDepth.resource), "DLSSG.Depth");
+		setObjectDebugName(static_cast<ID3D12Resource *>(fsrDilationDesc.InputMotionVectors.resource), "DLSSG.MVecs");
+		setObjectDebugName(static_cast<ID3D12Resource *>(fsrFiDispatchDesc.InputHUDLessColorBuffer.resource), "DLSSG.HUDLess");
+		setObjectDebugName(static_cast<ID3D12Resource *>(fsrFiDispatchDesc.InputColorBuffer.resource), "DLSSG.Backbuffer");
+		setObjectDebugName(static_cast<ID3D12Resource *>(fsrFiDispatchDesc.OutputInterpolatedColorBuffer.resource), "DLSSG.OutputInterpolated");
+
+		//setObjectDebugName(outputRealResource, "DLSSG.OutputReal");
+#endif
+
+		const static bool doDebugOverlay = Util::GetSetting(L"Debug", L"EnableDebugOverlay", false);
+		const static bool doDebugTearLines = Util::GetSetting(L"Debug", L"EnableDebugTearLines", false);
+
+		fsrFiDispatchDesc.DebugView = doDebugOverlay;
+		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
+
+		uint32_t status = FFX_OK;
+		status |= DilationContext->Dispatch(fsrDilationDesc);
+		FFX_THROW_ON_FAIL(status);
+		status |= ffxOpticalflowContextDispatch(&OpticalFlowContext, &fsrOfDispatchDesc);
+		FFX_THROW_ON_FAIL(status);
+		status |= FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
+		FFX_THROW_ON_FAIL(status);
+
+		if (fsrFiDispatchDesc.DebugView)
+			ffxRealOutputResource = fsrFiDispatchDesc.OutputInterpolatedColorBuffer;
+		else
+			ffxRealOutputResource = fsrFiDispatchDesc.InputColorBuffer;
+	}
+
+	ID3D12Resource *dlssgRealOutputResource = nullptr;
+	Parameters->GetVoidPointer("DLSSG.OutputReal", reinterpret_cast<void **>(&dlssgRealOutputResource));
+
+	if (dlssgRealOutputResource)
+	{
+		D3D12_RESOURCE_BARRIER barriers[2] = {};
+		barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barriers[0].Transition.pResource = dlssgRealOutputResource; // Destination
+		barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+
+		barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barriers[1].Transition.pResource = static_cast<ID3D12Resource *>(ffxRealOutputResource.resource); // Source
+		barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barriers[1].Transition.StateBefore = ffxGetDX12StateFromResourceState(ffxRealOutputResource.state);
+		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+
+		CommandList->ResourceBarrier(2, barriers);
+		CommandList->CopyResource(barriers[0].Transition.pResource, barriers[1].Transition.pResource);
+		std::swap(barriers[0].Transition.StateBefore, barriers[0].Transition.StateAfter);
+		std::swap(barriers[1].Transition.StateBefore, barriers[1].Transition.StateAfter);
+		CommandList->ResourceBarrier(2, barriers);
+	}
+
+	// CommandList->Close();
+	// queue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList **>(&CommandList));
+	// queue->Signal(SwapChainInUseFence, ++SwapChainInUseCounter);
+	// CommandList->Reset(allocator, nullptr);
+
+	if (!isRecordingCommands)
+	{
+		// End what we started
+		CommandList->Close();
+	}
+}
+
+bool FFFrameInterpolator::BuildDilationParameters(
+	FFDilatorDispatchParameters *OutParameters,
+	ID3D12GraphicsCommandList *CommandList,
+	NGXInstanceParameters *NGXParameters)
+{
+	auto& desc = *OutParameters;
+	desc.CommandList = ffxGetCommandListDX12(CommandList);
+
+	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &desc.InputDepth, FFX_RESOURCE_STATE_COPY_DEST))
+		return false;
+
+	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST))
+		return false;
+
+	desc.OutputDilatedDepth = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0]);
+
+	desc.OutputDilatedMotionVectors = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0]);
+
+	desc.OutputReconstructedPrevNearestDepth = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0]);
+
+	desc.RenderSize = { RenderWidth, RenderHeight };
+	desc.OutputSize = { SwapchainWidth, SwapchainHeight };
+
+	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
+	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
+
+	// clang-format off
+	const FfxDimensions2D mvecExtents =
+	{
+		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectWidth", desc.InputMotionVectors.description.width),
+		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectHeight", desc.InputMotionVectors.description.height),
+	};
+
+	desc.MotionVectorScale =
+	{
+		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleX", 0),
+		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleY", 0),
+	};
+
+	desc.MotionVectorJitterOffsets =
+	{
+		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetX", 0),
+		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetY", 0),
+	};
+
+	desc.MotionVectorJitterCancellation = NGXParameters->GetUIntOrDefault("DLSSG.MVecJittered", 0) != 0;
+	desc.MotionVectorsFullResolution = desc.OutputSize.width == mvecExtents.width && desc.OutputSize.height == mvecExtents.height;
+	// clang-format on
+
+	return true;
+}
+
+bool FFFrameInterpolator::BuildOpticalFlowParameters(
+	FfxOpticalflowDispatchDescription *OutParameters,
+	ID3D12GraphicsCommandList *CommandList,
+	NGXInstanceParameters *NGXParameters)
+{
+	auto& desc = *OutParameters;
+	desc.commandList = ffxGetCommandListDX12(CommandList);
+
+	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color, FFX_RESOURCE_STATE_COPY_DEST) &&
+		!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.color, FFX_RESOURCE_STATE_COMPUTE_READ))
+		return false;
+
+	desc.opticalFlowVector = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]);
+
+	desc.opticalFlowSCD = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]);
+
+	desc.reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
+
+	if (NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) == 0)
+		desc.backbufferTransferFunction = FFX_BACKBUFFER_TRANSFER_FUNCTION_SRGB;
+	else
+		desc.backbufferTransferFunction = FFX_BACKBUFFER_TRANSFER_FUNCTION_PQ;
+
+	desc.minMaxLuminance.x = 0.00001f; // TODO
+	desc.minMaxLuminance.y = 1000.0f;  // TODO
+
+	return true;
+}
+
+bool FFFrameInterpolator::BuildFrameInterpolationParameters(
+	FFInterpolatorDispatchParameters *OutParameters,
+	ID3D12GraphicsCommandList *CommandList,
+	NGXInstanceParameters *NGXParameters)
+{
+	auto& desc = *OutParameters;
+	desc.CommandList = ffxGetCommandListDX12(CommandList);
+
+	LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.InputHUDLessColorBuffer, FFX_RESOURCE_STATE_COPY_DEST);
+
+	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.InputColorBuffer, FFX_RESOURCE_STATE_COMPUTE_READ) &&
+		!desc.InputHUDLessColorBuffer.resource)
+		return false;
+
+	if (!LoadResourceFromNGXParameters(
+			NGXParameters,
+			"DLSSG.OutputInterpolated",
+			&desc.OutputInterpolatedColorBuffer,
+			FFX_RESOURCE_STATE_UNORDERED_ACCESS))
+		return false;
+
+	desc.InputDilatedDepth = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0]);
+
+	desc.InputDilatedMotionVectors = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0]);
+
+	desc.InputReconstructedPreviousNearDepth = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0]);
+
+	desc.InputOpticalFlowVector = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]);
+
+	desc.InputOpticalFlowSceneChangeDetection = SharedBackendInterface.fpGetResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]);
+
+	desc.RenderSize = { RenderWidth, RenderHeight };
+	desc.OutputSize = { SwapchainWidth, SwapchainHeight };
+
+	desc.OpticalFlowBufferSize = { desc.InputOpticalFlowVector.description.width, desc.InputOpticalFlowVector.description.height };
+	desc.OpticalFlowBlockSize = 8;
+	desc.OpticalFlowScale = { 1.0f / desc.OutputSize.width, 1.0f / desc.OutputSize.height };
+
+	// Games require a deg2rad fixup because...reasons
+	desc.CameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0);
+
+	if (desc.CameraFovAngleVertical > 10.0f)
+		desc.CameraFovAngleVertical *= std::numbers::pi_v<float> / 180.0f;
+
+	desc.CameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0);
+	desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0);
+	desc.ViewSpaceToMetersFactor = 0.0f; // TODO
+
+	// Generic flags...
+	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
+	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
+	desc.Reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
+
+	// HDR nits
+	desc.MinMaxLuminance = { 0.00001f, 1000.0f }; // TODO
+
+	return true;
+}
+
+bool FFFrameInterpolator::LoadResourceFromNGXParameters(
+	NGXInstanceParameters *Parameters,
+	const char *Name,
+	FfxResource *OutFfxResource,
+	FfxResourceStates State)
+{
+	// FSR blatantly ignores the FfxResource size fields. I'm not even going to try.
+	ID3D12Resource *resource = nullptr;
+	Parameters->GetVoidPointer(Name, reinterpret_cast<void **>(&resource));
+
+	if (resource)
+	{
+		*OutFfxResource = ffxGetResourceDX12(resource, FFXExt::GetResourceDescriptionDX12(resource, true), nullptr, State);
+		return true;
+	}
+
+	*OutFfxResource = {};
+	return false;
+}
+
+void FFFrameInterpolator::CreateBackend(ID3D12Device *Device)
+{
+	const auto fsrDevice = ffxGetDeviceDX12(Device);
+	const auto scratchBufferSize = ffxGetScratchMemorySizeDX12(3); // Assume 3 contexts per interface
+
+	auto& buffer1 = ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchBufferSize));
+	FFX_THROW_ON_FAIL(ffxGetInterfaceDX12(&SharedBackendInterface, fsrDevice, buffer1.get(), scratchBufferSize, 3));
+
+	auto& buffer2 = ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchBufferSize));
+	FFX_THROW_ON_FAIL(ffxGetInterfaceDX12(&FrameInterpolationBackendInterface, fsrDevice, buffer2.get(), scratchBufferSize, 3));
+
+	FFX_THROW_ON_FAIL(SharedBackendInterface.fpCreateBackendContext(&SharedBackendInterface, &SharedBackendEffectContextId));
+}
+
+void FFFrameInterpolator::DestroyBackend()
+{
+	SharedBackendInterface.fpDestroyBackendContext(&SharedBackendInterface, SharedBackendEffectContextId);
+}
+
+void FFFrameInterpolator::CreateDilationContext()
+{
+	DilationContext = std::make_unique<FFDilator>(SharedBackendInterface, SwapchainWidth, SwapchainHeight);
+	const auto resourceDescs = DilationContext->GetSharedResourceDescriptions();
+
+	FFX_THROW_ON_FAIL(SharedBackendInterface.fpCreateResource(
+		&SharedBackendInterface,
+		&resourceDescs.dilatedDepth,
+		SharedBackendEffectContextId,
+		&GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0]));
+
+	FFX_THROW_ON_FAIL(SharedBackendInterface.fpCreateResource(
+		&SharedBackendInterface,
+		&resourceDescs.dilatedMotionVectors,
+		SharedBackendEffectContextId,
+		&GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0]));
+
+	FFX_THROW_ON_FAIL(SharedBackendInterface.fpCreateResource(
+		&SharedBackendInterface,
+		&resourceDescs.reconstructedPrevNearestDepth,
+		SharedBackendEffectContextId,
+		&GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0]));
+}
+
+void FFFrameInterpolator::DestroyDilationContext()
+{
+	DilationContext.reset();
+
+	SharedBackendInterface.fpDestroyResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0],
+		SharedBackendEffectContextId);
+
+	SharedBackendInterface.fpDestroyResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0],
+		SharedBackendEffectContextId);
+
+	SharedBackendInterface.fpDestroyResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0],
+		SharedBackendEffectContextId);
+}
+
+void FFFrameInterpolator::CreateOpticalFlowContext()
+{
+	// Set up configuration for optical flow
+	FfxOpticalflowContextDescription fsrOfDescription = {};
+	fsrOfDescription.backendInterface = FrameInterpolationBackendInterface;
+	fsrOfDescription.flags = 0;
+	fsrOfDescription.resolution = { SwapchainWidth, SwapchainHeight };
+	FFX_THROW_ON_FAIL(ffxOpticalflowContextCreate(&OpticalFlowContext, &fsrOfDescription));
+
+	FfxOpticalflowSharedResourceDescriptions fsrOfSharedDescriptions = {};
+	FFX_THROW_ON_FAIL(ffxOpticalflowGetSharedResourceDescriptions(&OpticalFlowContext, &fsrOfSharedDescriptions));
+
+	FFX_THROW_ON_FAIL(SharedBackendInterface.fpCreateResource(
+		&SharedBackendInterface,
+		&fsrOfSharedDescriptions.opticalFlowVector,
+		SharedBackendEffectContextId,
+		&GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]));
+
+	FFX_THROW_ON_FAIL(SharedBackendInterface.fpCreateResource(
+		&SharedBackendInterface,
+		&fsrOfSharedDescriptions.opticalFlowSCD,
+		SharedBackendEffectContextId,
+		&GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]));
+}
+
+void FFFrameInterpolator::DestroyOpticalFlowContext()
+{
+	ffxOpticalflowContextDestroy(&OpticalFlowContext);
+
+	SharedBackendInterface.fpDestroyResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR],
+		SharedBackendEffectContextId);
+
+	SharedBackendInterface.fpDestroyResource(
+		&SharedBackendInterface,
+		GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT],
+		SharedBackendEffectContextId);
+}

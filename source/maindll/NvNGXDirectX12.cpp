@@ -1,9 +1,10 @@
 #include <shared_mutex>
 #include "nvngx.h"
-#include "FFXInterpolator.h"
+#include "FFFrameInterpolator.h"
+#include "Util.h"
 
 std::shared_mutex NGXInstanceHandleLock;
-std::unordered_map<uint32_t, std::shared_ptr<FFXInterpolator>> NGXInstanceHandles;
+std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> NGXInstanceHandles;
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	ID3D12CommandList *CommandList,
@@ -37,7 +38,11 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 		return 0xBAD00004;
 
 	// Finally initialize FSR
-	auto instance = std::make_shared<FFXInterpolator>(device, swapchainWidth, swapchainHeight, backbufferFormat);
+	auto instance = std::make_shared<FFFrameInterpolator>(
+		device,
+		swapchainWidth,
+		swapchainHeight,
+		static_cast<DXGI_FORMAT>(backbufferFormat));
 
 	NGXInstanceHandleLock.lock();
 	{
@@ -56,7 +61,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 	if (!CommandList || !InstanceHandle || !Parameters)
 		return 0xBAD00005;
 
-	std::shared_ptr<FFXInterpolator> instance;
+	std::shared_ptr<FFFrameInterpolator> instance;
 	{
 		std::shared_lock lock(NGXInstanceHandleLock);
 		auto itr = NGXInstanceHandles.find(InstanceHandle->InternalId);
