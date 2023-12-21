@@ -1,11 +1,13 @@
 #include <windows.h>
+#include <string>
+#include <array>
 
 auto CustomLibraryResolverCallback();
 
-#define DLL_PROXY_EXPORT_LISTING_FILE "ExportListing.inc"                   // List of exported functions
-#define DLL_PROXY_TLS_CALLBACK_AUTOINIT                                     // Enable automatic initialization through a thread local storage callback
-#define DLL_PROXY_DECLARE_IMPLEMENTATION                                    // Define the whole implementation
-#define DLL_PROXY_LIBRARY_RESOLVER_CALLBACK CustomLibraryResolverCallback   // Custom DLL path resolver
+constexpr auto DLL_PROXY_EXPORT_LISTING_FILE = "ExportListing.inc";                   // List of exported functions
+constexpr auto DLL_PROXY_TLS_CALLBACK_AUTOINIT = true;                                     // Enable automatic initialization through a thread local storage callback
+constexpr auto DLL_PROXY_DECLARE_IMPLEMENTATION = true;                                    // Define the whole implementation
+auto DLL_PROXY_LIBRARY_RESOLVER_CALLBACK = CustomLibraryResolverCallback;   // Custom DLL path resolver
 #include "DllProxy.h"
 
 auto CustomLibraryResolverCallback()
@@ -15,7 +17,7 @@ auto CustomLibraryResolverCallback()
 
 	if (!NVNGXModuleHandle)
 	{
-		wchar_t filePath[MAX_PATH] = {};
+		std::array<wchar_t, MAX_PATH> filePath = {};
 		DWORD filePathSize = sizeof(filePath); // Nvidia screwed this up with an ARRAYSIZE() instead
 
 		HKEY key = nullptr;
@@ -23,7 +25,7 @@ auto CustomLibraryResolverCallback()
 
 		if (status == ERROR_SUCCESS)
 		{
-			status = RegGetValueW(key, nullptr, L"NGXPath", RRF_RT_ANY, nullptr, filePath, &filePathSize);
+			status = RegGetValueW(key, nullptr, L"NGXPath", RRF_RT_ANY, nullptr, filePath.data(), &filePathSize);
 			RegCloseKey(key);
 		}
 		else
@@ -32,15 +34,16 @@ auto CustomLibraryResolverCallback()
 
 			if (status == ERROR_SUCCESS)
 			{
-				status = RegGetValueW(key, nullptr, L"FullPath", RRF_RT_ANY, nullptr, filePath, &filePathSize);
+				status = RegGetValueW(key, nullptr, L"FullPath", RRF_RT_ANY, nullptr, filePath.data(), &filePathSize);
 				RegCloseKey(key);
 			}
 		}
 
 		if (status == ERROR_SUCCESS)
 		{
-			wcscat_s(filePath, L"\\_nvngx.dll");
-			NVNGXModuleHandle = LoadLibraryW(filePath);
+			std::wstring filePathStr(filePath.data());
+			filePathStr += L"\\_nvngx.dll";
+			NVNGXModuleHandle = LoadLibraryW(filePathStr.c_str());
 		}
 
 		if (!NVNGXModuleHandle)

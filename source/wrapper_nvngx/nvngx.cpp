@@ -7,15 +7,15 @@
 // sl.common.dll      loads  _nvngx.dll       <- we are here
 // _nvngx.dll         loads  nvngx_dlssg.dll  <- intercept this stage
 //
-constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.common.dll", L"_nvngx.dll" };
-constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
+constinit const std::array<wchar_t*, 3> TargetLibrariesToHook = { L"sl.interposer.dll", L"sl.common.dll", L"_nvngx.dll" };
+constinit const std::array<wchar_t, 36> RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
 void PatchImportForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
 auto LoadImplementationDll()
 {
 	// Use the same directory as the current DLL
-	wchar_t path[2048] = {};
+	std::string path(2048, L'\0');
 	HMODULE thisModuleHandle = nullptr;
 
 	GetModuleHandleExW(
