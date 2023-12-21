@@ -40,12 +40,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		OutputDebugStringW(L"DEBUG: Built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
 		Util::InitializeLog();
 
-		const auto message = "dlssg-to-fsr3 is loaded. AMD FSR 3 Frame Generation will replace Nvidia DLSS-G Frame Generation."
-								 "\n\nPlease note this is experimental software and is subject to bugs and/or crashes. This does "
-								 "NOT represent a native implementation of AMD's FSR 3.\n\nReport issues at "
-								 "https://github.com/Nukem9/dlssg-to-fsr3";
-
-		spdlog::warn(message);
+		spdlog::warn("dlssg-to-fsr3 is loaded. AMD FSR 3 Frame Generation will replace Nvidia DLSS-G Frame Generation.");
+		spdlog::warn("Please note this is experimental software and is subject to bugs and/or crashes. This does NOT represent a native implementation of AMD's FSR 3.");
+		spdlog::warn("Report issues at https://github.com/Nukem9/dlssg-to-fsr3");
 		spdlog::warn("WARNING: DO NOT USE IN MULTIPLAYER GAMES.");
 		return TRUE;
 	}
