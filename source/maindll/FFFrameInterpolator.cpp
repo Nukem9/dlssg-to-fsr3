@@ -47,18 +47,19 @@ bool FFFrameInterpolator::AnyResourcesInUse() const
 	return SwapChainInUseFence->GetCompletedValue() < SwapChainInUseCounter;
 }
 
-void FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *Parameters)
+FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *NGXParameters)
 {
-	const bool enableInterpolation = Parameters->GetUIntOrDefault("DLSSG.EnableInterp", 0) != 0;
-	const bool isRecordingCommands = Parameters->GetUIntOrDefault("DLSSG.IsRecording", 0) != 0;
+	const bool enableInterpolation = NGXParameters->GetUIntOrDefault("DLSSG.EnableInterp", 0) != 0;
+	const bool isRecordingCommands = NGXParameters->GetUIntOrDefault("DLSSG.IsRecording", 0) != 0;
+	FfxResource ffxRealOutputResource = {};
 
 	if (!isRecordingCommands)
 	{
 		ID3D12CommandQueue *recordingQueue = nullptr;
-		Parameters->GetVoidPointer("DLSSG.CmdQueue", reinterpret_cast<void **>(&recordingQueue));
+		NGXParameters->GetVoidPointer("DLSSG.CmdQueue", reinterpret_cast<void **>(&recordingQueue));
 
 		ID3D12CommandAllocator *recordingAllocator = nullptr;
-		Parameters->GetVoidPointer("DLSSG.CmdAlloc", reinterpret_cast<void **>(&recordingAllocator));
+		NGXParameters->GetVoidPointer("DLSSG.CmdAlloc", reinterpret_cast<void **>(&recordingAllocator));
 
 		static bool once = [&]()
 		{
@@ -75,32 +76,45 @@ void FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandList, NGXIn
 		CommandList->Reset(recordingAllocator, nullptr);
 	}
 
-	FfxResource ffxRealOutputResource = {};
-
-	if (enableInterpolation)
+	const auto dispatchStatus = [&]() -> FfxErrorCode
 	{
+		if (!enableInterpolation)
+			return FFX_OK;
+
 		// As far as I know there aren't any direct ways to fetch the current gbuffer dimensions from NGX. I guess
-		// pulling it from the depth buffer is enough.
+		// pulling it from depth buffer extents is enough.
 		{
 			ID3D12Resource *depthResource = nullptr;
-			Parameters->GetVoidPointer("DLSSG.Depth", reinterpret_cast<void **>(&depthResource));
-			auto desc = depthResource->GetDesc();
+			NGXParameters->GetVoidPointer("DLSSG.Depth", reinterpret_cast<void **>(&depthResource));
 
-			RenderWidth = Parameters->GetUIntOrDefault("DLSSG.DepthSubrectWidth", static_cast<uint32_t>(desc.Width));
-			RenderHeight = Parameters->GetUIntOrDefault("DLSSG.DepthSubrectHeight", desc.Height);
+			const auto desc = depthResource->GetDesc();
+			RenderWidth = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectWidth", static_cast<uint32_t>(desc.Width));
+			RenderHeight = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectHeight", desc.Height);
 		}
+
+		if (RenderWidth <= 32 || RenderHeight <= 32)
+			return FFX_ERROR_INVALID_ARGUMENT;
 
 		// Depth, MV dilation, and previous depth reconstruction
 		FFDilatorDispatchParameters fsrDilationDesc = {};
-		BuildDilationParameters(&fsrDilationDesc, CommandList, Parameters);
+		if (!BuildDilationParameters(&fsrDilationDesc, CommandList, NGXParameters))
+			return FFX_ERROR_INVALID_ARGUMENT;
 
 		// Optical flow
 		FfxOpticalflowDispatchDescription fsrOfDispatchDesc = {};
-		BuildOpticalFlowParameters(&fsrOfDispatchDesc, CommandList, Parameters);
+		if (!BuildOpticalFlowParameters(&fsrOfDispatchDesc, CommandList, NGXParameters))
+			return FFX_ERROR_INVALID_ARGUMENT;
 
 		// Frame interpolation
 		FFInterpolatorDispatchParameters fsrFiDispatchDesc = {};
-		BuildFrameInterpolationParameters(&fsrFiDispatchDesc, CommandList, Parameters);
+		if (!BuildFrameInterpolationParameters(&fsrFiDispatchDesc, CommandList, NGXParameters))
+			return FFX_ERROR_INVALID_ARGUMENT;
+
+		const static bool doDebugOverlay = Util::GetSetting(L"Debug", L"EnableDebugOverlay", false);
+		const static bool doDebugTearLines = Util::GetSetting(L"Debug", L"EnableDebugTearLines", false);
+
+		fsrFiDispatchDesc.DebugView = doDebugOverlay;
+		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
 
 #if 0
 		auto setObjectDebugName = [](ID3D12Object *Object, const char *Name)
@@ -122,63 +136,62 @@ void FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandList, NGXIn
 		//setObjectDebugName(outputRealResource, "DLSSG.OutputReal");
 #endif
 
-		const static bool doDebugOverlay = Util::GetSetting(L"Debug", L"EnableDebugOverlay", false);
-		const static bool doDebugTearLines = Util::GetSetting(L"Debug", L"EnableDebugTearLines", false);
+		auto status = DilationContext->Dispatch(fsrDilationDesc);
+		FFX_RETURN_ON_FAIL(status);
 
-		fsrFiDispatchDesc.DebugView = doDebugOverlay;
-		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
+		status = ffxOpticalflowContextDispatch(&OpticalFlowContext, &fsrOfDispatchDesc);
+		FFX_RETURN_ON_FAIL(status);
 
-		uint32_t status = FFX_OK;
-		status |= DilationContext->Dispatch(fsrDilationDesc);
-		FFX_THROW_ON_FAIL(status);
-		status |= ffxOpticalflowContextDispatch(&OpticalFlowContext, &fsrOfDispatchDesc);
-		FFX_THROW_ON_FAIL(status);
-		status |= FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
-		FFX_THROW_ON_FAIL(status);
+		status = FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
+		FFX_RETURN_ON_FAIL(status);
 
 		if (fsrFiDispatchDesc.DebugView)
 			ffxRealOutputResource = fsrFiDispatchDesc.OutputInterpolatedColorBuffer;
 		else
 			ffxRealOutputResource = fsrFiDispatchDesc.InputColorBuffer;
-	}
 
-	ID3D12Resource *dlssgRealOutputResource = nullptr;
-	Parameters->GetVoidPointer("DLSSG.OutputReal", reinterpret_cast<void **>(&dlssgRealOutputResource));
+		return FFX_OK;
+	}();
 
-	if (dlssgRealOutputResource)
+	// Command list state has to be restored before we can return an error code. Don't bother
+	// adding copy commands when dispatch fails.
+	if (dispatchStatus == FFX_OK)
 	{
-		D3D12_RESOURCE_BARRIER barriers[2] = {};
-		barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barriers[0].Transition.pResource = dlssgRealOutputResource; // Destination
-		barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+		ID3D12Resource *dlssgRealOutputResource = nullptr;
+		NGXParameters->GetVoidPointer("DLSSG.OutputReal", reinterpret_cast<void **>(&dlssgRealOutputResource));
 
-		barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barriers[1].Transition.pResource = static_cast<ID3D12Resource *>(ffxRealOutputResource.resource); // Source
-		barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barriers[1].Transition.StateBefore = ffxGetDX12StateFromResourceState(ffxRealOutputResource.state);
-		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+		if (dlssgRealOutputResource)
+		{
+			D3D12_RESOURCE_BARRIER barriers[2] = {};
+			barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			barriers[0].Transition.pResource = dlssgRealOutputResource; // Destination
+			barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
 
-		CommandList->ResourceBarrier(2, barriers);
-		CommandList->CopyResource(barriers[0].Transition.pResource, barriers[1].Transition.pResource);
-		std::swap(barriers[0].Transition.StateBefore, barriers[0].Transition.StateAfter);
-		std::swap(barriers[1].Transition.StateBefore, barriers[1].Transition.StateAfter);
-		CommandList->ResourceBarrier(2, barriers);
+			barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			barriers[1].Transition.pResource = static_cast<ID3D12Resource *>(ffxRealOutputResource.resource); // Source
+			barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			barriers[1].Transition.StateBefore = ffxGetDX12StateFromResourceState(ffxRealOutputResource.state);
+			barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+
+			CommandList->ResourceBarrier(2, barriers);
+			CommandList->CopyResource(barriers[0].Transition.pResource, barriers[1].Transition.pResource);
+			std::swap(barriers[0].Transition.StateBefore, barriers[0].Transition.StateAfter);
+			std::swap(barriers[1].Transition.StateBefore, barriers[1].Transition.StateAfter);
+			CommandList->ResourceBarrier(2, barriers);
+		}
 	}
-
-	// CommandList->Close();
-	// queue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList **>(&CommandList));
-	// queue->Signal(SwapChainInUseFence, ++SwapChainInUseCounter);
-	// CommandList->Reset(allocator, nullptr);
 
 	if (!isRecordingCommands)
 	{
-		// End what we started
+		// Finish what we started
 		CommandList->Close();
 	}
+
+	return dispatchStatus;
 }
 
 bool FFFrameInterpolator::BuildDilationParameters(
@@ -342,14 +355,14 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 }
 
 bool FFFrameInterpolator::LoadResourceFromNGXParameters(
-	NGXInstanceParameters *Parameters,
+	NGXInstanceParameters *NGXParameters,
 	const char *Name,
 	FfxResource *OutFfxResource,
 	FfxResourceStates State)
 {
 	// FSR blatantly ignores the FfxResource size fields. I'm not even going to try.
 	ID3D12Resource *resource = nullptr;
-	Parameters->GetVoidPointer(Name, reinterpret_cast<void **>(&resource));
+	NGXParameters->GetVoidPointer(Name, reinterpret_cast<void **>(&resource));
 
 	if (resource)
 	{

@@ -40,7 +40,7 @@ public:
 	bool AnyResourcesInUse() const;
 
 public:
-	void Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *Parameters);
+	FfxErrorCode Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *NGXParameters);
 
 private:
 	bool BuildDilationParameters(
@@ -59,7 +59,7 @@ private:
 		NGXInstanceParameters *NGXParameters);
 
 	static bool LoadResourceFromNGXParameters(
-		NGXInstanceParameters *Parameters,
+		NGXInstanceParameters *NGXParameters,
 		const char *Name,
 		FfxResource *OutFfxResource,
 		FfxResourceStates State);
