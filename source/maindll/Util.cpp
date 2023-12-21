@@ -1,3 +1,4 @@
+#include <spdlog/sinks/basic_file_sink.h>
 #include <Windows.h>
 #include <stdio.h>
 #include "Util.h"
@@ -35,30 +36,24 @@ namespace Util
 		return finalPath;
 	}
 
-	void Log(const char *Format, ...)
+	void InitializeLog()
 	{
-		const static auto logPath = GetThisDllPath() + L"\\dlssg_to_fsr3.log";
-		static FILE *f = nullptr;
-
-		if (!f)
+		static bool once = []()
 		{
-			f = _wfsopen(logPath.c_str(), L"w", _SH_DENYWR);
+			const auto fullPath = GetThisDllPath() + L"\\dlssg_to_fsr3.log";
+			char convertedPath[2048] = {};
 
-			if (f)
-				setvbuf(f, NULL, _IONBF, 0);
-		}
+			if (wcstombs_s(nullptr, convertedPath, fullPath.c_str(), std::size(convertedPath)) == 0)
+			{
+				auto logger = spdlog::basic_logger_mt("file_logger", convertedPath, true);
+				logger->set_level(spdlog::level::level_enum::trace);
+				logger->set_pattern("[%H:%M:%S] [%l] %v"); // [HH:MM:SS] [Level] Message
+				logger->flush_on(logger->level());
+				spdlog::set_default_logger(std::move(logger));
+			}
 
-		if (f)
-		{
-			va_list args;
-			char buffer[2048];
-
-			va_start(args, Format);
-			const auto len = _vsnprintf_s(buffer, _TRUNCATE, Format, args);
-			va_end(args);
-
-			fwrite(buffer, 1, len, f);
-		}
+			return true;
+		}();
 	}
 
 	bool GetSetting(const wchar_t *Category, const wchar_t *Key, bool Default)

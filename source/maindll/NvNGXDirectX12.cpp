@@ -12,6 +12,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	NGXInstanceParameters *Parameters,
 	NGXHandle **OutInstanceHandle)
 {
+	spdlog::info(__FUNCTION__);
+
 	if (!CommandList || !Parameters || !OutInstanceHandle)
 		return 0xBAD00005;
 
@@ -53,6 +55,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	}
 	NGXInstanceHandleLock.unlock();
 
+	spdlog::info("NVSDK_NGX_D3D12_CreateFeature succeeded.");
 	return NGX_SUCCESS;
 }
 
@@ -72,8 +75,27 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 		instance = itr->second;
 	}
 
-	instance->Dispatch(CommandList, Parameters);
-	return NGX_SUCCESS;
+	const auto status = instance->Dispatch(CommandList, Parameters);
+
+	if (status != FFX_OK)
+	{
+		static bool once = [&]()
+		{
+			spdlog::error("Evaluation call failed with status {:X}.", status);
+			return true;
+		}();
+	}
+
+	switch (status)
+	{
+	case FFX_OK:
+		return NGX_SUCCESS;
+
+	case FFX_ERROR_INVALID_ARGUMENT:
+		return 0xBAD00004;
+	}
+
+	return 0xBAD00005;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adapter, void *FeatureDiscoveryInfo, NGXFeatureRequirementInfo *RequirementInfo)
@@ -101,6 +123,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(void *Unknown1, void
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path, ID3D12Device *D3DDevice, uint32_t Unknown3)
 {
+	spdlog::info(__FUNCTION__);
+
 	if (!D3DDevice)
 		return 0xBAD00005;
 
@@ -109,6 +133,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path,
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *, const wchar_t *Path, void *, uint32_t Unknown4, NGXInstanceParameters *Parameters)
 {
+	spdlog::info(__FUNCTION__);
+
 	// Seems to create the base instance but does nothing with the parameters other than
 	// setting up logging
 	return NGX_SUCCESS;
@@ -147,6 +173,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateParameters_Impl(NGXInstanceParame
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 {
+	spdlog::info(__FUNCTION__);
+
 	if (!InstanceHandle)
 		return 0xBAD00005;
 
@@ -168,11 +196,14 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Shutdown()
 {
+	spdlog::info(__FUNCTION__);
 	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Shutdown1(ID3D12Device *D3DDevice)
 {
+	spdlog::info(__FUNCTION__);
+
 	if (!D3DDevice)
 		return 0xBAD00005;
 

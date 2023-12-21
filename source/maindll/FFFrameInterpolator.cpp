@@ -53,12 +53,12 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 
 		static bool once = [&]()
 		{
-			Util::Log(
-				"Command list wasn't recording. Resetting state: %d %p %p %p\n",
+			spdlog::warn(
+				"Command list wasn't recording. Resetting state: {} 0x{:X} 0x{:X} 0x{:X}",
 				enableInterpolation,
-				CommandList,
-				recordingQueue,
-				recordingAllocator);
+				reinterpret_cast<uintptr_t>(CommandList),
+				reinterpret_cast<uintptr_t>(recordingQueue),
+				reinterpret_cast<uintptr_t>(recordingAllocator));
 
 			return false;
 		}();
