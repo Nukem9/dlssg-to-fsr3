@@ -1,3 +1,7 @@
+#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
+#include <FidelityFX/host/ffx_frameinterpolation.h>
+#include <FidelityFX/components/frameinterpolation/ffx_frameinterpolation_private.h>
+#include "FFExt.h"
 #include "FFInterpolator.h"
 
 FFInterpolator::FFInterpolator(const FfxInterface& BackendInterface, uint32_t MaxRenderWidth, uint32_t MaxRenderHeight)
@@ -9,17 +13,17 @@ FFInterpolator::FFInterpolator(const FfxInterface& BackendInterface, uint32_t Ma
 
 FFInterpolator::~FFInterpolator()
 {
-	if (m_ResourceCreationHackActive)
+	if (m_BackupBackBufferCreated)
 	{
 		const uint32_t resourceId = FFX_FRAMEINTERPOLATION_RESOURCE_IDENTIFIER_PREVIOUS_INTERPOLATION_SOURCE;
 		auto context = reinterpret_cast<FfxFrameInterpolationContext_Private *>(&m_Context);
 
-		context->srvResources[resourceId] = m_OriginalPreviousInterpolationSource;
-		context->uavResources[resourceId] = m_OriginalPreviousInterpolationSource;
+		context->srvResources[resourceId] = m_InitialPreviousInterpolationSource;
+		context->uavResources[resourceId] = m_InitialPreviousInterpolationSource;
 
 		context->contextDescription.backendInterface.fpDestroyResource(
 			&context->contextDescription.backendInterface,
-			m_HackPreviousInterpolationSource,
+			m_BackupPreviousInterpolationSource,
 			context->effectContextId);
 	}
 
@@ -109,45 +113,67 @@ FfxErrorCode FFInterpolator::InternalDeferredSetupContext(const FFInterpolatorDi
 	auto& currentInputColor = Parameters.InputHUDLessColorBuffer.resource ? Parameters.InputHUDLessColorBuffer
 																		  : Parameters.InputColorBuffer;
 
-	if (currentInputColor.description.format != m_InitialBackBufferFormat)
-		FFX_RETURN_ON_FAIL(InternalSwapResources(currentInputColor.description.format));
-
-	return FFX_OK;
+	return InternalSwapResources(currentInputColor.description.format);
 }
 
 FfxErrorCode FFInterpolator::InternalSwapResources(FfxSurfaceFormat NewFormat)
 {
-	if (m_ResourceCreationHackActive)
-		return FFX_OK;
-
 	const uint32_t resourceId = FFX_FRAMEINTERPOLATION_RESOURCE_IDENTIFIER_PREVIOUS_INTERPOLATION_SOURCE;
 	auto context = reinterpret_cast<FfxFrameInterpolationContext_Private *>(&m_Context);
 
-	// Create an exact texture copy but with the new format
-	auto newCopyDescription = context->contextDescription.backendInterface.fpGetResourceDescription(
-		&context->contextDescription.backendInterface,
-		context->srvResources[resourceId]);
+	// if (use original allocation)
+	if (NewFormat == m_InitialBackBufferFormat)
+	{
+		if (m_BackupBackBufferCreated)
+		{
+			context->srvResources[resourceId] = m_InitialPreviousInterpolationSource;
+			context->uavResources[resourceId] = m_InitialPreviousInterpolationSource;
+		}
 
-	newCopyDescription.format = NewFormat;
+		return FFX_OK;
+	}
 
-	const FfxCreateResourceDescription createResourceDescription = { FFX_HEAP_TYPE_DEFAULT,
-																	 newCopyDescription,
-																	 FFX_RESOURCE_STATE_UNORDERED_ACCESS,
-																	 0,
-																	 nullptr,
-																	 L"FI_PreviousInterpolationSourceHACK",
-																	 resourceId };
+	// if (new allocation required)
+	if (NewFormat == m_BackupBackBufferFormat || !m_BackupBackBufferCreated)
+	{
+		// Create an exact texture copy but with the new format
+		if (!m_BackupBackBufferCreated)
+		{
+			auto newCopyDescription = context->contextDescription.backendInterface.fpGetResourceDescription(
+				&context->contextDescription.backendInterface,
+				context->srvResources[resourceId]);
 
-	FFX_RETURN_ON_FAIL(context->contextDescription.backendInterface.fpCreateResource(
-		&context->contextDescription.backendInterface,
-		&createResourceDescription,
-		context->effectContextId,
-		&m_HackPreviousInterpolationSource));
+			m_BackupBackBufferFormat = NewFormat;
+			newCopyDescription.format = m_BackupBackBufferFormat;
 
-	m_OriginalPreviousInterpolationSource = context->srvResources[resourceId];
-	context->srvResources[resourceId] = m_HackPreviousInterpolationSource;
-	context->uavResources[resourceId] = m_HackPreviousInterpolationSource;
+			// clang-format off
+			const FfxCreateResourceDescription createResourceDescription =
+			{
+				FFX_HEAP_TYPE_DEFAULT,
+				newCopyDescription,
+				FFX_RESOURCE_STATE_UNORDERED_ACCESS,
+				0,
+				nullptr,
+				L"FI_PreviousInterpolationSourceHACK",
+				resourceId
+			};
+			// clang-format on
 
-	m_ResourceCreationHackActive = true;
-	return FFX_OK;
+			FFX_RETURN_ON_FAIL(context->contextDescription.backendInterface.fpCreateResource(
+				&context->contextDescription.backendInterface,
+				&createResourceDescription,
+				context->effectContextId,
+				&m_BackupPreviousInterpolationSource));
+
+			m_InitialPreviousInterpolationSource = context->srvResources[resourceId];
+			m_BackupBackBufferCreated = true;
+		}
+
+		context->srvResources[resourceId] = m_BackupPreviousInterpolationSource;
+		context->uavResources[resourceId] = m_BackupPreviousInterpolationSource;
+
+		return FFX_OK;
+	}
+
+	return FFX_ERROR_INVALID_ARGUMENT;
 }

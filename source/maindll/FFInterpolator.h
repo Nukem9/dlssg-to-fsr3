@@ -1,9 +1,6 @@
 #pragma once
 
 #include <FidelityFX/host/ffx_frameinterpolation.h>
-#include <FidelityFX/components/frameinterpolation/ffx_frameinterpolation_private.h>
-#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
-#include "FFExt.h"
 
 struct FFInterpolatorDispatchParameters
 {
@@ -45,7 +42,6 @@ private:
 	const uint32_t m_MaxRenderWidth;
 	const uint32_t m_MaxRenderHeight;
 
-	FfxSurfaceFormat m_InitialBackBufferFormat = {};
 
 	FfxInterface m_BackendInterface = {};
 	uint32_t m_EffectContextId = 0;
@@ -53,9 +49,13 @@ private:
 	FfxFrameInterpolationContext m_Context = {};
 	bool m_ContextCreated = false;
 
-	FfxResourceInternal m_HackPreviousInterpolationSource = {};
-	FfxResourceInternal m_OriginalPreviousInterpolationSource = {};
-	bool m_ResourceCreationHackActive = false;
+	FfxSurfaceFormat m_InitialBackBufferFormat = {};
+	FfxResourceInternal m_InitialPreviousInterpolationSource = {};
+
+	FfxSurfaceFormat m_BackupBackBufferFormat = {};
+	FfxResourceInternal m_BackupPreviousInterpolationSource = {};
+
+	bool m_BackupBackBufferCreated = false;
 
 public:
 	FFInterpolator(const FfxInterface& BackendInterface, uint32_t MaxRenderWidth, uint32_t MaxRenderHeight);
