@@ -22,9 +22,6 @@ FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWi
 	: SwapchainWidth(OutputWidth),
 	  SwapchainHeight(OutputHeight)
 {
-	if (FAILED(Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&SwapChainInUseFence))))
-		throw std::runtime_error("Failed to create swap chain in-use fence");
-
 	CreateBackend(Device);
 	CreateDilationContext();
 	CreateOpticalFlowContext();
@@ -34,17 +31,10 @@ FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWi
 
 FFFrameInterpolator::~FFFrameInterpolator()
 {
-	SwapChainInUseFence->Release();
-
 	FrameInterpolatorContext.reset();
 	DestroyOpticalFlowContext();
 	DestroyDilationContext();
 	DestroyBackend();
-}
-
-bool FFFrameInterpolator::AnyResourcesInUse() const
-{
-	return SwapChainInUseFence->GetCompletedValue() < SwapChainInUseCounter;
 }
 
 FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *NGXParameters)

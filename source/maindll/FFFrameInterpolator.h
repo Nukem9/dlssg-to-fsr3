@@ -17,9 +17,6 @@ private:
 	uint32_t RenderWidth = 0; // GBuffer dimensions
 	uint32_t RenderHeight = 0;
 
-	ID3D12Fence *SwapChainInUseFence = nullptr;
-	uint64_t SwapChainInUseCounter = 0;
-
 	FfxInterface FrameInterpolationBackendInterface = {};
 	FfxInterface SharedBackendInterface = {};
 	FfxUInt32 SharedBackendEffectContextId = 0;
@@ -36,8 +33,6 @@ public:
 	FFFrameInterpolator(const FFFrameInterpolator&) = delete;
 	FFFrameInterpolator& operator=(const FFFrameInterpolator&) = delete;
 	~FFFrameInterpolator();
-
-	bool AnyResourcesInUse() const;
 
 public:
 	FfxErrorCode Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *NGXParameters);

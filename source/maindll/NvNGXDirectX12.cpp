@@ -162,9 +162,6 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 	if (node.empty())
 		return 0xBAD00004;
 
-	while (node.mapped()->AnyResourcesInUse())
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
 	// Node is handled by RAII. Apparently, InstanceHandle isn't supposed to be deleted.
 	return NGX_SUCCESS;
 }
