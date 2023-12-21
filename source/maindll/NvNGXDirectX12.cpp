@@ -125,7 +125,7 @@ NGXResult EstimateVRAMCallback(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
 	if (!EstimatedSize)
 		return 0xBAD00005;
 
-	*EstimatedSize = 150 * 1024 * 1024; // Assume 150MB
+	*EstimatedSize = 300 * 1024 * 1024; // Assume 300MB
 	return NGX_SUCCESS;
 }
 
