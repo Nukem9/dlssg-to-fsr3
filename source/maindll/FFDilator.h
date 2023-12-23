@@ -104,8 +104,8 @@ public:
 private:
 	void UpdateConstantBuffers(const FFDilatorDispatchParameters& Parameters, Fsr3UpscalerConstants& Constants);
 	FfxErrorCode ScheduleComputeDispatch(const FfxPipelineState& Pipeline, uint32_t DispatchX, uint32_t DispatchY, uint32_t DispatchZ);
-	FfxPipelineState& GetPipelineStateForParameters(const FFDilatorDispatchParameters& Parameters);
-	FfxPipelineState& InternalCreatePipelineState(uint32_t PassFlags);
+	FfxErrorCode GetPipelineStateForParameters(const FFDilatorDispatchParameters& Parameters, FfxPipelineState*& PipelineState);
+	FfxErrorCode InternalCreatePipelineState(uint32_t PassFlags);
 	FfxErrorCode RemapResourceBindings(FfxPipelineState& InOutPipeline);
 
 	static uint32_t GetPipelinePermutationFlags(uint32_t ContextFlags, bool Fp16, bool Force64);

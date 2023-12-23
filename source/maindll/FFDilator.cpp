@@ -14,8 +14,8 @@ FFDilator::FFDilator(const FfxInterface& BackendInterface, uint32_t m_MaxRenderW
 	  m_MaxRenderHeight(m_MaxRenderHeight),
 	  m_BackendInterface(BackendInterface)
 {
-	// Initialize a private backend instance
-	FFX_THROW_ON_FAIL(m_BackendInterface.fpCreateBackendContext(&m_BackendInterface, &m_EffectContextId));
+	if (!FF_SUCCEEDED(m_BackendInterface.fpCreateBackendContext(&m_BackendInterface, &m_EffectContextId)))
+		throw std::runtime_error("FFDilator: Failed to create backend context");
 }
 
 FFDilator::~FFDilator()
@@ -118,7 +118,9 @@ FfxErrorCode FFDilator::Dispatch(const FFDilatorDispatchParameters& Parameters)
 	const uint32_t dispatchSrcX = (constants.renderSize[0] + (threadGroupWorkRegionDim - 1)) / threadGroupWorkRegionDim;
 	const uint32_t dispatchSrcY = (constants.renderSize[1] + (threadGroupWorkRegionDim - 1)) / threadGroupWorkRegionDim;
 
-	FFX_RETURN_ON_FAIL(ScheduleComputeDispatch(GetPipelineStateForParameters(Parameters), dispatchSrcX, dispatchSrcY, 1));
+	FfxPipelineState *pipelineState = nullptr;
+	FFX_RETURN_ON_FAIL(GetPipelineStateForParameters(Parameters, pipelineState));
+	FFX_RETURN_ON_FAIL(ScheduleComputeDispatch(*pipelineState, dispatchSrcX, dispatchSrcY, 1));
 
 	// Finally append our calls to the D3D12 command list and release 
 	FFX_RETURN_ON_FAIL(m_BackendInterface.fpExecuteGpuJobs(&m_BackendInterface, Parameters.CommandList));
@@ -204,7 +206,7 @@ FfxErrorCode FFDilator::ScheduleComputeDispatch(const FfxPipelineState& Pipeline
 	return m_BackendInterface.fpScheduleGpuJob(&m_BackendInterface, &job);
 }
 
-FfxPipelineState& FFDilator::GetPipelineStateForParameters(const FFDilatorDispatchParameters& Parameters)
+FfxErrorCode FFDilator::GetPipelineStateForParameters(const FFDilatorDispatchParameters& Parameters, FfxPipelineState*& PipelineState)
 {
 	uint32_t flags = 0;
 
@@ -221,16 +223,14 @@ FfxPipelineState& FFDilator::GetPipelineStateForParameters(const FFDilatorDispat
 		flags |= FFX_FSR3UPSCALER_ENABLE_MOTION_VECTORS_JITTER_CANCELLATION;
 
 	// Try to find an existing pipeline state
-	auto pipelineState = m_DispatchPipelineStates.find(flags);
+	if (!m_DispatchPipelineStates.contains(flags))
+		FFX_RETURN_ON_FAIL(InternalCreatePipelineState(flags));
 
-	if (pipelineState != m_DispatchPipelineStates.end())
-		return pipelineState->second;
-
-	// Otherwise create a new one
-	return InternalCreatePipelineState(flags);
+	PipelineState = &m_DispatchPipelineStates.at(flags);
+	return FFX_OK;
 }
 
-FfxPipelineState& FFDilator::InternalCreatePipelineState(uint32_t PassFlags)
+FfxErrorCode FFDilator::InternalCreatePipelineState(uint32_t PassFlags)
 {
 	FfxPipelineDescription pipelineDescription =
 	{
@@ -290,7 +290,7 @@ FfxPipelineState& FFDilator::InternalCreatePipelineState(uint32_t PassFlags)
 			supportedFP16,
 			canForceWave64);
 
-	FFX_THROW_ON_FAIL(m_BackendInterface.fpCreatePipeline(
+	FFX_RETURN_ON_FAIL(m_BackendInterface.fpCreatePipeline(
 		&m_BackendInterface,
 		FFX_EFFECT_FSR3UPSCALER,
 		FFX_FSR3UPSCALER_PASS_RECONSTRUCT_PREVIOUS_DEPTH,
@@ -299,8 +299,7 @@ FfxPipelineState& FFDilator::InternalCreatePipelineState(uint32_t PassFlags)
 		m_EffectContextId,
 		&pipelineState));
 
-	FFX_THROW_ON_FAIL(RemapResourceBindings(pipelineState));
-	return pipelineState;
+	return RemapResourceBindings(pipelineState);
 }
 
 FfxErrorCode FFDilator::RemapResourceBindings(FfxPipelineState& InOutPipeline)
