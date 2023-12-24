@@ -7,10 +7,13 @@
 #include "FFInterpolator.h"
 
 class NGXInstanceParameters;
+struct ID3D12Device;
 
 class FFFrameInterpolator
 {
 private:
+	ID3D12Device *const Device;
+
 	const uint32_t SwapchainWidth; // Final image presented to the screen
 	const uint32_t SwapchainHeight;
 

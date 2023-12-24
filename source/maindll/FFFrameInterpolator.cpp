@@ -19,12 +19,15 @@
 D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
 
 FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight, DXGI_FORMAT BackBufferFormat)
-	: SwapchainWidth(OutputWidth),
+	: Device(Device),
+	  SwapchainWidth(OutputWidth),
 	  SwapchainHeight(OutputHeight)
 {
 	CreateBackend(Device);
 	CreateDilationContext();
 	CreateOpticalFlowContext();
+	Device->AddRef();
+
 
 	FrameInterpolatorContext = std::make_unique<FFInterpolator>(FrameInterpolationBackendInterface, SwapchainWidth, SwapchainHeight);
 }
@@ -35,6 +38,8 @@ FFFrameInterpolator::~FFFrameInterpolator()
 	DestroyOpticalFlowContext();
 	DestroyDilationContext();
 	DestroyBackend();
+
+	Device->Release();
 }
 
 FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandList, NGXInstanceParameters *NGXParameters)
