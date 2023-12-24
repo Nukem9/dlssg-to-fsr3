@@ -95,6 +95,9 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 		if (RenderWidth <= 32 || RenderHeight <= 32)
 			return FFX_ERROR_INVALID_ARGUMENT;
 
+		//
+		// Parameter setup
+		//
 		// Depth, MV dilation, and previous depth reconstruction
 		FFDilatorDispatchParameters fsrDilationDesc = {};
 		if (!BuildDilationParameters(&fsrDilationDesc, CommandList, NGXParameters))
@@ -137,6 +140,9 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 		//setObjectDebugName(outputRealResource, "DLSSG.OutputReal");
 #endif
 
+		//
+		// Main pass dispatches
+		//
 		auto status = DilationContext->Dispatch(fsrDilationDesc);
 		FFX_RETURN_ON_FAIL(status);
 
@@ -368,7 +374,7 @@ bool FFFrameInterpolator::LoadResourceFromNGXParameters(
 
 	if (resource)
 	{
-		*OutFfxResource = ffxGetResourceDX12(resource, FFXExt::GetResourceDescriptionDX12(resource, true), nullptr, State);
+		*OutFfxResource = ffxGetResourceDX12(resource, GetFfxResourceDescriptionDX12(resource), nullptr, State);
 		return true;
 	}
 

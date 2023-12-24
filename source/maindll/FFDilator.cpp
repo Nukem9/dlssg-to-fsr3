@@ -194,7 +194,7 @@ FfxErrorCode FFDilator::ScheduleComputeDispatch(const FfxPipelineState& Pipeline
 		}
 
 		if (Pipeline.constCount != 1)
-			FFX_THROW_ON_FAIL(FFX_ERROR_INVALID_ARGUMENT); // Build-time issue
+			__debugbreak(); // Build-time issue
 
 		wcscpy_s(jobDescriptor.cbNames[0], Pipeline.constantBufferBindings[0].name);
 		jobDescriptor.cbs[0] = m_DispatchConstantBuffer;
