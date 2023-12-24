@@ -15,7 +15,7 @@ FFDilator::FFDilator(const FfxInterface& BackendInterface, uint32_t m_MaxRenderW
 	  m_BackendInterface(BackendInterface)
 {
 	if (!FF_SUCCEEDED(m_BackendInterface.fpCreateBackendContext(&m_BackendInterface, &m_EffectContextId)))
-		throw std::runtime_error("FFDilator: Failed to create backend context");
+		throw std::runtime_error("FFDilator: Failed to create backend context.");
 }
 
 FFDilator::~FFDilator()

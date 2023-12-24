@@ -62,10 +62,10 @@ private:
 		FfxResource *OutFfxResource,
 		FfxResourceStates State);
 
-	void CreateBackend(ID3D12Device *Device);
+	FfxErrorCode CreateBackend();
 	void DestroyBackend();
-	void CreateDilationContext();
+	FfxErrorCode CreateDilationContext();
 	void DestroyDilationContext();
-	void CreateOpticalFlowContext();
+	FfxErrorCode CreateOpticalFlowContext();
 	void DestroyOpticalFlowContext();
 };

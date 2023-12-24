@@ -19,8 +19,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 
 	// Grab NGX parameters from sl.dlss_g.dll
 	// https://forums.developer.nvidia.com/t/using-dlssg-without-idxgiswapchain-present/247260/8?u=user81906
-	// Parameters->Get5("CreationNodeMask", &temp);
-	// Parameters->Get5("VisibilityNodeMask", &temp);
+	Parameters->Set4("DLSSG.MustCallEval", 1);
 
 	uint32_t swapchainWidth = 0;
 	Parameters->Get5("Width", &swapchainWidth);
@@ -31,8 +30,6 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	uint32_t backbufferFormat = 0;
 	Parameters->Get5("DLSSG.BackbufferFormat", &backbufferFormat);
 
-	Parameters->Set4("DLSSG.MustCallEval", 1);
-
 	// Grab the device from the command list
 	ID3D12Device *device = nullptr;
 
@@ -40,22 +37,31 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 		return 0xBAD00004;
 
 	// Finally initialize FSR
-	auto instance = std::make_shared<FFFrameInterpolator>(
-		device,
-		swapchainWidth,
-		swapchainHeight,
-		static_cast<DXGI_FORMAT>(backbufferFormat));
-
-	NGXInstanceHandleLock.lock();
+	try
 	{
-		const auto id = static_cast<uint32_t>(NGXInstanceHandles.size()) + 1;
-		NGXInstanceHandles.emplace(id, std::move(instance));
+		auto instance = std::make_shared<FFFrameInterpolator>(
+			device,
+			swapchainWidth,
+			swapchainHeight,
+			static_cast<DXGI_FORMAT>(backbufferFormat));
 
-		*OutInstanceHandle = new NGXHandle { id, 11 };
+		device->Release(); // TODO: RAII
+
+		std::scoped_lock lock(NGXInstanceHandleLock);
+		{
+			const auto id = static_cast<uint32_t>(NGXInstanceHandles.size()) + 1;
+			NGXInstanceHandles.emplace(id, std::move(instance));
+
+			*OutInstanceHandle = new NGXHandle { id, 11 };
+		}
 	}
-	NGXInstanceHandleLock.unlock();
+	catch (const std::exception &e)
+	{
+		spdlog::error("NVSDK_NGX_D3D12_CreateFeature: Failed to initialize: {}", e.what());
+		return 0xBAD00004;
+	}
 
-	spdlog::info("NVSDK_NGX_D3D12_CreateFeature succeeded.");
+	spdlog::info("NVSDK_NGX_D3D12_CreateFeature: Succeeded.");
 	return NGX_SUCCESS;
 }
 
@@ -156,7 +162,9 @@ NGXResult EstimateVRAMCallback(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
 	if (!EstimatedSize)
 		return 0xBAD00005;
 
-	*EstimatedSize = 300 * 1024 * 1024; // Assume 300MB
+	// Assume 300MB
+	*EstimatedSize = 300 * 1024 * 1024;
+
 	return NGX_SUCCESS;
 }
 
@@ -180,11 +188,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 
 	const auto node = [&]()
 	{
-		NGXInstanceHandleLock.lock();
-		auto node = NGXInstanceHandles.extract(InstanceHandle->InternalId);
-		NGXInstanceHandleLock.unlock();
-
-		return node;
+		std::scoped_lock lock(NGXInstanceHandleLock);
+		return NGXInstanceHandles.extract(InstanceHandle->InternalId);
 	}();
 
 	if (node.empty())
