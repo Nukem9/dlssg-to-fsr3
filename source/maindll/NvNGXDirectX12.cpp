@@ -42,7 +42,9 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 
 		std::scoped_lock lock(NGXInstanceHandleLock);
 		{
-			const auto id = static_cast<uint32_t>(NGXInstanceHandles.size()) + 1;
+			constinit static uint32_t nextHandleId = 1;
+
+			const auto id = nextHandleId++;
 			NGXInstanceHandles.emplace(id, std::move(instance));
 
 			*OutInstanceHandle = new NGXHandle { id, 11 };
