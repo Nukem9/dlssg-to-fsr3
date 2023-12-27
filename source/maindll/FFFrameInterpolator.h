@@ -32,7 +32,7 @@ private:
 	std::vector<std::unique_ptr<uint8_t[]>> ScratchMemoryBuffers;
 
 public:
-	FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight, DXGI_FORMAT BackBufferFormat);
+	FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight);
 	FFFrameInterpolator(const FFFrameInterpolator&) = delete;
 	FFFrameInterpolator& operator=(const FFFrameInterpolator&) = delete;
 	~FFFrameInterpolator();

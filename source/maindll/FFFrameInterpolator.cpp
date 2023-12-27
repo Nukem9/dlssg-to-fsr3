@@ -18,7 +18,7 @@
 
 D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
 
-FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight, DXGI_FORMAT BackBufferFormat)
+FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight)
 	: Device(Device),
 	  SwapchainWidth(OutputWidth),
 	  SwapchainHeight(OutputHeight)
@@ -79,7 +79,10 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 	const auto dispatchStatus = [&]() -> FfxErrorCode
 	{
 		if (!enableInterpolation)
+		{
+			LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &ffxRealOutputResource, FFX_RESOURCE_STATE_COMPUTE_READ);
 			return FFX_OK;
+		}
 
 		// As far as I know there aren't any direct ways to fetch the current gbuffer dimensions from NGX. I guess
 		// pulling it from depth buffer extents is enough.
@@ -167,7 +170,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(ID3D12GraphicsCommandList *CommandLis
 		ID3D12Resource *dlssgRealOutputResource = nullptr;
 		NGXParameters->GetVoidPointer("DLSSG.OutputReal", reinterpret_cast<void **>(&dlssgRealOutputResource));
 
-		if (dlssgRealOutputResource)
+		if (dlssgRealOutputResource && ffxRealOutputResource.resource)
 		{
 			D3D12_RESOURCE_BARRIER barriers[2] = {};
 			barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
