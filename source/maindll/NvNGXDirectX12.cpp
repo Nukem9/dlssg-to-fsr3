@@ -1,7 +1,6 @@
 #include <shared_mutex>
 #include "nvngx.h"
 #include "FFFrameInterpolator.h"
-#include "Util.h"
 
 std::shared_mutex NGXInstanceHandleLock;
 std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> NGXInstanceHandles;
@@ -15,7 +14,13 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	spdlog::info(__FUNCTION__);
 
 	if (!CommandList || !Parameters || !OutInstanceHandle)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
+
+	// Grab the device from the command list
+	ID3D12Device *device = nullptr;
+
+	if (FAILED(CommandList->GetDevice(IID_PPV_ARGS(&device))))
+		return 0xBAD00002;
 
 	// Grab NGX parameters from sl.dlss_g.dll
 	// https://forums.developer.nvidia.com/t/using-dlssg-without-idxgiswapchain-present/247260/8?u=user81906
@@ -27,25 +32,13 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	uint32_t swapchainHeight = 0;
 	Parameters->Get5("Height", &swapchainHeight);
 
-	uint32_t backbufferFormat = 0;
-	Parameters->Get5("DLSSG.BackbufferFormat", &backbufferFormat);
-
-	// Grab the device from the command list
-	ID3D12Device *device = nullptr;
-
-	if (FAILED(CommandList->GetDevice(IID_PPV_ARGS(&device))))
-		return 0xBAD00004;
-
-	// Finally initialize FSR
+	// Then initialize FSR
 	try
 	{
 		auto instance = std::make_shared<FFFrameInterpolator>(
 			device,
 			swapchainWidth,
-			swapchainHeight,
-			static_cast<DXGI_FORMAT>(backbufferFormat));
-
-		device->Release(); // TODO: RAII
+			swapchainHeight);
 
 		std::scoped_lock lock(NGXInstanceHandleLock);
 		{
@@ -58,17 +51,21 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	catch (const std::exception &e)
 	{
 		spdlog::error("NVSDK_NGX_D3D12_CreateFeature: Failed to initialize: {}", e.what());
-		return 0xBAD00004;
+		device->Release();
+
+		return NGX_FEATURE_NOT_FOUND;
 	}
 
 	spdlog::info("NVSDK_NGX_D3D12_CreateFeature: Succeeded.");
+	device->Release();
+
 	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList *CommandList, NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
 {
 	if (!CommandList || !InstanceHandle || !Parameters)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	std::shared_ptr<FFFrameInterpolator> instance;
 	{
@@ -76,21 +73,12 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 		auto itr = NGXInstanceHandles.find(InstanceHandle->InternalId);
 
 		if (itr == NGXInstanceHandles.end())
-			return 0xBAD00004;
+			return NGX_FEATURE_NOT_FOUND;
 
 		instance = itr->second;
 	}
 
 	const auto status = instance->Dispatch(CommandList, Parameters);
-
-	if (status != FFX_OK)
-	{
-		static bool once = [&]()
-		{
-			spdlog::error("Evaluation call failed with status {:X}.", status);
-			return true;
-		}();
-	}
 
 	switch (status)
 	{
@@ -98,16 +86,23 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 		return NGX_SUCCESS;
 
 	case FFX_ERROR_INVALID_ARGUMENT:
-		return 0xBAD00005;
-	}
+	default:
+	{
+		static bool once = [&]()
+		{
+			spdlog::error("Evaluation call failed with status {:X}.", status);
+			return true;
+		}();
 
-	return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
+	}
+	}
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adapter, void *FeatureDiscoveryInfo, NGXFeatureRequirementInfo *RequirementInfo)
 {
 	if (!FeatureDiscoveryInfo || !RequirementInfo)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	RequirementInfo->Flags = 0;
 	RequirementInfo->RequiredGPUArchitecture = NGXHardcodedArchitecture;
@@ -118,13 +113,11 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetFeatureRequirements(IDXGIAdapter *Adap
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(void *Unknown1, void *Unknown2, uint64_t *OutBufferSize)
 {
-	if (OutBufferSize)
-	{
-		*OutBufferSize = 0;
-		return NGX_SUCCESS;
-	}
+	if (!OutBufferSize)
+		return NGX_INVALID_PARAMETER;
 
-	return 0xBAD00005;
+	*OutBufferSize = 0;
+	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path, ID3D12Device *D3DDevice, uint32_t Unknown3)
@@ -132,7 +125,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path,
 	spdlog::info(__FUNCTION__);
 
 	if (!D3DDevice)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	return NGX_SUCCESS;
 }
@@ -149,7 +142,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *, const wchar_t *Path, voi
 NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
 {
 	if (!InstanceHandle || !Parameters)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	Parameters->Set4("DLSSG.MustCallEval", 1);
 	Parameters->Set4("DLSSG.BurstCaptureRunning", 0);
@@ -159,19 +152,19 @@ NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParam
 
 NGXResult EstimateVRAMCallback(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, size_t *EstimatedSize)
 {
-	if (!EstimatedSize)
-		return 0xBAD00005;
-
 	// Assume 300MB
-	*EstimatedSize = 300 * 1024 * 1024;
+	if (EstimatedSize)
+		*EstimatedSize = 300 * 1024 * 1024;
 
 	return NGX_SUCCESS;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateParameters_Impl(NGXInstanceParameters *Parameters)
 {
+	spdlog::info(__FUNCTION__);
+
 	if (!Parameters)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	Parameters->SetVoidPointer("DLSSG.GetCurrentSettingsCallback", &GetCurrentSettingsCallback);
 	Parameters->SetVoidPointer("DLSSG.EstimateVRAMCallback", &EstimateVRAMCallback);
@@ -184,7 +177,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 	spdlog::info(__FUNCTION__);
 
 	if (!InstanceHandle)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	const auto node = [&]()
 	{
@@ -193,7 +186,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 	}();
 
 	if (node.empty())
-		return 0xBAD00004;
+		return NGX_FEATURE_NOT_FOUND;
 
 	// Node is handled by RAII. Apparently, InstanceHandle isn't supposed to be deleted.
 	return NGX_SUCCESS;
@@ -210,7 +203,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Shutdown1(ID3D12Device *D3DDevice)
 	spdlog::info(__FUNCTION__);
 
 	if (!D3DDevice)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	return NGX_SUCCESS;
 }

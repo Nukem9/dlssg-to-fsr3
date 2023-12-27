@@ -2,10 +2,10 @@
 
 #define NGXDLLEXPORT extern "C" __declspec(dllexport)
 
-struct ID3D12Resource;
-
 using NGXResult = uint32_t;
-constexpr NGXResult NGX_SUCCESS = 1;
+constexpr NGXResult NGX_SUCCESS = 0x1;
+constexpr NGXResult NGX_FEATURE_NOT_FOUND = 0xBAD00004;
+constexpr NGXResult NGX_INVALID_PARAMETER = 0xBAD00005;
 
 constexpr uint32_t NGXHardcodedArchitecture = 0xC0;
 
@@ -31,7 +31,7 @@ public:
 	virtual void Set4(const char *Name, uint32_t Value) = 0;			  // 18
 	virtual void Set5(const char *Name, uint32_t Value) = 0;			  // 20
 	virtual void Set6(const char *Name, void *Unknown) = 0;				  // 28
-	virtual void Set7(const char *Name, ID3D12Resource *Value) = 0;		  // 30
+	virtual void Set7(const char *Name, struct ID3D12Resource *Value) = 0;// 30
 	virtual void Set8(const char *Name, void *Value) = 0;				  // 38
 	virtual NGXResult GetVoidPointer(const char *Name, void **Value) = 0; // 40
 	virtual NGXResult Get2(const char *Name, float *Value) = 0;			  // 48

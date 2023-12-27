@@ -18,7 +18,7 @@ NGXDLLEXPORT uint32_t NVSDK_NGX_GetDriverVersion()
 NGXDLLEXPORT NGXResult NVSDK_NGX_GetDriverVersionEx(uint32_t *Versions, uint32_t InputVersionCount, uint32_t *TotalDriverVersionCount)
 {
 	if (!Versions && !TotalDriverVersionCount)
-		return 0xBAD00005;
+		return NGX_INVALID_PARAMETER;
 
 	if (TotalDriverVersionCount)
 		*TotalDriverVersionCount = 2;
