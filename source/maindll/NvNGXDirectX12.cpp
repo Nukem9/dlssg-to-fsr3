@@ -141,7 +141,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *, const wchar_t *Path, voi
 	return NGX_SUCCESS;
 }
 
-NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
+static NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
 {
 	if (!InstanceHandle || !Parameters)
 		return NGX_INVALID_PARAMETER;
@@ -152,7 +152,17 @@ NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParam
 	return NGX_SUCCESS;
 }
 
-NGXResult EstimateVRAMCallback(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, size_t *EstimatedSize)
+static NGXResult EstimateVRAMCallback(
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	size_t *EstimatedSize)
 {
 	// Assume 300MB
 	if (EstimatedSize)
