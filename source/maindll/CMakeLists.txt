@@ -45,6 +45,7 @@ target_include_directories(
 	PRIVATE
 		"${SOURCE_DIR}"
 		"${PROJECT_DEPENDENCIES_PATH}/ffx-sdk"
+		"$ENV{VULKAN_SDK}/include"
 )
 
 set_target_properties(
@@ -107,6 +108,9 @@ target_compile_definitions(
 # Spdlog
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(${CURRENT_PROJECT} PRIVATE spdlog::spdlog)
+
+find_package(Vulkan REQUIRED)
+target_link_libraries(${CURRENT_PROJECT} PRIVATE Vulkan::Vulkan)
 
 #
 # Commands
