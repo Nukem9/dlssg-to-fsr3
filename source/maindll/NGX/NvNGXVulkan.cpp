@@ -1,11 +1,17 @@
-#include <shared_mutex>
 #include "NvNGX.h"
 #include "FFFrameInterpolator.h"
 
 static std::shared_mutex FeatureInstanceHandleLock;
 static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> FeatureInstanceHandles;
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(VkCommandBuffer CommandList, void *Unknown, NGXInstanceParameters *Parameters, NGXHandle **OutInstanceHandle)
+VkDevice g_LogicalDevice = {};
+VkPhysicalDevice g_PhysicalDevice = {};
+
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(
+	VkCommandBuffer CommandList,
+	void *Unknown,
+	NGXInstanceParameters *Parameters,
+	NGXHandle **OutInstanceHandle)
 {
 	spdlog::info(__FUNCTION__);
 
@@ -23,9 +29,9 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(VkCommandBuffer CommandLis
 	Parameters->Get5("Height", &swapchainHeight);
 
 	// Then initialize FSR
-	/*try
+	try
 	{
-		auto instance = std::make_shared<FFFrameInterpolator>(device, swapchainWidth, swapchainHeight);
+		auto instance = std::make_shared<FFFrameInterpolator>(g_LogicalDevice, g_PhysicalDevice, swapchainWidth, swapchainHeight);
 
 		std::scoped_lock lock(FeatureInstanceHandleLock);
 		{
@@ -42,10 +48,6 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(VkCommandBuffer CommandLis
 	}
 
 	spdlog::info("NVSDK_NGX_VULKAN_CreateFeature: Succeeded.");
-	*/
-
-	*OutInstanceHandle = NGXHandle::Allocate(11);
-
 	return NGX_SUCCESS;
 }
 
@@ -69,7 +71,36 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_EvaluateFeature(VkCommandBuffer CommandL
 	if (!CommandList || !InstanceHandle || !Parameters)
 		return NGX_INVALID_PARAMETER;
 
-	return NGX_SUCCESS;
+	std::shared_ptr<FFFrameInterpolator> instance;
+	{
+		std::shared_lock lock(FeatureInstanceHandleLock);
+		auto itr = FeatureInstanceHandles.find(InstanceHandle->InternalId);
+
+		if (itr == FeatureInstanceHandles.end())
+			return NGX_FEATURE_NOT_FOUND;
+
+		instance = itr->second;
+	}
+
+	const auto status = instance->Dispatch(CommandList, Parameters);
+
+	switch (status)
+	{
+	case FFX_OK:
+		return NGX_SUCCESS;
+
+	case FFX_ERROR_INVALID_ARGUMENT:
+	default:
+	{
+		static bool once = [&]()
+		{
+			spdlog::error("Evaluation call failed with status {:X}.", status);
+			return true;
+		}();
+
+		return NGX_INVALID_PARAMETER;
+	}
+	}
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_GetFeatureRequirements(
@@ -144,6 +175,9 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 
 	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
 		return NGX_INVALID_PARAMETER;
+
+	g_LogicalDevice = LogicalDevice;
+	g_PhysicalDevice = PhysicalDevice;
 
 	return NGX_SUCCESS;
 }

@@ -26,7 +26,25 @@ struct NGXHandle // See _nvngx.dll
 	}
 };
 
-struct NGXFeatureRequirementInfo // See nvngx_dlssg.dll
+// See nvngx_dlss.dll and nvngx_dlssg.dll
+#ifdef VK_HEADER_VERSION
+struct NGXVulkanResourceHandle
+{
+	struct
+	{
+		VkImageView View;
+		VkImage Image;
+		VkImageSubresourceRange Subresource;
+		VkFormat Format;
+		uint32_t Width;
+		uint32_t Height;
+	} ImageMetadata;
+	uint32_t Type;
+};
+#endif // VK_HEADER_VERSION
+
+// See nvngx_dlssg.dll
+struct NGXFeatureRequirementInfo
 {
 	uint32_t Flags;
 	uint32_t RequiredGPUArchitecture;
