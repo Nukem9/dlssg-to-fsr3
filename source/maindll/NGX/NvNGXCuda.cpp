@@ -1,4 +1,4 @@
-#include "nvngx.h"
+#include "NvNGX.h"
 
 NGXDLLEXPORT uint32_t NvOptimusEnablementCuda = 0x00000001;
 

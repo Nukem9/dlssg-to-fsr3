@@ -9,7 +9,8 @@ constexpr NGXResult NGX_INVALID_PARAMETER = 0xBAD00005;
 
 constexpr uint32_t NGXHardcodedArchitecture = 0xC0;
 
-struct NGXHandle // See _nvngx.dll
+// See _nvngx.dll
+struct NGXHandle
 {
 	uint32_t InternalId = 0;
 	uint32_t InternalFeatureId = 0;
@@ -51,9 +52,9 @@ struct NGXFeatureRequirementInfo
 	char RequiredOperatingSystemVersion[32];
 };
 
-class NGXInstanceParameters // See sl.common.dll exports
+// See sl.common.dll exports
+struct NGXInstanceParameters
 {
-public:
 	virtual void SetVoidPointer(const char *Name, void *Value) = 0;		  // 0
 	virtual void Set2(const char *Name, float Value) = 0;				  // 8
 	virtual void Set3(const char *Name, void *Unknown) = 0;				  // 10

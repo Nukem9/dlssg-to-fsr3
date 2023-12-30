@@ -40,12 +40,16 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		OutputDebugStringW(L"DEBUG: Built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
 		Util::InitializeLog();
 
-		spdlog::warn("dlssg-to-fsr3 is loaded. AMD FSR 3 Frame Generation will replace Nvidia DLSS-G Frame Generation. Note this does NOT represent a native implementation of AMD's FSR 3.");
 		spdlog::warn("");
-		spdlog::warn("dlssg-to-fsr3 is freely downloadable from https://www.nexusmods.com/site/mods/738?tab=files or https://github.com/Nukem9/dlssg-to-fsr3/releases.");
+		spdlog::warn("dlssg-to-fsr3 is loaded. AMD FSR 3 Frame Generation will replace Nvidia DLSS-G Frame Generation. Note this does NOT "
+					 "represent a native implementation of AMD's FSR 3.");
+		spdlog::warn("");
+		spdlog::warn("dlssg-to-fsr3 is freely downloadable from https://www.nexusmods.com/site/mods/738?tab=files or "
+					 "https://github.com/Nukem9/dlssg-to-fsr3/releases.");
 		spdlog::warn("If you paid for these files, you've been scammed.");
 		spdlog::warn("");
 		spdlog::warn("DO NOT USE IN MULTIPLAYER GAMES.");
+		spdlog::warn("");
 		return TRUE;
 	}
 

@@ -7,9 +7,7 @@
 #include "FFDilator.h"
 #include "FFInterpolator.h"
 
-struct NGXVulkanResourceHandle;
-class NGXInstanceParameters;
-
+struct NGXInstanceParameters;
 struct ID3D12Device;
 
 class FFFrameInterpolator

@@ -1,4 +1,4 @@
-#include "nvngx.h"
+#include "NvNGX.h"
 
 struct IDXGIAdapter;
 struct ID3D11Device;

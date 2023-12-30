@@ -322,28 +322,23 @@ bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *O
 	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
 	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
 
-	// clang-format off
-	const FfxDimensions2D mvecExtents =
-	{
+	const FfxDimensions2D mvecExtents = {
 		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectWidth", desc.InputMotionVectors.description.width),
 		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectHeight", desc.InputMotionVectors.description.height),
 	};
 
-	desc.MotionVectorScale =
-	{
+	desc.MotionVectorScale = {
 		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleX", 0),
 		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleY", 0),
 	};
 
-	desc.MotionVectorJitterOffsets =
-	{
+	desc.MotionVectorJitterOffsets = {
 		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetX", 0),
 		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetY", 0),
 	};
 
 	desc.MotionVectorJitterCancellation = NGXParameters->GetUIntOrDefault("DLSSG.MVecJittered", 0) != 0;
 	desc.MotionVectorsFullResolution = desc.OutputSize.width == mvecExtents.width && desc.OutputSize.height == mvecExtents.height;
-	// clang-format on
 
 	return true;
 }
