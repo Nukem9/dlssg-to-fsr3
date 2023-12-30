@@ -1,9 +1,9 @@
+#include <shared_mutex>
 #include "NvNGX.h"
+#include "FFFrameInterpolator.h"
 
-typedef void *VkCommandBuffer;
-typedef void *VkDevice;
-typedef void *VkInstance;
-typedef void *VkPhysicalDevice;
+static std::shared_mutex FeatureInstanceHandleLock;
+static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> FeatureInstanceHandles;
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(VkCommandBuffer CommandList, void *Unknown, NGXInstanceParameters *Parameters, NGXHandle **OutInstanceHandle)
 {
@@ -11,6 +11,40 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(VkCommandBuffer CommandLis
 
 	if (!Parameters || !OutInstanceHandle)
 		return NGX_INVALID_PARAMETER;
+
+	// Grab NGX parameters from sl.dlss_g.dll
+	// https://forums.developer.nvidia.com/t/using-dlssg-without-idxgiswapchain-present/247260/8?u=user81906
+	Parameters->Set4("DLSSG.MustCallEval", 1);
+
+	uint32_t swapchainWidth = 0;
+	Parameters->Get5("Width", &swapchainWidth);
+
+	uint32_t swapchainHeight = 0;
+	Parameters->Get5("Height", &swapchainHeight);
+
+	// Then initialize FSR
+	/*try
+	{
+		auto instance = std::make_shared<FFFrameInterpolator>(device, swapchainWidth, swapchainHeight);
+
+		std::scoped_lock lock(FeatureInstanceHandleLock);
+		{
+			const auto handle = NGXHandle::Allocate(11);
+			*OutInstanceHandle = handle;
+
+			FeatureInstanceHandles.emplace(handle->InternalId, std::move(instance));
+		}
+	}
+	catch (const std::exception& e)
+	{
+		spdlog::error("NVSDK_NGX_VULKAN_CreateFeature: Failed to initialize: {}", e.what());
+		return NGX_FEATURE_NOT_FOUND;
+	}
+
+	spdlog::info("NVSDK_NGX_VULKAN_CreateFeature: Succeeded.");
+	*/
+
+	*OutInstanceHandle = NGXHandle::Allocate(11);
 
 	return NGX_SUCCESS;
 }
@@ -164,6 +198,17 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_ReleaseFeature(NGXHandle *InstanceHandle
 	if (!InstanceHandle)
 		return NGX_INVALID_PARAMETER;
 
+	const auto node = [&]()
+	{
+		std::scoped_lock lock(FeatureInstanceHandleLock);
+		return FeatureInstanceHandles.extract(InstanceHandle->InternalId);
+	}();
+
+	if (node.empty())
+		return NGX_FEATURE_NOT_FOUND;
+
+	// Node is handled by RAII. Apparently, InstanceHandle isn't supposed to be deleted.
+	// NGXHandle::Free(InstanceHandle);
 	return NGX_SUCCESS;
 }
 

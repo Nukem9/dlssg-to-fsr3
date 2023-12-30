@@ -1,9 +1,9 @@
 #include <shared_mutex>
-#include "nvngx.h"
+#include "NvNGX.h"
 #include "FFFrameInterpolator.h"
 
-std::shared_mutex NGXInstanceHandleLock;
-std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> NGXInstanceHandles;
+static std::shared_mutex FeatureInstanceHandleLock;
+static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> FeatureInstanceHandles;
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	ID3D12CommandList *CommandList,
@@ -40,14 +40,12 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 			swapchainWidth,
 			swapchainHeight);
 
-		std::scoped_lock lock(NGXInstanceHandleLock);
+		std::scoped_lock lock(FeatureInstanceHandleLock);
 		{
-			constinit static uint32_t nextHandleId = 1;
+			const auto handle = NGXHandle::Allocate(11);
+			*OutInstanceHandle = handle;
 
-			const auto id = nextHandleId++;
-			NGXInstanceHandles.emplace(id, std::move(instance));
-
-			*OutInstanceHandle = new NGXHandle { id, 11 };
+			FeatureInstanceHandles.emplace(handle->InternalId, std::move(instance));
 		}
 	}
 	catch (const std::exception &e)
@@ -71,10 +69,10 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 
 	std::shared_ptr<FFFrameInterpolator> instance;
 	{
-		std::shared_lock lock(NGXInstanceHandleLock);
-		auto itr = NGXInstanceHandles.find(InstanceHandle->InternalId);
+		std::shared_lock lock(FeatureInstanceHandleLock);
+		auto itr = FeatureInstanceHandles.find(InstanceHandle->InternalId);
 
-		if (itr == NGXInstanceHandles.end())
+		if (itr == FeatureInstanceHandles.end())
 			return NGX_FEATURE_NOT_FOUND;
 
 		instance = itr->second;
@@ -193,14 +191,15 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_ReleaseFeature(NGXHandle *InstanceHandle)
 
 	const auto node = [&]()
 	{
-		std::scoped_lock lock(NGXInstanceHandleLock);
-		return NGXInstanceHandles.extract(InstanceHandle->InternalId);
+		std::scoped_lock lock(FeatureInstanceHandleLock);
+		return FeatureInstanceHandles.extract(InstanceHandle->InternalId);
 	}();
 
 	if (node.empty())
 		return NGX_FEATURE_NOT_FOUND;
 
 	// Node is handled by RAII. Apparently, InstanceHandle isn't supposed to be deleted.
+	// NGXHandle::Free(InstanceHandle);
 	return NGX_SUCCESS;
 }
 

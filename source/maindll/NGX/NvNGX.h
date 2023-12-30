@@ -13,6 +13,17 @@ struct NGXHandle // See _nvngx.dll
 {
 	uint32_t InternalId = 0;
 	uint32_t InternalFeatureId = 0;
+
+	static NGXHandle *Allocate(uint32_t FeatureId)
+	{
+		constinit static uint32_t nextId = 1;
+		return new NGXHandle { nextId++, FeatureId };
+	}
+
+	static void Free(NGXHandle *Handle)
+	{
+		delete Handle;
+	}
 };
 
 struct NGXFeatureRequirementInfo // See nvngx_dlssg.dll
@@ -55,3 +66,4 @@ public:
 		return Default;
 	}
 };
+
