@@ -18,6 +18,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(
 	if (!Parameters || !OutInstanceHandle)
 		return NGX_INVALID_PARAMETER;
 
+#if 0
 	// Grab NGX parameters from sl.dlss_g.dll
 	// https://forums.developer.nvidia.com/t/using-dlssg-without-idxgiswapchain-present/247260/8?u=user81906
 	Parameters->Set4("DLSSG.MustCallEval", 1);
@@ -49,6 +50,9 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(
 
 	spdlog::info("NVSDK_NGX_VULKAN_CreateFeature: Succeeded.");
 	return NGX_SUCCESS;
+#endif
+
+	return NGX_FEATURE_NOT_FOUND;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature1(
@@ -136,12 +140,12 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init(
 	VkDevice LogicalDevice,
 	uint32_t Unknown3)
 {
-	spdlog::info(__FUNCTION__);
+	spdlog::info("{}: Vulkan unsupported.", __FUNCTION__);
 
 	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
 		return NGX_INVALID_PARAMETER;
 
-	return NGX_SUCCESS;
+	return NGX_INVALID_PARAMETER;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext(
@@ -153,12 +157,12 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext(
 	uint32_t Unknown3,
 	void *Unknown4)
 {
-	spdlog::info(__FUNCTION__);
+	spdlog::info("{}: Vulkan unsupported.", __FUNCTION__);
 
 	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
 		return NGX_INVALID_PARAMETER;
 
-	return NGX_SUCCESS;
+	return NGX_INVALID_PARAMETER;
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
@@ -171,15 +175,12 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 	uint32_t Unknown4,
 	NGXInstanceParameters *Parameters)
 {
-	spdlog::info(__FUNCTION__);
+	spdlog::info("{}: Vulkan unsupported.", __FUNCTION__);
 
 	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
 		return NGX_INVALID_PARAMETER;
 
-	g_LogicalDevice = LogicalDevice;
-	g_PhysicalDevice = PhysicalDevice;
-
-	return NGX_SUCCESS;
+	return NGX_INVALID_PARAMETER;
 }
 
 static NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
