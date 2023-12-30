@@ -463,8 +463,6 @@ void FFFrameInterpolator::Destroy()
 
 FfxErrorCode FFFrameInterpolator::CreateBackend()
 {
-	const uint32_t maxContexts = 3; // Assume 3 contexts per interface
-
 	if (VulkanBackend)
 	{
 		VkDeviceContext vkContext =
@@ -474,17 +472,18 @@ FfxErrorCode FFFrameInterpolator::CreateBackend()
 			.vkDeviceProcAddr = nullptr,
 		};
 
+		const uint32_t maxContexts = 6; // One interface, six contexts
 		const auto fsrDevice = ffxGetDeviceVK(&vkContext);
 		const auto scratchSize = ffxGetScratchMemorySizeVK(vkContext.vkPhysicalDevice, maxContexts);
 
 		auto& buffer1 = ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
 		FFX_RETURN_ON_FAIL(ffxGetInterfaceVK(&SharedBackendInterface, fsrDevice, buffer1.get(), scratchSize, maxContexts));
 
-		auto& buffer2 = ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
-		FFX_RETURN_ON_FAIL(ffxGetInterfaceVK(&FrameInterpolationBackendInterface, fsrDevice, buffer2.get(), scratchSize, maxContexts));
+		FrameInterpolationBackendInterface = SharedBackendInterface;
 	}
 	else
 	{
+		const uint32_t maxContexts = 3; // Assume 3 contexts per interface
 		const auto fsrDevice = ffxGetDeviceDX12(DXLogicalDevice);
 		const auto scratchSize = ffxGetScratchMemorySizeDX12(maxContexts);
 
