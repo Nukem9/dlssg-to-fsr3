@@ -120,11 +120,17 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		// As far as I know there aren't any direct ways to fetch the current gbuffer dimensions from NGX. I guess
 		// pulling it from depth buffer extents is enough.
 		{
-			FfxResource temp = {};
-			LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &temp, FFX_RESOURCE_STATE_COPY_DEST);
+			RenderWidth = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectWidth", 0);
+			RenderHeight = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectHeight", 0);
 
-			RenderWidth = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectWidth", temp.description.width);
-			RenderHeight = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectHeight", temp.description.height);
+			if (RenderWidth == 0 || RenderHeight == 0)
+			{
+				FfxResource temp = {};
+				LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &temp, FFX_RESOURCE_STATE_COPY_DEST);
+
+				RenderWidth = temp.description.width;
+				RenderHeight = temp.description.height;
+			}
 		}
 
 		if (RenderWidth <= 32 || RenderHeight <= 32)
@@ -328,8 +334,8 @@ bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *O
 	};
 
 	desc.MotionVectorScale = {
-		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleX", 0),
-		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleY", 0),
+		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleX", 1.0f),
+		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleY", 1.0f),
 	};
 
 	desc.MotionVectorJitterOffsets = {
