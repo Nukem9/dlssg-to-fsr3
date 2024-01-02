@@ -8,6 +8,7 @@ file(
 	GLOB HEADER_FILES
 	LIST_DIRECTORIES FALSE
 	CONFIGURE_DEPENDS
+	"${SOURCE_DIR}/NGX/*.h"
 	"${SOURCE_DIR}/*.h"
 )
 
@@ -15,6 +16,7 @@ file(
 	GLOB SOURCE_FILES
 	LIST_DIRECTORIES FALSE
 	CONFIGURE_DEPENDS
+	"${SOURCE_DIR}/NGX/*.cpp"
 	"${SOURCE_DIR}/*.cpp"
 )
 
@@ -36,6 +38,7 @@ target_include_directories(
 	${CURRENT_PROJECT}
 	PRIVATE
 		"${SOURCE_DIR}"
+		"$ENV{VULKAN_SDK}/include"
 )
 
 set_target_properties(

@@ -17,7 +17,7 @@ __declspec(noinline) void *GetImplementationDll()
 		if (GetModuleFileNameW(thisModuleHandle, path, ARRAYSIZE(path)))
 		{
 			// Chop off the file name
-			for (auto i = (ptrdiff_t)wcslen(path) - 1; i > 0; i--)
+			for (auto i = static_cast<ptrdiff_t>(wcslen(path)) - 1; i > 0; i--)
 			{
 				if (path[i] == L'\\' || path[i] == L'/')
 				{
@@ -39,7 +39,7 @@ __declspec(noinline) void *GetImplementationDll()
 	return moduleHandle;
 }
 
-__declspec(noinline) void *GetOriginalExport(const char *name)
+__declspec(noinline) void *GetOriginalExport(const char *Name)
 {
-	return GetProcAddress(reinterpret_cast<HMODULE>(GetImplementationDll()), name);
+	return GetProcAddress(reinterpret_cast<HMODULE>(GetImplementationDll()), Name);
 }

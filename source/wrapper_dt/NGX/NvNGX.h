@@ -11,14 +11,14 @@
 using NGXResult = uint32_t;
 struct NGXHandle;				  // See _nvngx.dll
 struct NGXFeatureRequirementInfo; // See nvngx_dlssg.dll
-class NGXInstanceParameters;	  // See sl.common.dll exports
+struct NGXInstanceParameters;	  // See sl.common.dll exports
 
 void *GetImplementationDll();
-void *GetOriginalExport(const char *name);
+void *GetOriginalExport(const char *Name);
 
 template<typename = decltype([]{})>
-void *GetOriginalExportCached(const char *name)
+void *GetOriginalExportCached(const char *Name)
 {
-	static auto impl = GetOriginalExport(name);
+	static auto impl = GetOriginalExport(Name);
 	return impl;
 }
