@@ -105,11 +105,16 @@ target_compile_definitions(
 #
 # Dependencies
 #
+# Windows SDK
+target_link_libraries(${CURRENT_PROJECT} PRIVATE "delayimp.lib")
+
 # Spdlog
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(${CURRENT_PROJECT} PRIVATE spdlog::spdlog)
 
+# Vulkan
 find_package(Vulkan REQUIRED)
+target_link_options(${CURRENT_PROJECT} PRIVATE "/DELAYLOAD:vulkan-1.dll")
 target_link_libraries(${CURRENT_PROJECT} PRIVATE Vulkan::Vulkan)
 
 #
