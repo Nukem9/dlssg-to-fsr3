@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <algorithm>
 #include <string_view>
 #include <mutex>
 #include <unordered_set>
@@ -13,7 +14,7 @@ constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.
 constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
-void PatchImportForModule(const wchar_t *Path, HMODULE ModuleHandle);
+bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
 void *LoadImplementationDll()
 {
@@ -29,7 +30,7 @@ void *LoadImplementationDll()
 		if (GetModuleFileNameW(thisModuleHandle, path, ARRAYSIZE(path)))
 		{
 			// Chop off the file name
-			for (auto i = (ptrdiff_t)wcslen(path) - 1; i > 0; i--)
+			for (auto i = static_cast<ptrdiff_t>(wcslen(path)) - 1; i > 0; i--)
 			{
 				if (path[i] == L'\\' || path[i] == L'/')
 				{
@@ -40,7 +41,7 @@ void *LoadImplementationDll()
 		}
 	}
 
-	// DO NOT cache a handle to the implementation DLL. It might be unloaded and reloaded.
+	// Do not cache a handle to the implementation DLL. It might be unloaded and reloaded.
 	wcscat_s(path, RelplacementImplementationDll);
 	const auto mod = LoadLibraryW(path);
 
@@ -71,7 +72,7 @@ HMODULE WINAPI HookedLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD d
 	if (!libraryHandle)
 		libraryHandle = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
-	PatchImportForModule(lpLibFileName, libraryHandle);
+	PatchImportsForModule(lpLibFileName, libraryHandle);
 	return libraryHandle;
 }
 
@@ -82,7 +83,7 @@ HMODULE WINAPI HookedLoadLibraryW(LPCWSTR lpLibFileName)
 	if (!libraryHandle)
 		libraryHandle = LoadLibraryW(lpLibFileName);
 
-	PatchImportForModule(lpLibFileName, libraryHandle);
+	PatchImportsForModule(lpLibFileName, libraryHandle);
 	return libraryHandle;
 }
 
@@ -91,38 +92,42 @@ bool ModuleRequiresPatching(HMODULE ModuleHandle)
 	static std::mutex trackerLock;
 	static std::unordered_set<HMODULE> trackedModules;
 
-	trackerLock.lock();
+	std::scoped_lock lock(trackerLock);
+
 	if (trackedModules.size() > 100)
 		trackedModules.clear();
 
-	const bool wasInserted = trackedModules.emplace(ModuleHandle).second;
-	trackerLock.unlock();
-
-	return wasInserted;
+	return trackedModules.emplace(ModuleHandle).second;
 }
 
-void PatchImportForModule(const wchar_t *Path, HMODULE ModuleHandle)
+bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 {
 	if (!Path || !ModuleHandle)
-		return;
+		return false;
 
 	std::wstring_view libFileName(Path);
 
-	for (auto targetName : TargetLibrariesToHook)
-	{
-		if (!libFileName.ends_with(targetName))
-			continue;
-
-		if (ModuleRequiresPatching(ModuleHandle))
+	const bool isMatch = std::any_of(
+		std::begin(TargetLibrariesToHook),
+		std::end(TargetLibrariesToHook),
+		[&](const wchar_t *Target)
 		{
-			OutputDebugStringW(L"Patching imports for a new module: ");
-			OutputDebugStringW(Path);
-			OutputDebugStringW(L"...\n");
+			return libFileName.ends_with(Target);
+		});
 
-			Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
-			Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);
-		}
-	}
+	if (!isMatch)
+		return false;
+
+	if (!ModuleRequiresPatching(ModuleHandle))
+		return false;
+
+	OutputDebugStringW(L"Patching imports for a new module: ");
+	OutputDebugStringW(Path);
+	OutputDebugStringW(L"...\n");
+
+	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
+	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);
+	return true;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -131,9 +136,22 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	{
 		OutputDebugStringW(L"DEBUG: Built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
 
-		// We probably loaded after sl.interposer.dll and sl.common.dll. Patch them up front.
-		for (const auto targetName : TargetLibrariesToHook)
-			PatchImportForModule(targetName, GetModuleHandleW(targetName));
+		// We probably loaded after sl.interposer.dll and sl.common.dll. Try patching them up front.
+		bool anyPatched = !std::none_of(
+			std::begin(TargetLibrariesToHook),
+			std::end(TargetLibrariesToHook),
+			[](const wchar_t *Target)
+		{
+			return PatchImportsForModule(Target, GetModuleHandleW(Target));
+		});
+
+		// If zero Streamline dlls were loaded we'll have to hook the game's LoadLibrary calls and wait
+		if (!anyPatched)
+			anyPatched = PatchImportsForModule(TargetLibrariesToHook[0], GetModuleHandleW(nullptr));
+
+		// Hooks can't be removed once they're in place. Pin this DLL in memory.
+		if (anyPatched)
+			GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, nullptr, &hInstDLL);
 	}
 
 	return TRUE;
