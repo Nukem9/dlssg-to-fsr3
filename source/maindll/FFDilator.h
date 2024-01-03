@@ -80,8 +80,8 @@ private:
 	const uint32_t m_MaxRenderWidth;
 	const uint32_t m_MaxRenderHeight;
 
-	FfxInterface m_BackendInterface = {};
-	uint32_t m_EffectContextId = 0;
+	FfxInterface m_BackendInterface;
+	std::optional<uint32_t> m_EffectContextId;
 
 	std::unordered_map<uint32_t, FfxPipelineState> m_DispatchPipelineStates = {};
 	
@@ -89,6 +89,7 @@ private:
 	Fsr3UpscalerConstants m_PreviousConstants = {};
 	FfxConstantBuffer m_DispatchConstantBuffer = { { sizeof(Fsr3UpscalerConstants) / sizeof(uint32_t) } };
 
+	// Transient
     FfxResourceInternal m_SRVResources[ResourceIndex::Count] = {};
 	FfxResourceInternal m_UAVResources[ResourceIndex::Count] = {};
 

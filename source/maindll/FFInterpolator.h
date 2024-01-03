@@ -42,19 +42,14 @@ private:
 	const uint32_t m_MaxRenderWidth;
 	const uint32_t m_MaxRenderHeight;
 
-	FfxInterface m_BackendInterface = {};
-	uint32_t m_EffectContextId = 0;
-
-	FfxFrameInterpolationContext m_Context = {};
-	bool m_ContextCreated = false;
+	const FfxInterface m_BackendInterface;
+	std::optional<FfxFrameInterpolationContext> m_FSRContext;
 
 	FfxSurfaceFormat m_InitialBackBufferFormat = {};
-	FfxResourceInternal m_InitialPreviousInterpolationSource = {};
+	std::optional<FfxResourceInternal> m_InitialPreviousInterpolationSource;
 
 	FfxSurfaceFormat m_BackupBackBufferFormat = {};
-	FfxResourceInternal m_BackupPreviousInterpolationSource = {};
-
-	bool m_BackupBackBufferCreated = false;
+	std::optional<FfxResourceInternal> m_BackupPreviousInterpolationSource;
 
 public:
 	FFInterpolator(const FfxInterface& BackendInterface, uint32_t MaxRenderWidth, uint32_t MaxRenderHeight);

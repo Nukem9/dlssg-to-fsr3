@@ -1,3 +1,5 @@
+#include <d3d12.h>
+#include <dxgi.h>
 #include "NvNGX.h"
 #include "FFFrameInterpolator.h"
 
@@ -89,7 +91,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 	{
 		static bool once = [&]()
 		{
-			spdlog::error("Evaluation call failed with status {:X}.", status);
+			spdlog::error("Evaluation call failed with status {:X}.", static_cast<uint32_t>(status));
 			return true;
 		}();
 

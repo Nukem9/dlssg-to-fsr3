@@ -10,21 +10,28 @@
 #include "FFDilator.h"
 
 FFDilator::FFDilator(const FfxInterface& BackendInterface, uint32_t m_MaxRenderWidth, uint32_t m_MaxRenderHeight)
-	: m_MaxRenderWidth(m_MaxRenderWidth),
-	  m_MaxRenderHeight(m_MaxRenderHeight),
-	  m_BackendInterface(BackendInterface)
+	: m_BackendInterface(BackendInterface),
+	  m_MaxRenderWidth(m_MaxRenderWidth),
+	  m_MaxRenderHeight(m_MaxRenderHeight)
 {
-	if (!FF_SUCCEEDED(m_BackendInterface.fpCreateBackendContext(&m_BackendInterface, &m_EffectContextId)))
+	const auto status = m_BackendInterface.fpCreateBackendContext(&m_BackendInterface, &m_EffectContextId.emplace());
+
+	if (status != FFX_OK)
+	{
+		m_EffectContextId.reset();
 		throw std::runtime_error("FFDilator: Failed to create backend context.");
+	}
 }
 
 FFDilator::~FFDilator()
 {
-	for (auto& pipeline : m_DispatchPipelineStates)
-		m_BackendInterface.fpDestroyPipeline(&m_BackendInterface, &pipeline.second, m_EffectContextId);
+	if (m_EffectContextId)
+	{
+		for (auto& pipeline : m_DispatchPipelineStates)
+			m_BackendInterface.fpDestroyPipeline(&m_BackendInterface, &pipeline.second, *m_EffectContextId);
 
-	m_DispatchPipelineStates.clear();
-	m_BackendInterface.fpDestroyBackendContext(&m_BackendInterface, m_EffectContextId);
+		m_BackendInterface.fpDestroyBackendContext(&m_BackendInterface, *m_EffectContextId);
+	}
 }
 
 // clang-format off
@@ -84,7 +91,7 @@ FfxErrorCode FFDilator::Dispatch(const FFDilatorDispatchParameters& Parameters)
 {
 	auto registerResource = [&](const FfxResource& Resource, uint32_t Index, bool UAV)
 	{
-		m_BackendInterface.fpRegisterResource(&m_BackendInterface, &Resource, m_EffectContextId, UAV ? &m_UAVResources[Index] : &m_SRVResources[Index]);
+		m_BackendInterface.fpRegisterResource(&m_BackendInterface, &Resource, *m_EffectContextId, UAV ? &m_UAVResources[Index] : &m_SRVResources[Index]);
 	};
 
 	registerResource(Parameters.InputDepth, ResourceIndex::InputDepth, false);
@@ -122,9 +129,10 @@ FfxErrorCode FFDilator::Dispatch(const FFDilatorDispatchParameters& Parameters)
 	FFX_RETURN_ON_FAIL(GetPipelineStateForParameters(Parameters, pipelineState));
 	FFX_RETURN_ON_FAIL(ScheduleComputeDispatch(*pipelineState, dispatchSrcX, dispatchSrcY, 1));
 
-	// Finally append our calls to the D3D12 command list and release 
+	// Finally append our calls to the D3D12 command list and release
+	// TODO: Need early fpUnregisterResources call to avoid resource leak on error
 	FFX_RETURN_ON_FAIL(m_BackendInterface.fpExecuteGpuJobs(&m_BackendInterface, Parameters.CommandList));
-	FFX_RETURN_ON_FAIL(m_BackendInterface.fpUnregisterResources(&m_BackendInterface, Parameters.CommandList, m_EffectContextId));
+	FFX_RETURN_ON_FAIL(m_BackendInterface.fpUnregisterResources(&m_BackendInterface, Parameters.CommandList, *m_EffectContextId));
 
 	return FFX_OK;
 }
@@ -296,7 +304,7 @@ FfxErrorCode FFDilator::InternalCreatePipelineState(uint32_t PassFlags)
 		FFX_FSR3UPSCALER_PASS_RECONSTRUCT_PREVIOUS_DEPTH,
 		permutationFlags,
 		&pipelineDescription,
-		m_EffectContextId,
+		*m_EffectContextId,
 		&pipelineState));
 
 	return RemapResourceBindings(pipelineState);

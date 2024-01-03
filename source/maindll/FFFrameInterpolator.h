@@ -1,9 +1,7 @@
 #pragma once
 
-#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
-#include <FidelityFX/host/backends/vk/ffx_vk.h>
 #include <FidelityFX/host/ffx_opticalflow.h>
-#include <FidelityFX/gpu/fsr3/ffx_fsr3_resources.h>
+#include <vulkan/vulkan.h>
 #include "FFDilator.h"
 #include "FFInterpolator.h"
 
@@ -13,31 +11,32 @@ struct ID3D12Device;
 class FFFrameInterpolator
 {
 private:
-	const bool VulkanBackend;
-
 	ID3D12Device *const DXLogicalDevice = nullptr;
+	const VkDevice VKLogicalDevice = {};
+	const VkPhysicalDevice VKPhysicalDevice = {};
 
-	VkDevice VKLogicalDevice = {};
-	VkPhysicalDevice VKPhysicalDevice = {};
-
-	const uint32_t SwapchainWidth; // Final image presented to the screen
+	const uint32_t SwapchainWidth; // Final image presented to the screen dimensions
 	const uint32_t SwapchainHeight;
 
-	uint32_t RenderWidth = 0; // GBuffer dimensions
-	uint32_t RenderHeight = 0;
-
+	std::vector<std::unique_ptr<uint8_t[]>> ScratchMemoryBuffers;
 	FfxInterface FrameInterpolationBackendInterface = {};
 	FfxInterface SharedBackendInterface = {};
-	FfxUInt32 SharedBackendEffectContextId = 0;
+	std::optional<FfxUInt32> m_SharedEffectContextId;
 
 	std::unique_ptr<FFDilator> DilationContext;
-	FfxOpticalflowContext OpticalFlowContext = {};
+	std::optional<FfxOpticalflowContext> OpticalFlowContext;
 	std::unique_ptr<FFInterpolator> FrameInterpolatorContext;
 
-	FfxResourceInternal GPUResources[FFX_FSR3_RESOURCE_IDENTIFIER_COUNT] = {};
-	std::vector<std::unique_ptr<uint8_t[]>> ScratchMemoryBuffers;
+	std::optional<FfxResourceInternal> m_TexSharedDilatedDepth;
+	std::optional<FfxResourceInternal> m_TexSharedDilatedMotionVectors;
+	std::optional<FfxResourceInternal> m_TexSharedPreviousNearestDepth;
+	std::optional<FfxResourceInternal> m_TexSharedOpticalFlowVector;
+	std::optional<FfxResourceInternal> m_TexSharedOpticalFlowSCD;
 
-	FfxCommandList ActiveCommandList = {};
+	// Transient
+	uint32_t m_RenderWidth = 0; // GBuffer dimensions
+	uint32_t m_RenderHeight = 0;
+	FfxCommandList m_ActiveCommandList = {};
 
 public:
 	FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight);
@@ -50,11 +49,13 @@ public:
 	FfxErrorCode Dispatch(void *CommandList, NGXInstanceParameters *NGXParameters);
 
 private:
+	bool IsVulkanBackend() const;
+
 	bool BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildOpticalFlowParameters(FfxOpticalflowDispatchDescription *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildFrameInterpolationParameters(FFInterpolatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 
-	FfxErrorCode Create();
+	void Create();
 	void Destroy();
 	FfxErrorCode CreateBackend();
 	void DestroyBackend();
