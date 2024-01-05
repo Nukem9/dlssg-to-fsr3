@@ -3,6 +3,9 @@
 #include "NvNGX.h"
 #include "FFFrameInterpolator.h"
 
+typedef LONG NTSTATUS;
+#include <d3dkmthk.h>
+
 static std::shared_mutex FeatureInstanceHandleLock;
 static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> FeatureInstanceHandles;
 
@@ -121,23 +124,54 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_GetScratchBufferSize(void *Unknown1, void
 	return NGX_SUCCESS;
 }
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path, ID3D12Device *D3DDevice, uint32_t Unknown3)
+NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *Unknown1, const wchar_t *Path, ID3D12Device *D3DDevice, uint32_t Unknown2, NGXInstanceParameters *Parameters)
 {
 	spdlog::info(__FUNCTION__);
 
 	if (!D3DDevice)
 		return NGX_INVALID_PARAMETER;
 
+	const bool isHAGSEnabled = [&]()
+	{
+		D3DKMT_OPENADAPTERFROMLUID openAdapter = {
+			.AdapterLuid = D3DDevice->GetAdapterLuid(),
+		};
+
+		if (D3DKMTOpenAdapterFromLuid(&openAdapter) == 0)
+		{
+			D3DKMT_WDDM_2_7_CAPS caps = {};
+			D3DKMT_QUERYADAPTERINFO info = {
+				.hAdapter = openAdapter.hAdapter,
+				.Type = KMTQAITYPE_WDDM_2_7_CAPS,
+				.pPrivateDriverData = &caps,
+				.PrivateDriverDataSize = sizeof(caps),
+			};
+
+			D3DKMTQueryAdapterInfo(&info);
+
+			D3DKMT_CLOSEADAPTER closeAdapter = {
+				.hAdapter = openAdapter.hAdapter,
+			};
+
+			D3DKMTCloseAdapter(&closeAdapter);
+			return caps.HwSchEnabled != 0;
+		}
+
+		return false;
+	}();
+
+	spdlog::info("Hardware accelerated GPU scheduling is {} on this adapter.", isHAGSEnabled ? "enabled" : "disabled");
+
+	// DLSS-G creates the base cudabin instance but does nothing with the parameters other than
+	// setting up logging
 	return NGX_SUCCESS;
 }
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *, const wchar_t *Path, void *, uint32_t Unknown4, NGXInstanceParameters *Parameters)
+NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path, ID3D12Device *D3DDevice, uint32_t Unknown2)
 {
 	spdlog::info(__FUNCTION__);
 
-	// Seems to create the base instance but does nothing with the parameters other than
-	// setting up logging
-	return NGX_SUCCESS;
+	return NVSDK_NGX_D3D12_Init_Ext(Unknown1, Path, D3DDevice, Unknown2, nullptr);
 }
 
 static NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)

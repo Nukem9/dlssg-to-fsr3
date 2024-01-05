@@ -108,6 +108,7 @@ target_compile_definitions(
 # Dependencies
 #
 # Windows SDK
+target_link_options(${CURRENT_PROJECT} PRIVATE "/DELAYLOAD:gdi32.dll")
 target_link_libraries(${CURRENT_PROJECT} PRIVATE "delayimp.lib")
 
 # Spdlog
