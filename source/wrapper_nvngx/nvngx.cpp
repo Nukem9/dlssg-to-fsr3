@@ -10,10 +10,11 @@
 // sl.common.dll      loads  _nvngx.dll       <- we are here
 // _nvngx.dll         loads  nvngx_dlssg.dll  <- intercept this stage
 //
-constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.common.dll", L"_nvngx.dll" };
+constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll" };
 constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
+void TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
 bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
 void *LoadImplementationDll()
@@ -87,6 +88,14 @@ HMODULE WINAPI HookedLoadLibraryW(LPCWSTR lpLibFileName)
 	return libraryHandle;
 }
 
+FARPROC WINAPI HookedGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
+{
+	auto proc = GetProcAddress(hModule, lpProcName);
+
+	TryInterceptNvAPIFunction(hModule, lpProcName, reinterpret_cast<void **>(&proc));
+	return proc;
+}
+
 bool ModuleRequiresPatching(HMODULE ModuleHandle)
 {
 	static std::mutex trackerLock;
@@ -127,6 +136,7 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);
+	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "GetProcAddress", &HookedGetProcAddress, nullptr);
 	return true;
 }
 
@@ -134,16 +144,16 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
-		OutputDebugStringW(L"DEBUG: Built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
+		OutputDebugStringW(L"DEBUG: Shim built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
 
 		// We probably loaded after sl.interposer.dll and sl.common.dll. Try patching them up front.
-		bool anyPatched = !std::none_of(
+		bool anyPatched = std::count_if(
 			std::begin(TargetLibrariesToHook),
 			std::end(TargetLibrariesToHook),
 			[](const wchar_t *Target)
 		{
 			return PatchImportsForModule(Target, GetModuleHandleW(Target));
-		});
+		}) > 0;
 
 		// If zero Streamline dlls were loaded we'll have to hook the game's LoadLibrary calls and wait
 		if (!anyPatched)
