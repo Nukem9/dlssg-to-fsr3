@@ -117,23 +117,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		if (!enableInterpolation)
 			return FFX_OK;
 
-		// As far as I know there aren't any direct ways to fetch the current gbuffer dimensions from NGX. I guess
-		// pulling it from depth buffer extents is enough.
-		{
-			m_RenderWidth = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectWidth", 0);
-			m_RenderHeight = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectHeight", 0);
-
-			if (m_RenderWidth == 0 || m_RenderHeight == 0)
-			{
-				FfxResource temp = {};
-				LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &temp, FFX_RESOURCE_STATE_COPY_DEST);
-
-				m_RenderWidth = temp.description.width;
-				m_RenderHeight = temp.description.height;
-			}
-		}
-
-		if (m_RenderWidth <= 32 || m_RenderHeight <= 32)
+		if (!CalculateResourceDimensions(NGXParameters))
 			return FFX_ERROR_INVALID_ARGUMENT;
 
 		// Parameter setup
@@ -304,6 +288,61 @@ bool FFFrameInterpolator::IsVulkanBackend() const
 	return DXLogicalDevice == nullptr;
 }
 
+bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGXParameters)
+{
+	// NGX doesn't provide a direct method to query current gbuffer dimensions so we'll grab them
+	// from the depth buffer instead. Depth is suitable because it's the one resource guaranteed to
+	// be the same size as the gbuffer. Hopefully.
+	FfxResource temp = {};
+	{
+		auto width = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectWidth", 0);
+		auto height = NGXParameters->GetUIntOrDefault("DLSSG.DepthSubrectHeight", 0);
+
+		if (width == 0 || height == 0)
+		{
+			LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &temp, FFX_RESOURCE_STATE_COPY_DEST);
+			width = temp.description.width;
+			height = temp.description.height;
+		}
+
+		m_PreUpscaleRenderWidth = width;
+		m_PreUpscaleRenderHeight = height;
+	}
+
+	if (m_PreUpscaleRenderWidth <= 32 || m_PreUpscaleRenderHeight <= 32)
+		return false;
+
+	// HUD-less dimensions are the "ground truth" final render resolution. These aren't necessarily
+	// equal to back buffer dimensions. Letterboxing in The Witcher 3 is a good test case.
+#if 0
+	if (LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &temp, FFX_RESOURCE_STATE_COPY_DEST))
+	{
+		auto width = NGXParameters->GetUIntOrDefault("DLSSG.HUDLessSubrectWidth", 0);
+		auto height = NGXParameters->GetUIntOrDefault("DLSSG.HUDLessSubrectHeight", 0);
+
+		if (width == 0 || height == 0)
+		{
+			width = temp.description.width;
+			height = temp.description.height;
+		}
+
+		m_PostUpscaleRenderWidth = width;
+		m_PostUpscaleRenderHeight = height;
+	}
+	else
+#endif
+	{
+		// No HUD-less resource. Default to back buffer resolution.
+		m_PostUpscaleRenderWidth = SwapchainWidth;
+		m_PostUpscaleRenderHeight = SwapchainHeight;
+	}
+
+	if (m_PostUpscaleRenderWidth <= 32 || m_PostUpscaleRenderHeight <= 32)
+		return false;
+
+	return true;
+}
+
 bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters)
 {
 	auto& desc = *OutParameters;
@@ -319,8 +358,8 @@ bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *O
 	desc.OutputDilatedMotionVectors = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedDilatedMotionVectors);
 	desc.OutputReconstructedPrevNearestDepth = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedPreviousNearestDepth);
 
-	desc.RenderSize = { m_RenderWidth, m_RenderHeight };
-	desc.OutputSize = { SwapchainWidth, SwapchainHeight };
+	desc.RenderSize = { m_PreUpscaleRenderWidth, m_PreUpscaleRenderHeight };
+	desc.OutputSize = { m_PostUpscaleRenderWidth, m_PostUpscaleRenderHeight };
 
 	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
 	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
@@ -341,7 +380,7 @@ bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *O
 	};
 
 	desc.MotionVectorJitterCancellation = NGXParameters->GetUIntOrDefault("DLSSG.MVecJittered", 0) != 0;
-	desc.MotionVectorsFullResolution = desc.OutputSize.width == mvecExtents.width && desc.OutputSize.height == mvecExtents.height;
+	desc.MotionVectorsFullResolution = m_PostUpscaleRenderWidth == mvecExtents.width && m_PostUpscaleRenderHeight == mvecExtents.height;
 
 	return true;
 }
@@ -356,6 +395,9 @@ bool FFFrameInterpolator::BuildOpticalFlowParameters(
 	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color, FFX_RESOURCE_STATE_COPY_DEST) &&
 		!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.color, FFX_RESOURCE_STATE_COMPUTE_READ))
 		return false;
+
+	desc.color.description.width = m_PostUpscaleRenderWidth; // Explicit override
+	desc.color.description.height = m_PostUpscaleRenderHeight;
 
 	desc.opticalFlowVector = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowVector);
 	desc.opticalFlowSCD = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
@@ -399,12 +441,12 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	desc.InputOpticalFlowVector = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowVector);
 	desc.InputOpticalFlowSceneChangeDetection = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
 
-	desc.RenderSize = { m_RenderWidth, m_RenderHeight };
+	desc.RenderSize = { m_PreUpscaleRenderWidth, m_PreUpscaleRenderHeight };
 	desc.OutputSize = { SwapchainWidth, SwapchainHeight };
 
 	desc.OpticalFlowBufferSize = { desc.InputOpticalFlowVector.description.width, desc.InputOpticalFlowVector.description.height };
 	desc.OpticalFlowBlockSize = 8;
-	desc.OpticalFlowScale = { 1.0f / desc.OutputSize.width, 1.0f / desc.OutputSize.height };
+	desc.OpticalFlowScale = { 1.0f / m_PostUpscaleRenderWidth, 1.0f / m_PostUpscaleRenderHeight };
 
 	// Games require a deg2rad fixup because...reasons
 	desc.CameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0);

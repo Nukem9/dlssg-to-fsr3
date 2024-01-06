@@ -34,8 +34,12 @@ private:
 	std::optional<FfxResourceInternal> m_TexSharedOpticalFlowSCD;
 
 	// Transient
-	uint32_t m_RenderWidth = 0; // GBuffer dimensions
-	uint32_t m_RenderHeight = 0;
+	uint32_t m_PreUpscaleRenderWidth = 0; // GBuffer dimensions
+	uint32_t m_PreUpscaleRenderHeight = 0;
+
+	uint32_t m_PostUpscaleRenderWidth = 0;
+	uint32_t m_PostUpscaleRenderHeight = 0;
+
 	FfxCommandList m_ActiveCommandList = {};
 
 public:
@@ -51,6 +55,7 @@ public:
 private:
 	bool IsVulkanBackend() const;
 
+	bool CalculateResourceDimensions(NGXInstanceParameters *NGXParameters);
 	bool BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildOpticalFlowParameters(FfxOpticalflowDispatchDescription *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildFrameInterpolationParameters(FFInterpolatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
