@@ -8,55 +8,16 @@ void *CustomLibraryResolverCallback();
 #define DLL_PROXY_LIBRARY_RESOLVER_CALLBACK CustomLibraryResolverCallback   // Custom DLL path resolver
 #include "DllProxy.h"
 
-constinit const wchar_t *AvailableProxies[] = { L"dbghelp.dll", L"winhttp.dll", L"version.dll" };
-
-void *TryResolveSystemLibrary()
+void *TryResolveSystemLibrary(const wchar_t *RealLibraryName)
 {
-	// Grab the file name and extension of this dll
-	const auto targetLibraryName = []() -> const wchar_t *
-	{
-		wchar_t path[2048] = {};
-		HMODULE thisModuleHandle = nullptr;
-
-		if (!GetModuleHandleExW(
-				GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-				reinterpret_cast<LPCWSTR>(&TryResolveSystemLibrary),
-				&thisModuleHandle))
-			return nullptr;
-
-		if (GetModuleFileNameW(thisModuleHandle, path, ARRAYSIZE(path)) <= 0)
-			return nullptr;
-
-		for (auto i = static_cast<ptrdiff_t>(wcslen(path)) - 1; i > 0; i--)
-		{
-			if (path[i] == L'\\' || path[i] == L'/')
-			{
-				auto fileNamePart = &path[i + 1];
-
-				for (auto proxy : AvailableProxies)
-				{
-					if (_wcsicmp(fileNamePart, proxy) == 0)
-						return proxy;
-				}
-
-				break;
-			}
-		}
-
-		return nullptr;
-	}();
-
-	if (!targetLibraryName)
-		return nullptr;
-
 	// Build the full system32 path
 	wchar_t fullSystemPath[2048] = {};
 
-	if (!GetSystemDirectoryW(fullSystemPath, ARRAYSIZE(fullSystemPath) - 1))
+	if (GetSystemDirectoryW(fullSystemPath, ARRAYSIZE(fullSystemPath) - 1) <= 0)
 		return nullptr;
 
 	wcscat_s(fullSystemPath, L"\\");
-	wcscat_s(fullSystemPath, targetLibraryName);
+	wcscat_s(fullSystemPath, RealLibraryName);
 
 	return LoadLibraryW(fullSystemPath);
 }
@@ -106,10 +67,52 @@ void *CustomLibraryResolverCallback()
 
 	if (!moduleHandle)
 	{
-		moduleHandle = TryResolveSystemLibrary();
+		// Grab the file name and extension of this dll
+		wchar_t temp[2048] = {};
+		const auto targetLibraryName = [&]() -> const wchar_t *
+		{
+			HMODULE thisModuleHandle = nullptr;
 
-		if (!moduleHandle)
-			moduleHandle = TryResolveNGXLibrary();
+			if (!GetModuleHandleExW(
+					GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+					reinterpret_cast<LPCWSTR>(&TryResolveSystemLibrary),
+					&thisModuleHandle))
+				return nullptr;
+
+			if (GetModuleFileNameW(thisModuleHandle, temp, ARRAYSIZE(temp)) <= 0)
+				return nullptr;
+
+			for (auto i = static_cast<ptrdiff_t>(wcslen(temp)) - 1; i > 0; i--)
+			{
+				// Split the name out
+				if (temp[i] == L'\\' || temp[i] == L'/')
+					return &temp[i + 1];
+			}
+
+			return temp;
+		}();
+
+		if (targetLibraryName)
+		{
+			if (_wcsicmp(targetLibraryName, L"nvngx.dll") == 0)
+			{
+				// Check the registry
+				moduleHandle = TryResolveNGXLibrary();
+			}
+			else if (_wcsicmp(targetLibraryName, L"dbghelp.dll") == 0 ||
+				_wcsicmp(targetLibraryName, L"winhttp.dll") == 0 ||
+				_wcsicmp(targetLibraryName, L"version.dll") == 0)
+			{
+				// Check system32
+				moduleHandle = TryResolveSystemLibrary(targetLibraryName);
+			}
+			else
+			{
+				// Not a system DLL and not NGX. We're either an ASI variant or some arbitrary DLL. Don't
+				// bother resolving exports properly.
+				moduleHandle = GetModuleHandleW(nullptr);
+			}
+		}
 	}
 
 	return moduleHandle;
