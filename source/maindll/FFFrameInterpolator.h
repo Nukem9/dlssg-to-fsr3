@@ -33,6 +33,9 @@ private:
 	std::optional<FfxResourceInternal> m_TexSharedOpticalFlowVector;
 	std::optional<FfxResourceInternal> m_TexSharedOpticalFlowSCD;
 
+	FfxFloatCoords2D m_HDRLuminanceRange = { 0.0001f, 1000.0f };
+	bool m_HDRLuminanceRangeSet = false;
+
 	// Transient
 	uint32_t m_PreUpscaleRenderWidth = 0; // GBuffer dimensions
 	uint32_t m_PreUpscaleRenderHeight = 0;
@@ -56,6 +59,7 @@ private:
 	bool IsVulkanBackend() const;
 
 	bool CalculateResourceDimensions(NGXInstanceParameters *NGXParameters);
+	void QueryHDRLuminanceRange(NGXInstanceParameters *NGXParameters);
 	bool BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildOpticalFlowParameters(FfxOpticalflowDispatchDescription *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildFrameInterpolationParameters(FFInterpolatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);

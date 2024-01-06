@@ -120,6 +120,8 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		if (!CalculateResourceDimensions(NGXParameters))
 			return FFX_ERROR_INVALID_ARGUMENT;
 
+		QueryHDRLuminanceRange(NGXParameters);
+
 		// Parameter setup
 		FFDilatorDispatchParameters fsrDilationDesc = {};
 		FfxOpticalflowDispatchDescription fsrOfDispatchDesc = {};
@@ -343,6 +345,64 @@ bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGX
 	return true;
 }
 
+void FFFrameInterpolator::QueryHDRLuminanceRange(NGXInstanceParameters *NGXParameters)
+{
+	if (NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) == 0)
+		return;
+
+	if (m_HDRLuminanceRangeSet)
+		return;
+
+	// Microsoft DirectX 12 HDR sample
+	// https://github.com/microsoft/DirectX-Graphics-Samples/blob/b5f92e2251ee83db4d4c795b3cba5d470c52eaf8/Samples/Desktop/D3D12HDR/src/D3D12HDR.cpp#L1064
+	const auto currentAdapterLuid = DXLogicalDevice->GetAdapterLuid();
+
+	IDXGIFactory1 *factory = nullptr;
+	IDXGIAdapter1 *adapter = nullptr;
+	IDXGIOutput *output = nullptr;
+
+	if (CreateDXGIFactory1(IID_PPV_ARGS(&factory)) == S_OK)
+	{
+		// Match the active DXGI adapter
+		for (uint32_t i = 0; factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; i++)
+		{
+			DXGI_ADAPTER_DESC desc = {};
+			adapter->GetDesc(&desc);
+
+			if (desc.AdapterLuid.LowPart == currentAdapterLuid.LowPart && desc.AdapterLuid.HighPart == currentAdapterLuid.HighPart)
+			{
+				// Then check the first HDR-capable output
+				for (uint32_t j = 0; adapter->EnumOutputs(j, &output) != DXGI_ERROR_NOT_FOUND; j++)
+				{
+					if (IDXGIOutput6 *output6; output->QueryInterface(IID_PPV_ARGS(&output6)) == S_OK)
+					{
+						DXGI_OUTPUT_DESC1 outputDesc = {};
+						output6->GetDesc1(&outputDesc);
+						output6->Release();
+
+						if (outputDesc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 && !m_HDRLuminanceRangeSet)
+						{
+							m_HDRLuminanceRange = { outputDesc.MinLuminance, outputDesc.MaxLuminance };
+							m_HDRLuminanceRangeSet = true;
+						}
+					}
+
+					output->Release();
+				}
+			}
+
+			adapter->Release();
+		}
+
+		factory->Release();
+	}
+
+	// Keep using hardcoded defaults even if we didn't find a valid output
+	m_HDRLuminanceRangeSet = true;
+
+	spdlog::info("Using assumed HDR luminance range: {} to {} nits", m_HDRLuminanceRange.x, m_HDRLuminanceRange.y);
+}
+
 bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters)
 {
 	auto& desc = *OutParameters;
@@ -409,8 +469,7 @@ bool FFFrameInterpolator::BuildOpticalFlowParameters(
 	else
 		desc.backbufferTransferFunction = FFX_BACKBUFFER_TRANSFER_FUNCTION_PQ;
 
-	desc.minMaxLuminance.x = 0.00001f; // TODO
-	desc.minMaxLuminance.y = 1000.0f;  // TODO
+	desc.minMaxLuminance = m_HDRLuminanceRange;
 
 	return true;
 }
@@ -464,7 +523,7 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	desc.Reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
 	// HDR nits
-	desc.MinMaxLuminance = { 0.00001f, 1000.0f }; // TODO
+	desc.MinMaxLuminance = m_HDRLuminanceRange;
 
 	return true;
 }
