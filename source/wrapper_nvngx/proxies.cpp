@@ -85,16 +85,16 @@ void *TryResolveNGXLibrary()
 		}
 	}
 
-	HANDLE moduleHandle = nullptr;
-
+	// Use the current working directory if registry keys aren't present
 	if (status == ERROR_SUCCESS)
-	{
 		wcscat_s(filePath, L"\\_nvngx.dll");
-		moduleHandle = LoadLibraryW(filePath);
-	}
+	else
+		wcscpy_s(filePath, L"_nvngx.dll");
+
+	const auto moduleHandle = LoadLibraryW(filePath);
 
 	if (!moduleHandle)
-		MessageBoxW(nullptr, L"Failed to load system32 NGXCore library.", L"dlssg-to-fsr3", MB_OK);
+		MessageBoxW(nullptr, L"Failed to load NGXCore library.", L"dlssg-to-fsr3", MB_OK);
 
 	return moduleHandle;
 }
