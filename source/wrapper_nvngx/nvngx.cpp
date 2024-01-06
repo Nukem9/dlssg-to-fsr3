@@ -161,7 +161,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 		// Hooks can't be removed once they're in place. Pin this DLL in memory.
 		if (anyPatched)
-			GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, nullptr, &hInstDLL);
+		{
+			GetModuleHandleExW(
+				GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
+				reinterpret_cast<LPCWSTR>(hInstDLL),
+				&hInstDLL);
+		}
 	}
 
 	return TRUE;
