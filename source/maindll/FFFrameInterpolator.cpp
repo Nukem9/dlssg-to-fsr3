@@ -25,11 +25,11 @@ VkAccessFlags getVKAccessFlagsFromResourceState(FfxResourceStates state);
 VkImageLayout getVKImageLayoutFromResourceState(FfxResourceStates state);
 
 FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight)
-	: DXLogicalDevice(Device),
-	  SwapchainWidth(OutputWidth),
-	  SwapchainHeight(OutputHeight)
+	: m_LogicalDeviceDX(Device),
+	  m_SwapchainWidth(OutputWidth),
+	  m_SwapchainHeight(OutputHeight)
 {
-	DXLogicalDevice->AddRef();
+	m_LogicalDeviceDX->AddRef();
 	Create();
 }
 
@@ -38,10 +38,10 @@ FFFrameInterpolator::FFFrameInterpolator(
 	VkPhysicalDevice PhysicalDevice,
 	uint32_t OutputWidth,
 	uint32_t OutputHeight)
-	: VKLogicalDevice(LogicalDevice),
-	  VKPhysicalDevice(PhysicalDevice),
-	  SwapchainWidth(OutputWidth),
-	  SwapchainHeight(OutputHeight)
+	: m_LogicalDeviceVK(LogicalDevice),
+	  m_PhysicalDeviceVK(PhysicalDevice),
+	  m_SwapchainWidth(OutputWidth),
+	  m_SwapchainHeight(OutputHeight)
 {
 	Create();
 }
@@ -50,8 +50,8 @@ FFFrameInterpolator::~FFFrameInterpolator()
 {
 	Destroy();
 
-	if (DXLogicalDevice)
-		DXLogicalDevice->Release();
+	if (m_LogicalDeviceDX)
+		m_LogicalDeviceDX->Release();
 }
 
 FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParameters *NGXParameters)
@@ -144,13 +144,13 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
 
 		// Record/submit commands
-		auto status = DilationContext->Dispatch(fsrDilationDesc);
+		auto status = m_DilationContext->Dispatch(fsrDilationDesc);
 		FFX_RETURN_ON_FAIL(status);
 
-		status = ffxOpticalflowContextDispatch(&OpticalFlowContext.value(), &fsrOfDispatchDesc);
+		status = ffxOpticalflowContextDispatch(&m_OpticalFlowContext.value(), &fsrOfDispatchDesc);
 		FFX_RETURN_ON_FAIL(status);
 
-		status = FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
+		status = m_FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
 		FFX_RETURN_ON_FAIL(status);
 
 		if (fsrFiDispatchDesc.DebugView || doInterpolatedOnly)
@@ -287,7 +287,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 
 bool FFFrameInterpolator::IsVulkanBackend() const
 {
-	return DXLogicalDevice == nullptr;
+	return m_LogicalDeviceDX == nullptr;
 }
 
 bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGXParameters)
@@ -335,8 +335,8 @@ bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGX
 #endif
 	{
 		// No HUD-less resource. Default to back buffer resolution.
-		m_PostUpscaleRenderWidth = SwapchainWidth;
-		m_PostUpscaleRenderHeight = SwapchainHeight;
+		m_PostUpscaleRenderWidth = m_SwapchainWidth;
+		m_PostUpscaleRenderHeight = m_SwapchainHeight;
 	}
 
 	if (m_PostUpscaleRenderWidth <= 32 || m_PostUpscaleRenderHeight <= 32)
@@ -355,7 +355,7 @@ void FFFrameInterpolator::QueryHDRLuminanceRange(NGXInstanceParameters *NGXParam
 
 	// Microsoft DirectX 12 HDR sample
 	// https://github.com/microsoft/DirectX-Graphics-Samples/blob/b5f92e2251ee83db4d4c795b3cba5d470c52eaf8/Samples/Desktop/D3D12HDR/src/D3D12HDR.cpp#L1064
-	const auto currentAdapterLuid = DXLogicalDevice->GetAdapterLuid();
+	const auto currentAdapterLuid = m_LogicalDeviceDX->GetAdapterLuid();
 
 	IDXGIFactory1 *factory = nullptr;
 	IDXGIAdapter1 *adapter = nullptr;
@@ -414,9 +414,9 @@ bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *O
 	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST))
 		return false;
 
-	desc.OutputDilatedDepth = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedDilatedDepth);
-	desc.OutputDilatedMotionVectors = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedDilatedMotionVectors);
-	desc.OutputReconstructedPrevNearestDepth = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedPreviousNearestDepth);
+	desc.OutputDilatedDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedDepth);
+	desc.OutputDilatedMotionVectors = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedMotionVectors);
+	desc.OutputReconstructedPrevNearestDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedPreviousNearestDepth);
 
 	desc.RenderSize = { m_PreUpscaleRenderWidth, m_PreUpscaleRenderHeight };
 	desc.OutputSize = { m_PostUpscaleRenderWidth, m_PostUpscaleRenderHeight };
@@ -459,8 +459,8 @@ bool FFFrameInterpolator::BuildOpticalFlowParameters(
 	desc.color.description.width = m_PostUpscaleRenderWidth; // Explicit override
 	desc.color.description.height = m_PostUpscaleRenderHeight;
 
-	desc.opticalFlowVector = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowVector);
-	desc.opticalFlowSCD = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
+	desc.opticalFlowVector = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowVector);
+	desc.opticalFlowSCD = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
 
 	desc.reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
@@ -494,14 +494,14 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 			FFX_RESOURCE_STATE_UNORDERED_ACCESS))
 		return false;
 
-	desc.InputDilatedDepth = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedDilatedDepth);
-	desc.InputDilatedMotionVectors = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedDilatedMotionVectors);
-	desc.InputReconstructedPreviousNearDepth = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedPreviousNearestDepth);
-	desc.InputOpticalFlowVector = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowVector);
-	desc.InputOpticalFlowSceneChangeDetection = SharedBackendInterface.fpGetResource(&SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
+	desc.InputDilatedDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedDepth);
+	desc.InputDilatedMotionVectors = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedMotionVectors);
+	desc.InputReconstructedPreviousNearDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedPreviousNearestDepth);
+	desc.InputOpticalFlowVector = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowVector);
+	desc.InputOpticalFlowSceneChangeDetection = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
 
 	desc.RenderSize = { m_PreUpscaleRenderWidth, m_PreUpscaleRenderHeight };
-	desc.OutputSize = { SwapchainWidth, SwapchainHeight };
+	desc.OutputSize = { m_SwapchainWidth, m_SwapchainHeight };
 
 	desc.OpticalFlowBufferSize = { desc.InputOpticalFlowVector.description.width, desc.InputOpticalFlowVector.description.height };
 	desc.OpticalFlowBlockSize = 8;
@@ -539,12 +539,12 @@ void FFFrameInterpolator::Create()
 	if (CreateOpticalFlowContext() != FFX_OK)
 		throw std::runtime_error(__FUNCTION__ ": Failed to create optical flow context.");
 
-	FrameInterpolatorContext = std::make_unique<FFInterpolator>(FrameInterpolationBackendInterface, SwapchainWidth, SwapchainHeight);
+	m_FrameInterpolatorContext = std::make_unique<FFInterpolator>(m_FrameInterpolationBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
 }
 
 void FFFrameInterpolator::Destroy()
 {
-	FrameInterpolatorContext.reset();
+	m_FrameInterpolatorContext.reset();
 	DestroyOpticalFlowContext();
 	DestroyDilationContext();
 	DestroyBackend();
@@ -555,8 +555,8 @@ FfxErrorCode FFFrameInterpolator::CreateBackend()
 	if (IsVulkanBackend())
 	{
 		VkDeviceContext vkContext = {
-			.vkDevice = VKLogicalDevice,
-			.vkPhysicalDevice = VKPhysicalDevice,
+			.vkDevice = m_LogicalDeviceVK,
+			.vkPhysicalDevice = m_PhysicalDeviceVK,
 			.vkDeviceProcAddr = nullptr,
 		};
 
@@ -564,25 +564,25 @@ FfxErrorCode FFFrameInterpolator::CreateBackend()
 		const auto fsrDevice = ffxGetDeviceVK(&vkContext);
 		const auto scratchSize = ffxGetScratchMemorySizeVK(vkContext.vkPhysicalDevice, maxContexts);
 
-		auto& buffer1 = ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
-		FFX_RETURN_ON_FAIL(ffxGetInterfaceVK(&SharedBackendInterface, fsrDevice, buffer1.get(), scratchSize, maxContexts));
+		auto& buffer1 = m_ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
+		FFX_RETURN_ON_FAIL(ffxGetInterfaceVK(&m_SharedBackendInterface, fsrDevice, buffer1.get(), scratchSize, maxContexts));
 
-		FrameInterpolationBackendInterface = SharedBackendInterface;
+		m_FrameInterpolationBackendInterface = m_SharedBackendInterface;
 	}
 	else
 	{
 		const uint32_t maxContexts = 3; // Assume 3 contexts per interface
-		const auto fsrDevice = ffxGetDeviceDX12(DXLogicalDevice);
+		const auto fsrDevice = ffxGetDeviceDX12(m_LogicalDeviceDX);
 		const auto scratchSize = ffxGetScratchMemorySizeDX12(maxContexts);
 
-		auto& buffer1 = ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
-		FFX_RETURN_ON_FAIL(ffxGetInterfaceDX12(&SharedBackendInterface, fsrDevice, buffer1.get(), scratchSize, maxContexts));
+		auto& buffer1 = m_ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
+		FFX_RETURN_ON_FAIL(ffxGetInterfaceDX12(&m_SharedBackendInterface, fsrDevice, buffer1.get(), scratchSize, maxContexts));
 
-		auto& buffer2 = ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
-		FFX_RETURN_ON_FAIL(ffxGetInterfaceDX12(&FrameInterpolationBackendInterface, fsrDevice, buffer2.get(), scratchSize, maxContexts));
+		auto& buffer2 = m_ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
+		FFX_RETURN_ON_FAIL(ffxGetInterfaceDX12(&m_FrameInterpolationBackendInterface, fsrDevice, buffer2.get(), scratchSize, maxContexts));
 	}
 
-	const auto status = SharedBackendInterface.fpCreateBackendContext(&SharedBackendInterface, &m_SharedEffectContextId.emplace());
+	const auto status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, &m_SharedEffectContextId.emplace());
 
 	if (status != FFX_OK)
 	{
@@ -596,16 +596,16 @@ FfxErrorCode FFFrameInterpolator::CreateBackend()
 void FFFrameInterpolator::DestroyBackend()
 {
 	if (m_SharedEffectContextId)
-		SharedBackendInterface.fpDestroyBackendContext(&SharedBackendInterface, *m_SharedEffectContextId);
+		m_SharedBackendInterface.fpDestroyBackendContext(&m_SharedBackendInterface, *m_SharedEffectContextId);
 }
 
 FfxErrorCode FFFrameInterpolator::CreateDilationContext()
 {
-	DilationContext = std::make_unique<FFDilator>(SharedBackendInterface, SwapchainWidth, SwapchainHeight);
-	const auto resourceDescs = DilationContext->GetSharedResourceDescriptions();
+	m_DilationContext = std::make_unique<FFDilator>(m_SharedBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
+	const auto resourceDescs = m_DilationContext->GetSharedResourceDescriptions();
 
-	auto status = SharedBackendInterface.fpCreateResource(
-		&SharedBackendInterface,
+	auto status = m_SharedBackendInterface.fpCreateResource(
+		&m_SharedBackendInterface,
 		&resourceDescs.dilatedDepth,
 		*m_SharedEffectContextId,
 		&m_TexSharedDilatedDepth.emplace());
@@ -616,8 +616,8 @@ FfxErrorCode FFFrameInterpolator::CreateDilationContext()
 		return status;
 	}
 
-	status = SharedBackendInterface.fpCreateResource(
-		&SharedBackendInterface,
+	status = m_SharedBackendInterface.fpCreateResource(
+		&m_SharedBackendInterface,
 		&resourceDescs.dilatedMotionVectors,
 		*m_SharedEffectContextId,
 		&m_TexSharedDilatedMotionVectors.emplace());
@@ -628,8 +628,8 @@ FfxErrorCode FFFrameInterpolator::CreateDilationContext()
 		return status;
 	}
 
-	status = SharedBackendInterface.fpCreateResource(
-		&SharedBackendInterface,
+	status = m_SharedBackendInterface.fpCreateResource(
+		&m_SharedBackendInterface,
 		&resourceDescs.reconstructedPrevNearestDepth,
 		*m_SharedEffectContextId,
 		&m_TexSharedPreviousNearestDepth.emplace());
@@ -645,38 +645,38 @@ FfxErrorCode FFFrameInterpolator::CreateDilationContext()
 
 void FFFrameInterpolator::DestroyDilationContext()
 {
-	DilationContext.reset();
+	m_DilationContext.reset();
 
 	if (m_TexSharedDilatedDepth)
-		SharedBackendInterface.fpDestroyResource(&SharedBackendInterface, *m_TexSharedDilatedDepth, *m_SharedEffectContextId);
+		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedDilatedDepth, *m_SharedEffectContextId);
 
 	if (m_TexSharedDilatedMotionVectors)
-		SharedBackendInterface.fpDestroyResource(&SharedBackendInterface, *m_TexSharedDilatedMotionVectors, *m_SharedEffectContextId);
+		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedDilatedMotionVectors, *m_SharedEffectContextId);
 
 	if (m_TexSharedPreviousNearestDepth)
-		SharedBackendInterface.fpDestroyResource(&SharedBackendInterface, *m_TexSharedPreviousNearestDepth, *m_SharedEffectContextId);
+		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedPreviousNearestDepth, *m_SharedEffectContextId);
 }
 
 FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 {
 	// Set up configuration for optical flow
 	FfxOpticalflowContextDescription fsrOfDescription = {};
-	fsrOfDescription.backendInterface = FrameInterpolationBackendInterface;
+	fsrOfDescription.backendInterface = m_FrameInterpolationBackendInterface;
 	fsrOfDescription.flags = 0;
-	fsrOfDescription.resolution = { SwapchainWidth, SwapchainHeight };
-	auto status = ffxOpticalflowContextCreate(&OpticalFlowContext.emplace(), &fsrOfDescription);
+	fsrOfDescription.resolution = { m_SwapchainWidth, m_SwapchainHeight };
+	auto status = ffxOpticalflowContextCreate(&m_OpticalFlowContext.emplace(), &fsrOfDescription);
 
 	if (status != FFX_OK)
 	{
-		OpticalFlowContext.reset();
+		m_OpticalFlowContext.reset();
 		return status;
 	}
 
 	FfxOpticalflowSharedResourceDescriptions fsrOfSharedDescriptions = {};
-	FFX_RETURN_ON_FAIL(ffxOpticalflowGetSharedResourceDescriptions(&OpticalFlowContext.value(), &fsrOfSharedDescriptions));
+	FFX_RETURN_ON_FAIL(ffxOpticalflowGetSharedResourceDescriptions(&m_OpticalFlowContext.value(), &fsrOfSharedDescriptions));
 
-	status = SharedBackendInterface.fpCreateResource(
-		&SharedBackendInterface,
+	status = m_SharedBackendInterface.fpCreateResource(
+		&m_SharedBackendInterface,
 		&fsrOfSharedDescriptions.opticalFlowVector,
 		*m_SharedEffectContextId,
 		&m_TexSharedOpticalFlowVector.emplace());
@@ -687,8 +687,8 @@ FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 		return status;
 	}
 
-	status = SharedBackendInterface.fpCreateResource(
-		&SharedBackendInterface,
+	status = m_SharedBackendInterface.fpCreateResource(
+		&m_SharedBackendInterface,
 		&fsrOfSharedDescriptions.opticalFlowSCD,
 		*m_SharedEffectContextId,
 		&m_TexSharedOpticalFlowSCD.emplace());
@@ -704,14 +704,14 @@ FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 
 void FFFrameInterpolator::DestroyOpticalFlowContext()
 {
-	if (OpticalFlowContext)
-		ffxOpticalflowContextDestroy(&OpticalFlowContext.value());
+	if (m_OpticalFlowContext)
+		ffxOpticalflowContextDestroy(&m_OpticalFlowContext.value());
 
 	if (m_TexSharedOpticalFlowVector)
-		SharedBackendInterface.fpDestroyResource(&SharedBackendInterface, *m_TexSharedOpticalFlowVector, *m_SharedEffectContextId);
+		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowVector, *m_SharedEffectContextId);
 
 	if (m_TexSharedOpticalFlowSCD)
-		SharedBackendInterface.fpDestroyResource(&SharedBackendInterface, *m_TexSharedOpticalFlowSCD, *m_SharedEffectContextId);
+		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowSCD, *m_SharedEffectContextId);
 }
 
 bool FFFrameInterpolator::LoadResourceFromNGXParameters(

@@ -11,21 +11,21 @@ struct ID3D12Device;
 class FFFrameInterpolator
 {
 private:
-	ID3D12Device *const DXLogicalDevice = nullptr;
-	const VkDevice VKLogicalDevice = {};
-	const VkPhysicalDevice VKPhysicalDevice = {};
+	ID3D12Device *const m_LogicalDeviceDX = nullptr;
+	const VkDevice m_LogicalDeviceVK = {};
+	const VkPhysicalDevice m_PhysicalDeviceVK = {};
 
-	const uint32_t SwapchainWidth; // Final image presented to the screen dimensions
-	const uint32_t SwapchainHeight;
+	const uint32_t m_SwapchainWidth; // Final image presented to the screen dimensions
+	const uint32_t m_SwapchainHeight;
 
-	std::vector<std::unique_ptr<uint8_t[]>> ScratchMemoryBuffers;
-	FfxInterface FrameInterpolationBackendInterface = {};
-	FfxInterface SharedBackendInterface = {};
+	std::vector<std::unique_ptr<uint8_t[]>> m_ScratchMemoryBuffers;
+	FfxInterface m_FrameInterpolationBackendInterface = {};
+	FfxInterface m_SharedBackendInterface = {};
 	std::optional<FfxUInt32> m_SharedEffectContextId;
 
-	std::unique_ptr<FFDilator> DilationContext;
-	std::optional<FfxOpticalflowContext> OpticalFlowContext;
-	std::unique_ptr<FFInterpolator> FrameInterpolatorContext;
+	std::unique_ptr<FFDilator> m_DilationContext;
+	std::optional<FfxOpticalflowContext> m_OpticalFlowContext;
+	std::unique_ptr<FFInterpolator> m_FrameInterpolatorContext;
 
 	std::optional<FfxResourceInternal> m_TexSharedDilatedDepth;
 	std::optional<FfxResourceInternal> m_TexSharedDilatedMotionVectors;
