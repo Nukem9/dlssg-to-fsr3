@@ -21,40 +21,58 @@ execute_process(
 )
 
 #
-# Set up the actual library
+# Always build the main library
 #
 add_subdirectory("${PROJECT_SOURCE_PATH}/maindll")
 
 #
-# And finally produce build artifacts
+# Then set up proxies/wrappers and install everything
 #
 set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}")
 
-if(BUILD_OUTPUT_WRAPPER STREQUAL "DLSSTWEAKS")
+function(install_universal_variant PROXYDLL IMPLDLL ROOTDIR READMEDIR DLLNAME)
+
+    if (NOT DLLNAME STREQUAL "")
+        install(FILES "$<TARGET_FILE:${PROXYDLL}>" DESTINATION "${ROOTDIR}/" RENAME "${DLLNAME}")
+    else()
+        install(TARGETS ${PROXYDLL} RUNTIME DESTINATION "${ROOTDIR}/")
+    endif()
+    install(TARGETS ${IMPLDLL} RUNTIME DESTINATION "${ROOTDIR}/")
+    install(FILES "${PROJECT_RESOURCES_PATH}/${READMEDIR}" DESTINATION "${ROOTDIR}/" RENAME "READ ME.txt")
+
+endfunction()
+
+if(BUILD_OUTPUT_WRAPPER STREQUAL "UNIVERSAL")
+
+    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME} (Universal)")
+
+    add_subdirectory("${PROJECT_SOURCE_PATH}/wrapper_nvngx")
+    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "plugin_red4ext" "read_me_generic_plugin.txt" "dlssg_to_fsr3.dll")
+    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "plugin_asi_loader" "read_me_generic_plugin.txt" "dlssg_to_fsr3.asi")
+    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "dll_version" "read_me_generic_dll.txt" "version.dll")
+    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "dll_winhttp" "read_me_generic_dll.txt" "winhttp.dll")
+    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "dll_dbghelp" "read_me_generic_dll.txt" "dbghelp.dll")
+
+elseif(BUILD_OUTPUT_WRAPPER STREQUAL "DLSSTWEAKS")
+
     set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME} (DLSSTweaks Edition)")
 
     add_subdirectory("${PROJECT_SOURCE_PATH}/wrapper_dt")
-    install(TARGETS dlsstweaks_wrapper_output_dll RUNTIME DESTINATION "/")
+    install_universal_variant(dlsstweaks_wrapper_output_dll dlssg_output_dll "" "read_me_dlsstweaks.txt" "")
 
-    install(
-        FILES
-            "${PROJECT_RESOURCES_PATH}/READ ME (DLSSTweaks).txt"
-        DESTINATION
-            "/"
-)
 elseif(BUILD_OUTPUT_WRAPPER STREQUAL "NVNGX")
 
     add_subdirectory("${PROJECT_SOURCE_PATH}/wrapper_nvngx")
-    install(TARGETS nvngx_wrapper_output_dll RUNTIME DESTINATION "/")
+    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "" "read_me_nvngx.txt" "")
 
     install(
         FILES
-            "${PROJECT_RESOURCES_PATH}/READ ME (Nvngx).txt"
             "${PROJECT_RESOURCES_PATH}/DisableNvidiaSignatureChecks.reg"
             "${PROJECT_RESOURCES_PATH}/RestoreNvidiaSignatureChecks.reg"
         DESTINATION
             "/"
-)
+    )
+
 endif()
 
 install(
@@ -64,13 +82,6 @@ install(
         "/"
     RENAME
         "LICENSE.txt"
-)
-
-install(
-    TARGETS
-        dlssg_output_dll
-    RUNTIME
-        DESTINATION "/"
 )
 
 set(CPACK_GENERATOR "ZIP")

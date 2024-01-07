@@ -12,3 +12,7 @@ Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments 
 & cmake --preset final-nvngxwrapper
 & cmake --build --preset final-nvngxwrapper-release
 & cpack --preset final-nvngxwrapper
+
+& cmake --preset final-universal
+& cmake --build --preset final-universal-release
+& cpack --preset final-universal

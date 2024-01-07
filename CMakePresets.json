@@ -66,9 +66,9 @@
       ]
     },
     {
-      "name": "final-dbghelpwrapper",
+      "name": "final-universal",
       "cacheVariables": {
-        "BUILD_OUTPUT_WRAPPER": "DBGHELP"
+        "BUILD_OUTPUT_WRAPPER": "UNIVERSAL"
       },
       "inherits": [
         "configuration-final"
@@ -98,16 +98,16 @@
       "displayName": "DTweaks Release x64"
     },
     {
-      "name": "final-dbghelpwrapper-debug",
-      "configurePreset": "final-dbghelpwrapper",
+      "name": "final-universal-debug",
+      "configurePreset": "final-universal",
       "configuration": "Debug",
-      "displayName": "Dbghelp Debug x64"
+      "displayName": "Universal Debug x64"
     },
     {
-      "name": "final-dbghelpwrapper-release",
-      "configurePreset": "final-dbghelpwrapper",
+      "name": "final-universal-release",
+      "configurePreset": "final-universal",
       "configuration": "Release",
-      "displayName": "Dbghelp Release x64"
+      "displayName": "Universal Release x64"
     },
     {
       "name": "final-nvngxwrapper-debug",
@@ -130,9 +130,9 @@
       "packageDirectory": "${sourceDir}/bin/built-packages"
     },
     {
-      "name": "final-dbghelpwrapper",
-      "displayName": "Package Final Dbghelp",
-      "configurePreset": "final-dbghelpwrapper",
+      "name": "final-universal",
+      "displayName": "Package Final Universal",
+      "configurePreset": "final-universal",
       "packageDirectory": "${sourceDir}/bin/built-packages"
     },
     {
