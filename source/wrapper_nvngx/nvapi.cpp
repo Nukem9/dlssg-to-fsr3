@@ -23,14 +23,13 @@ using PfnNvAPI_QueryInterface = void *(__stdcall *)(NV_INTERFACE InterfaceId);
 using PfnNvAPI_GPU_GetArchInfo = NV_STATUS(__stdcall *)(void *GPUHandle, NV_ARCH_INFO *ArchInfo);
 
 PfnNvAPI_QueryInterface OriginalNvAPI_QueryInterface = nullptr;
+PfnNvAPI_GPU_GetArchInfo OriginalNvAPI_GPU_GetArchInfo = nullptr;
 
 NV_STATUS __stdcall HookedNvAPI_GPU_GetArchInfo(void *GPUHandle, NV_ARCH_INFO *ArchInfo)
 {
-	const static auto interface = OriginalNvAPI_QueryInterface(NV_INTERFACE::GPU_GetArchInfo);
-
-	if (interface)
+	if (OriginalNvAPI_GPU_GetArchInfo)
 	{
-		const auto status = static_cast<PfnNvAPI_GPU_GetArchInfo>(interface)(GPUHandle, ArchInfo);
+		const auto status = OriginalNvAPI_GPU_GetArchInfo(GPUHandle, ArchInfo);
 
 		// Spoof Ada GPU arch
 		if (status == NV_STATUS::Success && ArchInfo && ArchInfo->Architecture < 0x190)
@@ -44,10 +43,15 @@ NV_STATUS __stdcall HookedNvAPI_GPU_GetArchInfo(void *GPUHandle, NV_ARCH_INFO *A
 
 void *__stdcall HookedNvAPI_QueryInterface(NV_INTERFACE InterfaceId)
 {
-	if (InterfaceId == NV_INTERFACE::GPU_GetArchInfo)
-		return &HookedNvAPI_GPU_GetArchInfo;
+	const auto result = OriginalNvAPI_QueryInterface(InterfaceId);
 
-	return OriginalNvAPI_QueryInterface(InterfaceId);
+	if (InterfaceId == NV_INTERFACE::GPU_GetArchInfo)
+	{
+		OriginalNvAPI_GPU_GetArchInfo = static_cast<PfnNvAPI_GPU_GetArchInfo>(result);
+		return &HookedNvAPI_GPU_GetArchInfo;
+	}
+
+	return result;
 }
 
 void TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer)

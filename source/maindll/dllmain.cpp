@@ -54,7 +54,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		spdlog::warn("");
 		spdlog::warn("DO NOT USE IN MULTIPLAYER GAMES.");
 		spdlog::warn("");
-		return TRUE;
 	}
 
 	return TRUE;

@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <Windows.h>
 
 void *CustomLibraryResolverCallback();
 
@@ -7,6 +7,8 @@ void *CustomLibraryResolverCallback();
 #define DLL_PROXY_DECLARE_IMPLEMENTATION                                    // Define the whole implementation
 #define DLL_PROXY_LIBRARY_RESOLVER_CALLBACK CustomLibraryResolverCallback   // Custom DLL path resolver
 #include "DllProxy.h"
+
+extern bool EnableAggressiveHooking;
 
 void *TryResolveSystemLibrary(const wchar_t *RealLibraryName)
 {
@@ -75,7 +77,7 @@ void *CustomLibraryResolverCallback()
 
 			if (!GetModuleHandleExW(
 					GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-					reinterpret_cast<LPCWSTR>(&TryResolveSystemLibrary),
+					reinterpret_cast<LPCWSTR>(&CustomLibraryResolverCallback),
 					&thisModuleHandle))
 				return nullptr;
 
@@ -97,6 +99,7 @@ void *CustomLibraryResolverCallback()
 			if (_wcsicmp(targetLibraryName, L"nvngx.dll") == 0)
 			{
 				// Check the registry
+				EnableAggressiveHooking = false;
 				moduleHandle = TryResolveNGXLibrary();
 			}
 			else if (_wcsicmp(targetLibraryName, L"dbghelp.dll") == 0 ||
@@ -104,12 +107,14 @@ void *CustomLibraryResolverCallback()
 				_wcsicmp(targetLibraryName, L"version.dll") == 0)
 			{
 				// Check system32
+				EnableAggressiveHooking = true;
 				moduleHandle = TryResolveSystemLibrary(targetLibraryName);
 			}
 			else
 			{
 				// Not a system DLL and not NGX. We're either an ASI variant or some arbitrary DLL. Don't
 				// bother resolving exports properly.
+				EnableAggressiveHooking = true;
 				moduleHandle = GetModuleHandleW(nullptr);
 			}
 		}

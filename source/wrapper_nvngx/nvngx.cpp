@@ -14,6 +14,8 @@ constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.
 constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
+bool EnableAggressiveHooking;
+
 void TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
 bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
@@ -136,7 +138,10 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);
-	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "GetProcAddress", &HookedGetProcAddress, nullptr);
+
+	if (EnableAggressiveHooking)
+		Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "GetProcAddress", &HookedGetProcAddress, nullptr);
+
 	return true;
 }
 
@@ -145,6 +150,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	if (fdwReason == DLL_PROCESS_ATTACH)
 	{
 		OutputDebugStringW(L"DEBUG: Shim built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
+
+		if (EnableAggressiveHooking)
+			LoadLibraryW(L"sl.interposer.dll");
 
 		// We probably loaded after sl.interposer.dll and sl.common.dll. Try patching them up front.
 		bool anyPatched = std::count_if(
