@@ -342,6 +342,25 @@ bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGX
 	if (m_PostUpscaleRenderWidth <= 32 || m_PostUpscaleRenderHeight <= 32)
 		return false;
 
+	// I've no better place to put this. Dying Light 2 is beyond screwed up.
+	//
+	// 1. They take a D24 depth buffer and explicitly convert it to RGBA8. The GBA channels are unused. This
+	//    is passed to Streamline as the "depth" buffer.
+	//
+	// 2. They take the same RGBA8 "depth" buffer above and pass it to Streamline as the "HUD-less" color
+	//    buffer.
+	//
+	// How's it possible to be this incompetent? Have these people used a debugger? The debug visualizer? For
+	// all I know the native DLSS-G implementation doesn't even work. It could just be duplicating frames.
+	const static auto isDyingLight2 = GetModuleHandleW(L"DyingLightGame_x64_rwdi.exe") != nullptr;
+
+	if (isDyingLight2)
+	{
+		NGXParameters->SetVoidPointer("DLSSG.HUDLess", nullptr);
+		m_PostUpscaleRenderWidth = m_SwapchainWidth;
+		m_PostUpscaleRenderHeight = m_SwapchainHeight;
+	}
+
 	return true;
 }
 
