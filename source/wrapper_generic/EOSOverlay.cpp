@@ -23,10 +23,10 @@ uint32_t __fastcall HookedEOS_Overlay_Stub(void *a1, void *a2, void *a3)
 	return 0xFFFFFFFF;
 }
 
-void TryInterceptEOSFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer)
+bool TryInterceptEOSFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer)
 {
 	if (!FunctionName || !*FunctionPointer || reinterpret_cast<uintptr_t>(FunctionName) < 0x10000)
-		return;
+		return false;
 
 	// Each export from EOSOVH-Win64-Shipping.dll requires interception. They're all guilty of calling the
 	// overlay initialization function, which causes other hooks to be removed.
@@ -36,6 +36,8 @@ void TryInterceptEOSFunction(void *ModuleHandle, const void *FunctionName, void 
 			continue;
 
 		*FunctionPointer = &HookedEOS_Overlay_Stub;
-		break;
+		return true;
 	}
+
+	return false;
 }

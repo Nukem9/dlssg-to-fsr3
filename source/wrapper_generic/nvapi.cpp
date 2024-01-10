@@ -52,14 +52,18 @@ void *__stdcall HookedNvAPI_QueryInterface(NV_INTERFACE InterfaceId)
 	return result;
 }
 
-void TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer)
+bool TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer)
 {
 	if (!FunctionName || !*FunctionPointer || reinterpret_cast<uintptr_t>(FunctionName) < 0x10000)
-		return;
+		return false;
 
 	if (_stricmp(static_cast<const char *>(FunctionName), "nvapi_QueryInterface") == 0)
 	{
 		OriginalNvAPI_QueryInterface = static_cast<PfnNvAPI_QueryInterface>(*FunctionPointer);
 		*FunctionPointer = &HookedNvAPI_QueryInterface;
+
+		return true;
 	}
+
+	return false;
 }

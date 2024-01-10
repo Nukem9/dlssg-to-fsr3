@@ -5,14 +5,15 @@
 // sl.common.dll      loads  _nvngx.dll       <- we are here
 // _nvngx.dll         loads  nvngx_dlssg.dll  <- intercept this stage
 //
-constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll", L"EOSSDK-Win64-Shipping.dll" };
+std::vector<const wchar_t *> TargetLibrariesToHook = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll" };
+constinit const wchar_t *TargetEGSOverlayDll = L"EOSSDK-Win64-Shipping.dll";
 constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
 bool EnableAggressiveHooking;
 
-void TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
-void TryInterceptEOSFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
+bool TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
+bool TryInterceptEOSFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
 bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
 void *LoadImplementationDll()
@@ -117,8 +118,8 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 	std::wstring_view libFileName(Path);
 
 	const bool isMatch = std::any_of(
-		std::begin(TargetLibrariesToHook),
-		std::end(TargetLibrariesToHook),
+		TargetLibrariesToHook.begin(),
+		TargetLibrariesToHook.end(),
 		[&](const wchar_t *Target)
 		{
 			return libFileName.ends_with(Target);
@@ -150,19 +151,22 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		OutputDebugStringW(L"DEBUG: Shim built with commit ID " BUILD_GIT_COMMIT_HASH "\n");
 
 		if (EnableAggressiveHooking)
+		{
+			TargetLibrariesToHook.push_back(TargetEGSOverlayDll);
 			LoadLibraryW(L"sl.interposer.dll");
+		}
 
 		// We probably loaded after sl.interposer.dll and sl.common.dll. Try patching them up front.
 		bool anyPatched = std::count_if(
-			std::begin(TargetLibrariesToHook),
-			std::end(TargetLibrariesToHook),
+			TargetLibrariesToHook.begin(),
+			TargetLibrariesToHook.end(),
 			[](const wchar_t *Target)
 		{
-			return PatchImportsForModule(Target, GetModuleHandleW(Target));
+			return PatchImportsForModule(Target, GetModuleHandleW(Target)) && _wcsicmp(Target, TargetEGSOverlayDll) != 0;
 		}) > 0;
 
 		// If zero Streamline dlls were loaded we'll have to hook the game's LoadLibrary calls and wait
-		if (!anyPatched)
+		if (!anyPatched && EnableAggressiveHooking)
 			anyPatched = PatchImportsForModule(TargetLibrariesToHook[0], GetModuleHandleW(nullptr));
 
 		// Hooks can't be removed once they're in place. Pin this DLL in memory.
