@@ -46,12 +46,12 @@ if(BUILD_OUTPUT_WRAPPER STREQUAL "UNIVERSAL")
 
     set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME} (Universal)")
 
-    add_subdirectory("${PROJECT_SOURCE_PATH}/wrapper_nvngx")
-    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "plugin_red4ext" "read_me_generic_plugin.txt" "dlssg_to_fsr3.dll")
-    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "plugin_asi_loader" "read_me_generic_plugin.txt" "dlssg_to_fsr3.asi")
-    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "dll_version" "read_me_generic_dll.txt" "version.dll")
-    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "dll_winhttp" "read_me_generic_dll.txt" "winhttp.dll")
-    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "dll_dbghelp" "read_me_generic_dll.txt" "dbghelp.dll")
+    add_subdirectory("${PROJECT_SOURCE_PATH}/wrapper_generic")
+    install_universal_variant(generic_wrapper_output_dll dlssg_output_dll "plugin_red4ext" "read_me_generic_plugin.txt" "dlssg_to_fsr3.dll")
+    install_universal_variant(generic_wrapper_output_dll dlssg_output_dll "plugin_asi_loader" "read_me_generic_plugin.txt" "dlssg_to_fsr3.asi")
+    install_universal_variant(generic_wrapper_output_dll dlssg_output_dll "dll_version" "read_me_generic_dll.txt" "version.dll")
+    install_universal_variant(generic_wrapper_output_dll dlssg_output_dll "dll_winhttp" "read_me_generic_dll.txt" "winhttp.dll")
+    install_universal_variant(generic_wrapper_output_dll dlssg_output_dll "dll_dbghelp" "read_me_generic_dll.txt" "dbghelp.dll")
 
 elseif(BUILD_OUTPUT_WRAPPER STREQUAL "DLSSTWEAKS")
 
@@ -62,8 +62,8 @@ elseif(BUILD_OUTPUT_WRAPPER STREQUAL "DLSSTWEAKS")
 
 elseif(BUILD_OUTPUT_WRAPPER STREQUAL "NVNGX")
 
-    add_subdirectory("${PROJECT_SOURCE_PATH}/wrapper_nvngx")
-    install_universal_variant(nvngx_wrapper_output_dll dlssg_output_dll "" "read_me_nvngx.txt" "")
+    add_subdirectory("${PROJECT_SOURCE_PATH}/wrapper_generic")
+    install_universal_variant(generic_wrapper_output_dll dlssg_output_dll "" "read_me_nvngx.txt" "")
 
     install(
         FILES

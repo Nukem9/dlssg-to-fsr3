@@ -1,7 +1,7 @@
 #
 # Set up the source files and output library
 #
-set(CURRENT_PROJECT nvngx_wrapper_output_dll)
+set(CURRENT_PROJECT generic_wrapper_output_dll)
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 file(
