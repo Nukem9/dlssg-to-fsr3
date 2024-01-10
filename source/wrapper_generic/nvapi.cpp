@@ -1,5 +1,3 @@
-#include <cstdint>
-#include <string.h>
 
 enum class NV_STATUS : uint32_t
 {

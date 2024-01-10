@@ -34,6 +34,12 @@ add_library(
 		${SOURCE_FILES}
 )
 
+target_precompile_headers(
+	${CURRENT_PROJECT}
+    PRIVATE
+        pch.h
+)
+
 target_include_directories(
 	${CURRENT_PROJECT}
 	PRIVATE

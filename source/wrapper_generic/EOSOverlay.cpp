@@ -1,6 +1,3 @@
-#include <cstdint>
-#include <string.h>
-
 constinit const char *TargetFunctionNames[] = {
 	"EOS_Overlay_ApplicationWillShutdown",
 	"EOS_Overlay_CloseBrowser",
