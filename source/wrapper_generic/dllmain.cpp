@@ -10,13 +10,14 @@
 // sl.common.dll      loads  _nvngx.dll       <- we are here
 // _nvngx.dll         loads  nvngx_dlssg.dll  <- intercept this stage
 //
-constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll" };
+constinit const wchar_t *TargetLibrariesToHook[] = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll", L"EOSSDK-Win64-Shipping.dll" };
 constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
 bool EnableAggressiveHooking;
 
 void TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
+void TryInterceptEOSFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
 bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
 void *LoadImplementationDll()
@@ -95,6 +96,8 @@ FARPROC WINAPI HookedGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 	auto proc = GetProcAddress(hModule, lpProcName);
 
 	TryInterceptNvAPIFunction(hModule, lpProcName, reinterpret_cast<void **>(&proc));
+	TryInterceptEOSFunction(hModule, lpProcName, reinterpret_cast<void **>(&proc));
+
 	return proc;
 }
 
