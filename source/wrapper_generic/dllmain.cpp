@@ -6,14 +6,15 @@
 // _nvngx.dll         loads  nvngx_dlssg.dll  <- intercept this stage
 //
 std::vector<const wchar_t *> TargetLibrariesToHook = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll" };
-constinit const wchar_t *TargetEGSOverlayDll = L"EOSSDK-Win64-Shipping.dll";
 constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
+
+constinit const wchar_t *TargetEGSServicesDll = L"EOSSDK-Win64-Shipping.dll";
+constinit const wchar_t *TargetEGSOverlayDll = L"EOSOVH-Win64-Shipping.dll";
 
 bool EnableAggressiveHooking;
 
 bool TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
-bool TryInterceptEOSFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
 bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
 
 void *LoadImplementationDll()
@@ -57,19 +58,35 @@ void *LoadImplementationDll()
 	return mod;
 }
 
-HMODULE RedirectModule(const wchar_t *Path)
+bool RedirectModule(const wchar_t *Path, HMODULE *ModuleHandle)
 {
-	if (Path && std::wstring_view(Path).ends_with(TargetImplementationDll))
-		return static_cast<HMODULE>(LoadImplementationDll());
+	if (Path)
+	{
+		if (std::wstring_view(Path).ends_with(TargetImplementationDll))
+		{
+			*ModuleHandle = static_cast<HMODULE>(LoadImplementationDll());
+			return true;
+		}
 
-	return nullptr;
+		if (std::wstring_view(Path).ends_with(TargetEGSOverlayDll))
+		{
+			SetLastError(ERROR_MOD_NOT_FOUND);
+			*ModuleHandle = nullptr;
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 HMODULE WINAPI HookedLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
 {
-	auto libraryHandle = RedirectModule(lpLibFileName);
+	HMODULE libraryHandle = nullptr;
 
-	if (!libraryHandle)
+	if (RedirectModule(lpLibFileName, &libraryHandle))
+		return libraryHandle;
+	else
 		libraryHandle = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
 	PatchImportsForModule(lpLibFileName, libraryHandle);
@@ -78,9 +95,11 @@ HMODULE WINAPI HookedLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD d
 
 HMODULE WINAPI HookedLoadLibraryW(LPCWSTR lpLibFileName)
 {
-	auto libraryHandle = RedirectModule(lpLibFileName);
+	HMODULE libraryHandle = nullptr;
 
-	if (!libraryHandle)
+	if (RedirectModule(lpLibFileName, &libraryHandle))
+		return libraryHandle;
+	else
 		libraryHandle = LoadLibraryW(lpLibFileName);
 
 	PatchImportsForModule(lpLibFileName, libraryHandle);
@@ -90,9 +109,7 @@ HMODULE WINAPI HookedLoadLibraryW(LPCWSTR lpLibFileName)
 FARPROC WINAPI HookedGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
 	auto proc = GetProcAddress(hModule, lpProcName);
-
 	TryInterceptNvAPIFunction(hModule, lpProcName, reinterpret_cast<void **>(&proc));
-	TryInterceptEOSFunction(hModule, lpProcName, reinterpret_cast<void **>(&proc));
 
 	return proc;
 }
@@ -125,10 +142,7 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 			return libFileName.ends_with(Target);
 		});
 
-	if (!isMatch)
-		return false;
-
-	if (!ModuleRequiresPatching(ModuleHandle))
+	if (!isMatch || !ModuleRequiresPatching(ModuleHandle))
 		return false;
 
 	OutputDebugStringW(L"Patching imports for a new module: ");
@@ -162,7 +176,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			TargetLibrariesToHook.end(),
 			[](const wchar_t *Target)
 		{
-			return PatchImportsForModule(Target, GetModuleHandleW(Target)) && _wcsicmp(Target, TargetEGSOverlayDll) != 0;
+			return PatchImportsForModule(Target, GetModuleHandleW(Target)) && _wcsicmp(Target, TargetEGSServicesDll) != 0;
 		}) > 0;
 
 		// If zero Streamline dlls were loaded we'll have to hook the game's LoadLibrary calls and wait
