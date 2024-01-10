@@ -166,8 +166,21 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 		if (EnableAggressiveHooking)
 		{
-			TargetLibrariesToHook.push_back(TargetEGSOverlayDll);
-			LoadLibraryW(L"sl.interposer.dll");
+			TargetLibrariesToHook.push_back(TargetEGSServicesDll);
+			LoadLibraryW(TargetEGSServicesDll);
+
+			if (!LoadLibraryW(L"sl.interposer.dll"))
+			{
+				// "Returnal\Returnal\Binaries\Win64\Returnal-Win64-Shipping.exe"
+				// "Returnal\Engine\Plugins\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+				//
+				// "Hogwarts Legacy\Phoenix\Binaries\Win64\HogwartsLegacy.exe"
+				// "Hogwarts Legacy\Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+				//
+				// Insanity. A dedicated configuration file is going to be required at this rate. HL is okay but
+				// Returnal needs some help.
+				LoadLibraryW(L"..\\..\\..\\Engine\\Plugins\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll");
+			}
 		}
 
 		// We probably loaded after sl.interposer.dll and sl.common.dll. Try patching them up front.
