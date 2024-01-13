@@ -1,4 +1,5 @@
 #include "Hooking/Hooks.h"
+#include "Util.h"
 
 //
 // sl.interposer.dll  loads  sl.common.dll
@@ -20,27 +21,8 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
 void *LoadImplementationDll()
 {
 	// Use the same directory as the current DLL
-	wchar_t path[2048] = {};
-	HMODULE thisModuleHandle = nullptr;
-
-	if (GetModuleHandleExW(
-			GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-			reinterpret_cast<LPCWSTR>(&LoadImplementationDll),
-			&thisModuleHandle))
-	{
-		if (GetModuleFileNameW(thisModuleHandle, path, ARRAYSIZE(path)))
-		{
-			// Chop off the file name
-			for (auto i = static_cast<ptrdiff_t>(wcslen(path)) - 1; i > 0; i--)
-			{
-				if (path[i] == L'\\' || path[i] == L'/')
-				{
-					path[i + 1] = 0;
-					break;
-				}
-			}
-		}
-	}
+	wchar_t path[2048];
+	Util::GetModulePath(path, true, nullptr);
 
 	// Do not cache a handle to the implementation DLL. It might be unloaded and reloaded.
 	wcscat_s(path, RelplacementImplementationDll);
@@ -132,22 +114,22 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 	if (!Path || !ModuleHandle)
 		return false;
 
-	std::wstring_view libFileName(Path);
-
 	const bool isMatch = std::any_of(
 		TargetLibrariesToHook.begin(),
 		TargetLibrariesToHook.end(),
-		[&](const wchar_t *Target)
+		[path = std::wstring_view(Path)](const wchar_t *Target)
 		{
-			return libFileName.ends_with(Target);
+			return path.ends_with(Target);
 		});
 
 	if (!isMatch || !ModuleRequiresPatching(ModuleHandle))
 		return false;
 
+#if 0
 	OutputDebugStringW(L"Patching imports for a new module: ");
 	OutputDebugStringW(Path);
 	OutputDebugStringW(L"...\n");
+#endif
 
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);
@@ -169,17 +151,44 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			TargetLibrariesToHook.push_back(TargetEGSServicesDll);
 			LoadLibraryW(TargetEGSServicesDll);
 
-			if (!LoadLibraryW(L"sl.interposer.dll"))
+			//
+			// Aggressive hooking tries to force SL's interposer to load early. It's not always present
+			// in the local directory. A bit of guesswork is required.
+			//
+			// "Dying Light 2\                  ph\work\bin\x64\DyingLightGame_x64_rwdi.exe"
+			// "Returnal\         Returnal\     Binaries\Win64\Returnal-Win64-Shipping.exe"
+			// "Hogwarts Legacy\  Phoenix\      Binaries\Win64\HogwartsLegacy.exe"
+			// "SW Jedi Survivor\ SwGame\       Binaries\Win64\JediSurvivor.exe"
+			// "Atomic Heart\     AtomicHeart\  Binaries\Win64\AtomicHeart-Win64-Shipping.exe
+			// "MMS\              MidnightSuns\ Binaries\Win64\MidnightSuns-Win64-Shipping.exe"
+			//
+			// "Dying Light 2\    ph\work\bin\x64\sl.interposer.dll"
+			// "Returnal\         Engine\Plugins\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+			// "Hogwarts Legacy\  Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+			// "SW Jedi Survivor\ Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+			// "Atomic Heart\     Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+			// "MMS\              Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+			//
+			constinit static const wchar_t *bruteInterposerPaths[] = {
+				L"sl.interposer.dll",
+				L"..\\..\\..\\Engine\\Plugins\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll",
+				L"..\\..\\..\\Engine\\Plugins\\Runtime\\Nvidia\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll",
+			};
+
+			if (!LoadLibraryW(bruteInterposerPaths[0]))
 			{
-				// "Returnal\Returnal\Binaries\Win64\Returnal-Win64-Shipping.exe"
-				// "Returnal\Engine\Plugins\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
-				//
-				// "Hogwarts Legacy\Phoenix\Binaries\Win64\HogwartsLegacy.exe"
-				// "Hogwarts Legacy\Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
-				//
-				// Insanity. A dedicated configuration file is going to be required at this rate. HL is okay but
-				// Returnal needs some help.
-				LoadLibraryW(L"..\\..\\..\\Engine\\Plugins\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll");
+				wchar_t path[2048];
+
+				for (auto interposer : bruteInterposerPaths)
+				{
+					if (!Util::GetModulePath(path, true, GetModuleHandleW(nullptr)))
+						break;
+
+					wcscat_s(path, interposer);
+
+					if (LoadLibraryW(path))
+						break;
+				}
 			}
 		}
 

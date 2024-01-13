@@ -1,3 +1,5 @@
+#include "Util.h"
+
 void *CustomLibraryResolverCallback();
 
 #define DLL_PROXY_EXPORT_LISTING_FILE "ExportListing.inc"                   // List of exported functions
@@ -10,7 +12,6 @@ extern bool EnableAggressiveHooking;
 
 void *TryResolveSystemLibrary(const wchar_t *RealLibraryName)
 {
-	// Build the full system32 path
 	wchar_t fullSystemPath[2048] = {};
 
 	if (GetSystemDirectoryW(fullSystemPath, ARRAYSIZE(fullSystemPath) - 1) <= 0)
@@ -68,29 +69,8 @@ void *CustomLibraryResolverCallback()
 	if (!moduleHandle)
 	{
 		// Grab the file name and extension of this dll
-		wchar_t temp[2048] = {};
-		const auto targetLibraryName = [&]() -> const wchar_t *
-		{
-			HMODULE thisModuleHandle = nullptr;
-
-			if (!GetModuleHandleExW(
-					GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-					reinterpret_cast<LPCWSTR>(&CustomLibraryResolverCallback),
-					&thisModuleHandle))
-				return nullptr;
-
-			if (GetModuleFileNameW(thisModuleHandle, temp, ARRAYSIZE(temp)) <= 0)
-				return nullptr;
-
-			for (auto i = static_cast<ptrdiff_t>(wcslen(temp)) - 1; i > 0; i--)
-			{
-				// Split the name out
-				if (temp[i] == L'\\' || temp[i] == L'/')
-					return &temp[i + 1];
-			}
-
-			return temp;
-		}();
+		wchar_t temp[2048];
+		const auto targetLibraryName = Util::GetModulePath(temp, false, nullptr);
 
 		if (targetLibraryName)
 		{
