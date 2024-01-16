@@ -3,6 +3,7 @@
   "supports": "windows",
   "dependencies": [
     "detours",
+    "quickdllproxy",
     "spdlog",
     "vulkan"
   ]

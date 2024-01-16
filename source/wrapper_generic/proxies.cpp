@@ -6,7 +6,7 @@ void *CustomLibraryResolverCallback();
 #define DLL_PROXY_TLS_CALLBACK_AUTOINIT                                     // Enable automatic initialization through a thread local storage callback
 #define DLL_PROXY_DECLARE_IMPLEMENTATION                                    // Define the whole implementation
 #define DLL_PROXY_LIBRARY_RESOLVER_CALLBACK CustomLibraryResolverCallback   // Custom DLL path resolver
-#include "DllProxy/DllProxy.h"
+#include <QuickDllProxy/DllProxy.h>
 
 extern bool EnableAggressiveHooking;
 
