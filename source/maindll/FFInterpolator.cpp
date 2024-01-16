@@ -1,5 +1,5 @@
 #include <FidelityFX/host/ffx_frameinterpolation.h>
-#include <FidelityFX/components/frameinterpolation/ffx_frameinterpolation_private.h>
+#include <frameinterpolation/ffx_frameinterpolation_private.h>
 #include "FFExt.h"
 #include "FFInterpolator.h"
 

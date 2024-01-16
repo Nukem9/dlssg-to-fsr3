@@ -9,7 +9,7 @@
 #pragma once
 
 #include <FidelityFX/host/ffx_fsr3upscaler.h>
-#include <FidelityFX/components/fsr3upscaler/ffx_fsr3upscaler_private.h>
+#include <fsr3upscaler/ffx_fsr3upscaler_private.h>
 
 struct FFDilatorDispatchParameters
 {

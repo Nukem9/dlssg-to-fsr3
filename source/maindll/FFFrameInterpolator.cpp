@@ -6,20 +6,6 @@
 #include "FFFrameInterpolator.h"
 #include "Util.h"
 
-#ifdef _DEBUG
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_fsr3_x64d.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_backend_dx12_x64d.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_backend_vk_x64d.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_frameinterpolation_x64d.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_opticalflow_x64d.lib")
-#else
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_fsr3_x64.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_backend_dx12_x64.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_backend_vk_x64.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_frameinterpolation_x64.lib")
-#pragma comment(lib, "../../dependencies/ffx-sdk/ffx_opticalflow_x64.lib")
-#endif
-
 D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
 VkAccessFlags getVKAccessFlagsFromResourceState(FfxResourceStates state);
 VkImageLayout getVKImageLayoutFromResourceState(FfxResourceStates state);

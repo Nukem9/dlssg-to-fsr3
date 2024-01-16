@@ -2,7 +2,9 @@
 # Set up the source files and output library
 #
 set(CURRENT_PROJECT dlssg_output_dll)
+
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(FIDELITYFX_SDK_DIR "${PROJECT_DEPENDENCIES_PATH}/FidelityFX-SDK/sdk")
 
 file(
 	GLOB HEADER_FILES
@@ -44,7 +46,8 @@ target_include_directories(
 	${CURRENT_PROJECT}
 	PRIVATE
 		"${SOURCE_DIR}"
-		"${PROJECT_DEPENDENCIES_PATH}/ffx-sdk"
+		"${FIDELITYFX_SDK_DIR}/include"
+		"${FIDELITYFX_SDK_DIR}/src/components"
 		"$ENV{VULKAN_SDK}/include"
 )
 
@@ -112,7 +115,8 @@ target_link_options(
 	${CURRENT_PROJECT}
 	PRIVATE
 		"/DELAYLOAD:gdi32.dll"
-		"/DELAYLOAD:dxgi.dll")
+		"/DELAYLOAD:dxgi.dll"
+)
 
 target_link_libraries(
 	${CURRENT_PROJECT}
@@ -129,6 +133,17 @@ target_link_libraries(${CURRENT_PROJECT} PRIVATE spdlog::spdlog)
 find_package(Vulkan REQUIRED)
 target_link_options(${CURRENT_PROJECT} PRIVATE "/DELAYLOAD:vulkan-1.dll")
 target_link_libraries(${CURRENT_PROJECT} PRIVATE Vulkan::Vulkan)
+
+# FidelityFX
+target_link_libraries(
+	${CURRENT_PROJECT}
+	PRIVATE
+		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_backend_dx12_x64$<$<CONFIG:Debug>:d>.lib"
+		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_backend_vk_x64$<$<CONFIG:Debug>:d>.lib"
+		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_fsr3_x64$<$<CONFIG:Debug>:d>.lib"
+		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_frameinterpolation_x64$<$<CONFIG:Debug>:d>.lib"
+		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_opticalflow_x64$<$<CONFIG:Debug>:d>.lib"
+)
 
 #
 # Commands
