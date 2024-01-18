@@ -10,26 +10,31 @@ D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
 VkAccessFlags getVKAccessFlagsFromResourceState(FfxResourceStates state);
 VkImageLayout getVKImageLayoutFromResourceState(FfxResourceStates state);
 
-FFFrameInterpolator::FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight)
+FFFrameInterpolator::FFFrameInterpolator(
+	ID3D12Device *Device,
+	uint32_t OutputWidth,
+	uint32_t OutputHeight,
+	NGXInstanceParameters *NGXParameters)
 	: m_LogicalDeviceDX(Device),
 	  m_SwapchainWidth(OutputWidth),
 	  m_SwapchainHeight(OutputHeight)
 {
 	m_LogicalDeviceDX->AddRef();
-	Create();
+	Create(NGXParameters);
 }
 
 FFFrameInterpolator::FFFrameInterpolator(
 	VkDevice LogicalDevice,
 	VkPhysicalDevice PhysicalDevice,
 	uint32_t OutputWidth,
-	uint32_t OutputHeight)
+	uint32_t OutputHeight,
+	NGXInstanceParameters *NGXParameters)
 	: m_LogicalDeviceVK(LogicalDevice),
 	  m_PhysicalDeviceVK(PhysicalDevice),
 	  m_SwapchainWidth(OutputWidth),
 	  m_SwapchainHeight(OutputHeight)
 {
-	Create();
+	Create(NGXParameters);
 }
 
 FFFrameInterpolator::~FFFrameInterpolator()
@@ -59,10 +64,10 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 	if (!isRecordingCommands)
 	{
 		void *recordingQueue = nullptr;
-		NGXParameters->GetVoidPointer("DLSSG.CmdQueue", reinterpret_cast<void **>(&recordingQueue));
+		NGXParameters->GetVoidPointer("DLSSG.CmdQueue", &recordingQueue);
 
 		void *recordingAllocator = nullptr;
-		NGXParameters->GetVoidPointer("DLSSG.CmdAlloc", reinterpret_cast<void **>(&recordingAllocator));
+		NGXParameters->GetVoidPointer("DLSSG.CmdAlloc", &recordingAllocator);
 
 		static bool once = [&]()
 		{
@@ -533,9 +538,9 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	return true;
 }
 
-void FFFrameInterpolator::Create()
+void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
 {
-	if (CreateBackend() != FFX_OK)
+	if (CreateBackend(NGXParameters) != FFX_OK)
 		throw std::runtime_error(__FUNCTION__ ": Failed to create backend context.");
 
 	if (CreateDilationContext() != FFX_OK)
@@ -555,7 +560,7 @@ void FFFrameInterpolator::Destroy()
 	DestroyBackend();
 }
 
-FfxErrorCode FFFrameInterpolator::CreateBackend()
+FfxErrorCode FFFrameInterpolator::CreateBackend(NGXInstanceParameters *NGXParameters)
 {
 	if (IsVulkanBackend())
 	{
@@ -565,26 +570,21 @@ FfxErrorCode FFFrameInterpolator::CreateBackend()
 			.vkDeviceProcAddr = nullptr,
 		};
 
-		const uint32_t maxContexts = 6; // One interface, six contexts
-		const auto fsrDevice = ffxGetDeviceVK(&vkContext);
-		const auto scratchSize = ffxGetScratchMemorySizeVK(vkContext.vkPhysicalDevice, maxContexts);
+		//const uint32_t maxContexts = 6; // One interface, six contexts
+		//const auto fsrDevice = ffxGetDeviceVK(&vkContext);
+		//const auto scratchSize = ffxGetScratchMemorySizeVK(vkContext.vkPhysicalDevice, maxContexts);
 
-		auto& buffer1 = m_ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
-		FFX_RETURN_ON_FAIL(ffxGetInterfaceVK(&m_SharedBackendInterface, fsrDevice, buffer1.get(), scratchSize, maxContexts));
+		//FFX_RETURN_ON_FAIL(m_SharedBackendInterface.Initialize(fsrDevice, maxContexts));
+		//m_FrameInterpolationBackendInterface = m_SharedBackendInterface;
 
-		m_FrameInterpolationBackendInterface = m_SharedBackendInterface;
+		return FFX_ERROR_INCOMPLETE_INTERFACE;
 	}
 	else
 	{
 		const uint32_t maxContexts = 3; // Assume 3 contexts per interface
-		const auto fsrDevice = ffxGetDeviceDX12(m_LogicalDeviceDX);
-		const auto scratchSize = ffxGetScratchMemorySizeDX12(maxContexts);
 
-		auto& buffer1 = m_ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
-		FFX_RETURN_ON_FAIL(ffxGetInterfaceDX12(&m_SharedBackendInterface, fsrDevice, buffer1.get(), scratchSize, maxContexts));
-
-		auto& buffer2 = m_ScratchMemoryBuffers.emplace_back(std::make_unique<uint8_t[]>(scratchSize));
-		FFX_RETURN_ON_FAIL(ffxGetInterfaceDX12(&m_FrameInterpolationBackendInterface, fsrDevice, buffer2.get(), scratchSize, maxContexts));
+		FFX_RETURN_ON_FAIL(m_SharedBackendInterface.Initialize(m_LogicalDeviceDX, maxContexts, NGXParameters));
+		FFX_RETURN_ON_FAIL(m_FrameInterpolationBackendInterface.Initialize(m_LogicalDeviceDX, maxContexts, NGXParameters));
 	}
 
 	const auto status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, &m_SharedEffectContextId.emplace());

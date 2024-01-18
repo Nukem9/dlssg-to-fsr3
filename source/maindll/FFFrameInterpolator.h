@@ -3,6 +3,7 @@
 #include <FidelityFX/host/ffx_opticalflow.h>
 #include <vulkan/vulkan.h>
 #include "FFDilator.h"
+#include "FFInterfaceWrapper.h"
 #include "FFInterpolator.h"
 
 struct NGXInstanceParameters;
@@ -18,9 +19,8 @@ private:
 	const uint32_t m_SwapchainWidth; // Final image presented to the screen dimensions
 	const uint32_t m_SwapchainHeight;
 
-	std::vector<std::unique_ptr<uint8_t[]>> m_ScratchMemoryBuffers;
-	FfxInterface m_FrameInterpolationBackendInterface = {};
-	FfxInterface m_SharedBackendInterface = {};
+	FFInterfaceWrapper m_FrameInterpolationBackendInterface;
+	FFInterfaceWrapper m_SharedBackendInterface;
 	std::optional<FfxUInt32> m_SharedEffectContextId;
 
 	std::unique_ptr<FFDilator> m_DilationContext;
@@ -46,8 +46,13 @@ private:
 	FfxCommandList m_ActiveCommandList = {};
 
 public:
-	FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight);
-	FFFrameInterpolator(VkDevice LogicalDevice, VkPhysicalDevice PhysicalDevice, uint32_t OutputWidth, uint32_t OutputHeight);
+	FFFrameInterpolator(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight, NGXInstanceParameters *NGXParameters);
+	FFFrameInterpolator(
+		VkDevice LogicalDevice,
+		VkPhysicalDevice PhysicalDevice,
+		uint32_t OutputWidth,
+		uint32_t OutputHeight,
+		NGXInstanceParameters *NGXParameters);
 	FFFrameInterpolator(const FFFrameInterpolator&) = delete;
 	FFFrameInterpolator& operator=(const FFFrameInterpolator&) = delete;
 	~FFFrameInterpolator();
@@ -64,9 +69,9 @@ private:
 	bool BuildOpticalFlowParameters(FfxOpticalflowDispatchDescription *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildFrameInterpolationParameters(FFInterpolatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 
-	void Create();
+	void Create(NGXInstanceParameters *NGXParameters);
 	void Destroy();
-	FfxErrorCode CreateBackend();
+	FfxErrorCode CreateBackend(NGXInstanceParameters *NGXParameters);
 	void DestroyBackend();
 	FfxErrorCode CreateDilationContext();
 	void DestroyDilationContext();

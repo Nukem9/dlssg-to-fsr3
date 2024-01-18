@@ -39,10 +39,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	// Then initialize FSR
 	try
 	{
-		auto instance = std::make_shared<FFFrameInterpolator>(
-			device,
-			swapchainWidth,
-			swapchainHeight);
+		auto instance = std::make_shared<FFFrameInterpolator>(device, swapchainWidth, swapchainHeight, Parameters);
 
 		std::scoped_lock lock(FeatureInstanceHandleLock);
 		{
