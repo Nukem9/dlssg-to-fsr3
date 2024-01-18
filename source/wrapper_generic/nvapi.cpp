@@ -1,4 +1,3 @@
-
 enum class NV_STATUS : uint32_t
 {
 	Success = 0,
@@ -8,6 +7,7 @@ enum class NV_STATUS : uint32_t
 enum class NV_INTERFACE : uint32_t
 {
 	GPU_GetArchInfo = 0xD8265D24,
+	D3D12_SetRawScgPriority = 0x5DB3048A,
 };
 
 struct NV_ARCH_INFO
@@ -15,6 +15,18 @@ struct NV_ARCH_INFO
 	uint32_t Version;
 	uint32_t Architecture;
 	uint32_t Unknown[2];
+};
+
+struct NV_SCG_PRIORITY_INFO
+{
+	void *CommandList; // 0
+	uint32_t Unknown2; // 8
+	uint32_t Unknown3; // C
+	uint8_t Unknown4;  // 10
+	uint8_t Unknown5;  // 11
+	uint8_t Unknown6;  // 12
+	uint8_t Unknown7;  // 13
+	uint32_t Unknown8; // 14
 };
 
 using PfnNvAPI_QueryInterface = void *(__stdcall *)(NV_INTERFACE InterfaceId);
@@ -39,6 +51,18 @@ NV_STATUS __stdcall HookedNvAPI_GPU_GetArchInfo(void *GPUHandle, NV_ARCH_INFO *A
 	return NV_STATUS::Error;
 }
 
+NV_STATUS __stdcall HookedNvAPI_D3D12_SetRawScgPriority(NV_SCG_PRIORITY_INFO *PriorityInfo)
+{
+	// SCG or "Simultaneous Compute and Graphics" is their fancy term for async compute. This is a completely
+	// undocumented driver hack used in early versions of sl.dlss_g.dll. Not a single hit on Google.
+	//
+	// nvngx_dlssg.dll feature evaluation somehow prevents crashes. Architecture-specific call? Literally no
+	// clue.
+	//
+	// This function must be stubbed. Otherwise expect undebuggable device removals.
+	return NV_STATUS::Success;
+}
+
 void *__stdcall HookedNvAPI_QueryInterface(NV_INTERFACE InterfaceId)
 {
 	const auto result = OriginalNvAPI_QueryInterface(InterfaceId);
@@ -48,6 +72,9 @@ void *__stdcall HookedNvAPI_QueryInterface(NV_INTERFACE InterfaceId)
 		OriginalNvAPI_GPU_GetArchInfo = static_cast<PfnNvAPI_GPU_GetArchInfo>(result);
 		return &HookedNvAPI_GPU_GetArchInfo;
 	}
+
+	if (InterfaceId == NV_INTERFACE::D3D12_SetRawScgPriority)
+		return &HookedNvAPI_D3D12_SetRawScgPriority;
 
 	return result;
 }
