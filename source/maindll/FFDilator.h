@@ -27,6 +27,7 @@ struct FFDilatorDispatchParameters
 
 	bool HDR;
 	bool DepthInverted;
+	bool MotionVectorsDilated;
 	bool MotionVectorsFullResolution;
 	bool MotionVectorJitterCancellation;
 	FfxFloatCoords2D MotionVectorScale;
