@@ -1,8 +1,8 @@
 #include "NvNGX.h"
-#include "FFFrameInterpolator.h"
+#include "FFFrameInterpolatorVKToDX.h"
 
 static std::shared_mutex FeatureInstanceHandleLock;
-static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> FeatureInstanceHandles;
+static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolatorVKToDX>> FeatureInstanceHandles;
 
 VkDevice g_LogicalDevice = {};
 VkPhysicalDevice g_PhysicalDevice = {};
@@ -32,7 +32,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(
 	// Then initialize FSR
 	try
 	{
-		auto instance = std::make_shared<FFFrameInterpolator>(g_LogicalDevice, g_PhysicalDevice, swapchainWidth, swapchainHeight);
+		auto instance = std::make_shared<FFFrameInterpolatorVKToDX>(g_LogicalDevice, g_PhysicalDevice, swapchainWidth, swapchainHeight, Parameters);
 
 		std::scoped_lock lock(FeatureInstanceHandleLock);
 		{
@@ -75,16 +75,19 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_EvaluateFeature(VkCommandBuffer CommandL
 	if (!CommandList || !InstanceHandle || !Parameters)
 		return NGX_INVALID_PARAMETER;
 
-	std::shared_ptr<FFFrameInterpolator> instance;
+	const auto instance = [&]()
 	{
 		std::shared_lock lock(FeatureInstanceHandleLock);
 		auto itr = FeatureInstanceHandles.find(InstanceHandle->InternalId);
 
 		if (itr == FeatureInstanceHandles.end())
-			return NGX_FEATURE_NOT_FOUND;
+			return decltype(itr->second) {};
 
-		instance = itr->second;
-	}
+		return itr->second;
+	}();
+
+	if (!instance)
+		return NGX_FEATURE_NOT_FOUND;
 
 	const auto status = instance->Dispatch(CommandList, Parameters);
 
@@ -93,12 +96,11 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_EvaluateFeature(VkCommandBuffer CommandL
 	case FFX_OK:
 		return NGX_SUCCESS;
 
-	case FFX_ERROR_INVALID_ARGUMENT:
 	default:
 	{
 		static bool once = [&]()
 		{
-			spdlog::error("Evaluation call failed with status {:X}.", status);
+			spdlog::error("Evaluation call failed with status {:X}.", static_cast<uint32_t>(status));
 			return true;
 		}();
 
