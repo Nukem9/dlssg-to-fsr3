@@ -1,37 +1,15 @@
-#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
-#include <FidelityFX/host/backends/vk/ffx_vk.h>
+#include <dxgi1_6.h>
 #include <numbers>
 #include "NGX/NvNGX.h"
 #include "FFExt.h"
 #include "FFFrameInterpolator.h"
 #include "Util.h"
 
-D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
-VkAccessFlags getVKAccessFlagsFromResourceState(FfxResourceStates state);
-VkImageLayout getVKImageLayoutFromResourceState(FfxResourceStates state);
-
 FFFrameInterpolator::FFFrameInterpolator(
-	ID3D12Device *Device,
 	uint32_t OutputWidth,
 	uint32_t OutputHeight,
 	NGXInstanceParameters *NGXParameters)
-	: m_LogicalDeviceDX(Device),
-	  m_SwapchainWidth(OutputWidth),
-	  m_SwapchainHeight(OutputHeight)
-{
-	m_LogicalDeviceDX->AddRef();
-	Create(NGXParameters);
-}
-
-FFFrameInterpolator::FFFrameInterpolator(
-	VkDevice LogicalDevice,
-	VkPhysicalDevice PhysicalDevice,
-	uint32_t OutputWidth,
-	uint32_t OutputHeight,
-	NGXInstanceParameters *NGXParameters)
-	: m_LogicalDeviceVK(LogicalDevice),
-	  m_PhysicalDeviceVK(PhysicalDevice),
-	  m_SwapchainWidth(OutputWidth),
+	: m_SwapchainWidth(OutputWidth),
 	  m_SwapchainHeight(OutputHeight)
 {
 	Create(NGXParameters);
@@ -40,70 +18,19 @@ FFFrameInterpolator::FFFrameInterpolator(
 FFFrameInterpolator::~FFFrameInterpolator()
 {
 	Destroy();
-
-	if (m_LogicalDeviceDX)
-		m_LogicalDeviceDX->Release();
 }
 
 FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParameters *NGXParameters)
 {
-	const bool enableInterpolation = NGXParameters->GetUIntOrDefault("DLSSG.EnableInterp", 0) != 0;
-	const bool isRecordingCommands = NGXParameters->GetUIntOrDefault("DLSSG.IsRecording", 0) != 0;
-
-	const auto cmdListVk = reinterpret_cast<VkCommandBuffer>(CommandList);
-	const auto cmdList12 = reinterpret_cast<ID3D12GraphicsCommandList *>(CommandList);
-
-	if (IsVulkanBackend())
-		m_ActiveCommandList = ffxGetCommandListVK(cmdListVk);
-	else
-		m_ActiveCommandList = ffxGetCommandListDX12(cmdList12);
-
-	//
-	// Begin a new command list in the event our caller didn't set one up
-	//
-	if (!isRecordingCommands)
-	{
-		void *recordingQueue = nullptr;
-		NGXParameters->GetVoidPointer("DLSSG.CmdQueue", &recordingQueue);
-
-		void *recordingAllocator = nullptr;
-		NGXParameters->GetVoidPointer("DLSSG.CmdAlloc", &recordingAllocator);
-
-		static bool once = [&]()
-		{
-			spdlog::warn(
-				"Command list wasn't recording. Resetting state: {} 0x{:X} 0x{:X} 0x{:X}",
-				enableInterpolation,
-				reinterpret_cast<uintptr_t>(CommandList),
-				reinterpret_cast<uintptr_t>(recordingQueue),
-				reinterpret_cast<uintptr_t>(recordingAllocator));
-
-			return false;
-		}();
-
-		if (IsVulkanBackend())
-		{
-			const VkCommandBufferBeginInfo info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-
-			vkResetCommandBuffer(cmdListVk, 0);
-			vkBeginCommandBuffer(cmdListVk, &info);
-		}
-		else
-		{
-			cmdList12->Reset(static_cast<ID3D12CommandAllocator *>(recordingAllocator), nullptr);
-		}
-	}
-
-	//
-	// Main pass setup and dispatches
-	//
-	FfxResource fsrGameBackBufferResource = {};
-	FfxResource fsrGameRealOutputResource = {};
+	FfxResource gameBackBufferResource = {};
+	FfxResource gameRealOutputResource = {};
 
 	const auto dispatchStatus = [&]() -> FfxErrorCode
 	{
-		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &fsrGameBackBufferResource, FFX_RESOURCE_STATE_COMPUTE_READ);
-		LoadResourceFromNGXParameters(NGXParameters, "DLSSG.OutputReal", &fsrGameRealOutputResource, FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+		const bool enableInterpolation = NGXParameters->GetUIntOrDefault("DLSSG.EnableInterp", 0) != 0;
+
+		LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &gameBackBufferResource, FFX_RESOURCE_STATE_COMPUTE_READ);
+		LoadTextureFromNGXParameters(NGXParameters, "DLSSG.OutputReal", &gameRealOutputResource, FFX_RESOURCE_STATE_UNORDERED_ACCESS);
 
 		if (!enableInterpolation)
 			return FFX_OK;
@@ -134,7 +61,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		fsrFiDispatchDesc.DebugView = doDebugOverlay;
 		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
 
-		// Record/submit commands
+		// Record commands
 		auto status = m_DilationContext->Dispatch(fsrDilationDesc);
 		FFX_RETURN_ON_FAIL(status);
 
@@ -145,140 +72,16 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		FFX_RETURN_ON_FAIL(status);
 
 		if (fsrFiDispatchDesc.DebugView || doInterpolatedOnly)
-			fsrGameBackBufferResource = fsrFiDispatchDesc.OutputInterpolatedColorBuffer;
+			gameBackBufferResource = fsrFiDispatchDesc.OutputInterpolatedColorBuffer;
 
 		return FFX_OK;
 	}();
 
-	// Command list state has to be restored before we can return an error code. Don't bother
-	// adding copy commands when dispatch fails.
-	if (dispatchStatus == FFX_OK && fsrGameRealOutputResource.resource && fsrGameBackBufferResource.resource)
-	{
-		if (IsVulkanBackend())
-		{
-			// Transition
-			VkImageMemoryBarrier barriers[2] = {};
-			{
-				barriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-				barriers[0].srcAccessMask = getVKAccessFlagsFromResourceState(fsrGameRealOutputResource.state);
-				barriers[0].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-				barriers[0].oldLayout = getVKImageLayoutFromResourceState(fsrGameRealOutputResource.state);
-				barriers[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-				barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-				barriers[0].image = static_cast<VkImage>(fsrGameRealOutputResource.resource); // Destination
-				barriers[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				barriers[0].subresourceRange.baseMipLevel = 0;
-				barriers[0].subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
-				barriers[0].subresourceRange.baseArrayLayer = 0;
-				barriers[0].subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
-
-				barriers[1] = barriers[0];
-				barriers[1].srcAccessMask = getVKAccessFlagsFromResourceState(fsrGameBackBufferResource.state);
-				barriers[1].dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-				barriers[1].oldLayout = getVKImageLayoutFromResourceState(fsrGameBackBufferResource.state);
-				barriers[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-				barriers[1].image = static_cast<VkImage>(fsrGameBackBufferResource.resource); // Source
-
-				vkCmdPipelineBarrier(
-					cmdListVk,
-					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					0,
-					0,
-					nullptr,
-					0,
-					nullptr,
-					2,
-					barriers);
-			}
-
-			// Copy
-			{
-				VkImageCopy copyRegion = {};
-				copyRegion.extent = { fsrGameRealOutputResource.description.width, fsrGameRealOutputResource.description.height, 1 };
-
-				copyRegion.dstSubresource.aspectMask = barriers[0].subresourceRange.aspectMask;
-				copyRegion.dstSubresource.mipLevel = barriers[0].subresourceRange.baseMipLevel;
-				copyRegion.dstSubresource.baseArrayLayer = barriers[0].subresourceRange.baseArrayLayer;
-				copyRegion.dstSubresource.layerCount = barriers[0].subresourceRange.layerCount;
-
-				copyRegion.srcSubresource.aspectMask = barriers[1].subresourceRange.aspectMask;
-				copyRegion.srcSubresource.mipLevel = barriers[1].subresourceRange.baseMipLevel;
-				copyRegion.srcSubresource.baseArrayLayer = barriers[1].subresourceRange.baseArrayLayer;
-				copyRegion.srcSubresource.layerCount = barriers[1].subresourceRange.layerCount;
-
-				vkCmdCopyImage(
-					cmdListVk,
-					barriers[1].image,
-					barriers[1].newLayout,
-					barriers[0].image,
-					barriers[0].newLayout,
-					1,
-					&copyRegion);
-			}
-
-			// Transition
-			{
-				std::swap(barriers[0].srcAccessMask, barriers[0].dstAccessMask);
-				std::swap(barriers[0].oldLayout, barriers[0].newLayout);
-				std::swap(barriers[1].srcAccessMask, barriers[1].dstAccessMask);
-				std::swap(barriers[1].oldLayout, barriers[1].newLayout);
-
-				vkCmdPipelineBarrier(
-					cmdListVk,
-					VK_PIPELINE_STAGE_TRANSFER_BIT,
-					VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-					0,
-					0,
-					nullptr,
-					0,
-					nullptr,
-					2,
-					barriers);
-			}
-		}
-		else
-		{
-			D3D12_RESOURCE_BARRIER barriers[2] = {};
-			barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			barriers[0].Transition.pResource = static_cast<ID3D12Resource *>(fsrGameRealOutputResource.resource); // Destination
-			barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-			barriers[0].Transition.StateBefore = ffxGetDX12StateFromResourceState(fsrGameRealOutputResource.state);
-			barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-
-			barriers[1] = barriers[0];
-			barriers[1].Transition.pResource = static_cast<ID3D12Resource *>(fsrGameBackBufferResource.resource); // Source
-			barriers[1].Transition.StateBefore = ffxGetDX12StateFromResourceState(fsrGameBackBufferResource.state);
-			barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
-
-			cmdList12->ResourceBarrier(2, barriers);
-			cmdList12->CopyResource(barriers[0].Transition.pResource, barriers[1].Transition.pResource);
-			std::swap(barriers[0].Transition.StateBefore, barriers[0].Transition.StateAfter);
-			std::swap(barriers[1].Transition.StateBefore, barriers[1].Transition.StateAfter);
-			cmdList12->ResourceBarrier(2, barriers);
-		}
-	}
-
-	//
-	// Finish what we started. Restore the command list to its previous state when necessary.
-	//
-	if (!isRecordingCommands)
-	{
-		if (IsVulkanBackend())
-			vkEndCommandBuffer(cmdListVk);
-		else
-			cmdList12->Close();
-	}
+	if (dispatchStatus == FFX_OK && gameRealOutputResource.resource && gameBackBufferResource.resource)
+		CopyTexture(GetActiveCommandList(), &gameRealOutputResource, &gameBackBufferResource);
 
 	NGXParameters->Set4("DLSSG.FlushRequired", 0);
 	return dispatchStatus;
-}
-
-bool FFFrameInterpolator::IsVulkanBackend() const
-{
-	return m_LogicalDeviceDX == nullptr;
 }
 
 bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGXParameters)
@@ -293,7 +96,7 @@ bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGX
 
 		if (width == 0 || height == 0)
 		{
-			LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &temp, FFX_RESOURCE_STATE_COPY_DEST);
+			LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Depth", &temp, FFX_RESOURCE_STATE_COPY_DEST);
 			width = temp.description.width;
 			height = temp.description.height;
 		}
@@ -308,7 +111,7 @@ bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGX
 	// HUD-less dimensions are the "ground truth" final render resolution. These aren't necessarily
 	// equal to back buffer dimensions. Letterboxing in The Witcher 3 is a good test case.
 #if 0
-	if (LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &temp, FFX_RESOURCE_STATE_COPY_DEST))
+	if (LoadTextureFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &temp, FFX_RESOURCE_STATE_COPY_DEST))
 	{
 		auto width = NGXParameters->GetUIntOrDefault("DLSSG.HUDLessSubrectWidth", 0);
 		auto height = NGXParameters->GetUIntOrDefault("DLSSG.HUDLessSubrectHeight", 0);
@@ -365,7 +168,7 @@ void FFFrameInterpolator::QueryHDRLuminanceRange(NGXInstanceParameters *NGXParam
 
 	// Microsoft DirectX 12 HDR sample
 	// https://github.com/microsoft/DirectX-Graphics-Samples/blob/b5f92e2251ee83db4d4c795b3cba5d470c52eaf8/Samples/Desktop/D3D12HDR/src/D3D12HDR.cpp#L1064
-	const auto currentAdapterLuid = m_LogicalDeviceDX->GetAdapterLuid();
+	const auto luid = GetActiveAdapterLUID();
 
 	IDXGIFactory1 *factory = nullptr;
 	IDXGIAdapter1 *adapter = nullptr;
@@ -374,15 +177,17 @@ void FFFrameInterpolator::QueryHDRLuminanceRange(NGXInstanceParameters *NGXParam
 	if (CreateDXGIFactory1(IID_PPV_ARGS(&factory)) == S_OK)
 	{
 		// Match the active DXGI adapter
-		for (uint32_t i = 0; factory->EnumAdapters1(i, &adapter) != DXGI_ERROR_NOT_FOUND; i++)
+		for (uint32_t i = 0; factory->EnumAdapters1(i, &adapter) == S_OK; i++)
 		{
 			DXGI_ADAPTER_DESC desc = {};
 			adapter->GetDesc(&desc);
 
-			if (desc.AdapterLuid.LowPart == currentAdapterLuid.LowPart && desc.AdapterLuid.HighPart == currentAdapterLuid.HighPart)
+			static_assert(luid.size() == sizeof(desc.AdapterLuid));
+
+			if (memcmp(&desc.AdapterLuid, luid.data(), luid.size()) == 0)
 			{
 				// Then check the first HDR-capable output
-				for (uint32_t j = 0; adapter->EnumOutputs(j, &output) != DXGI_ERROR_NOT_FOUND; j++)
+				for (uint32_t j = 0; adapter->EnumOutputs(j, &output) == S_OK; j++)
 				{
 					if (IDXGIOutput6 *output6; output->QueryInterface(IID_PPV_ARGS(&output6)) == S_OK)
 					{
@@ -416,12 +221,12 @@ void FFFrameInterpolator::QueryHDRLuminanceRange(NGXInstanceParameters *NGXParam
 bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters)
 {
 	auto& desc = *OutParameters;
-	desc.CommandList = m_ActiveCommandList;
+	desc.CommandList = GetActiveCommandList();
 
-	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Depth", &desc.InputDepth, FFX_RESOURCE_STATE_COPY_DEST))
+	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Depth", &desc.InputDepth, FFX_RESOURCE_STATE_COPY_DEST))
 		return false;
 
-	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST))
+	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST))
 		return false;
 
 	desc.OutputDilatedDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedDepth);
@@ -461,10 +266,10 @@ bool FFFrameInterpolator::BuildOpticalFlowParameters(
 	NGXInstanceParameters *NGXParameters)
 {
 	auto& desc = *OutParameters;
-	desc.commandList = m_ActiveCommandList;
+	desc.commandList = GetActiveCommandList();
 
-	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color, FFX_RESOURCE_STATE_COPY_DEST) &&
-		!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.color, FFX_RESOURCE_STATE_COMPUTE_READ))
+	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.color, FFX_RESOURCE_STATE_COPY_DEST) &&
+		!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.color, FFX_RESOURCE_STATE_COMPUTE_READ))
 		return false;
 
 	desc.color.description.width = m_PostUpscaleRenderWidth; // Explicit override
@@ -490,15 +295,15 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	NGXInstanceParameters *NGXParameters)
 {
 	auto& desc = *OutParameters;
-	desc.CommandList = m_ActiveCommandList;
+	desc.CommandList = GetActiveCommandList();
 
-	LoadResourceFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.InputHUDLessColorBuffer, FFX_RESOURCE_STATE_COPY_DEST);
+	LoadTextureFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.InputHUDLessColorBuffer, FFX_RESOURCE_STATE_COPY_DEST);
 
-	if (!LoadResourceFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.InputColorBuffer, FFX_RESOURCE_STATE_COMPUTE_READ) &&
+	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.InputColorBuffer, FFX_RESOURCE_STATE_COMPUTE_READ) &&
 		!desc.InputHUDLessColorBuffer.resource)
 		return false;
 
-	if (!LoadResourceFromNGXParameters(
+	if (!LoadTextureFromNGXParameters(
 			NGXParameters,
 			"DLSSG.OutputInterpolated",
 			&desc.OutputInterpolatedColorBuffer,
@@ -528,12 +333,10 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0);
 	desc.ViewSpaceToMetersFactor = 0.0f; // TODO
 
-	// Generic flags...
 	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
 	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
 	desc.Reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
-	// HDR nits
 	desc.MinMaxLuminance = m_HDRLuminanceRange;
 
 	return true;
@@ -542,15 +345,15 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
 {
 	if (CreateBackend(NGXParameters) != FFX_OK)
-		throw std::runtime_error(__FUNCTION__ ": Failed to create backend context.");
+		throw std::runtime_error("Failed to create backend context.");
 
 	if (CreateDilationContext() != FFX_OK)
-		throw std::runtime_error(__FUNCTION__ ": Failed to create dilation context.");
+		throw std::runtime_error("Failed to create dilation context.");
 
 	if (CreateOpticalFlowContext() != FFX_OK)
-		throw std::runtime_error(__FUNCTION__ ": Failed to create optical flow context.");
+		throw std::runtime_error("Failed to create optical flow context.");
 
-	m_FrameInterpolatorContext = std::make_unique<FFInterpolator>(m_FrameInterpolationBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
+	m_FrameInterpolatorContext.emplace(m_FrameInterpolationBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
 }
 
 void FFFrameInterpolator::Destroy()
@@ -563,30 +366,9 @@ void FFFrameInterpolator::Destroy()
 
 FfxErrorCode FFFrameInterpolator::CreateBackend(NGXInstanceParameters *NGXParameters)
 {
-	if (IsVulkanBackend())
-	{
-		VkDeviceContext vkContext = {
-			.vkDevice = m_LogicalDeviceVK,
-			.vkPhysicalDevice = m_PhysicalDeviceVK,
-			.vkDeviceProcAddr = nullptr,
-		};
-
-		//const uint32_t maxContexts = 6; // One interface, six contexts
-		//const auto fsrDevice = ffxGetDeviceVK(&vkContext);
-		//const auto scratchSize = ffxGetScratchMemorySizeVK(vkContext.vkPhysicalDevice, maxContexts);
-
-		//FFX_RETURN_ON_FAIL(m_SharedBackendInterface.Initialize(fsrDevice, maxContexts));
-		//m_FrameInterpolationBackendInterface = m_SharedBackendInterface;
-
-		return FFX_ERROR_INCOMPLETE_INTERFACE;
-	}
-	else
-	{
-		const uint32_t maxContexts = 3; // Assume 3 contexts per interface
-
-		FFX_RETURN_ON_FAIL(m_SharedBackendInterface.Initialize(m_LogicalDeviceDX, maxContexts, NGXParameters));
-		FFX_RETURN_ON_FAIL(m_FrameInterpolationBackendInterface.Initialize(m_LogicalDeviceDX, maxContexts, NGXParameters));
-	}
+	const uint32_t maxContexts = 3; // Assume 3 contexts per interface
+	FFX_RETURN_ON_FAIL(InitializeBackendInterface(&m_SharedBackendInterface, maxContexts, NGXParameters));
+	FFX_RETURN_ON_FAIL(InitializeBackendInterface(&m_FrameInterpolationBackendInterface, maxContexts, NGXParameters));
 
 	const auto status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, &m_SharedEffectContextId.emplace());
 
@@ -607,7 +389,7 @@ void FFFrameInterpolator::DestroyBackend()
 
 FfxErrorCode FFFrameInterpolator::CreateDilationContext()
 {
-	m_DilationContext = std::make_unique<FFDilator>(m_SharedBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
+	m_DilationContext.emplace(m_SharedBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
 	const auto resourceDescs = m_DilationContext->GetSharedResourceDescriptions();
 
 	auto status = m_SharedBackendInterface.fpCreateResource(
@@ -718,52 +500,4 @@ void FFFrameInterpolator::DestroyOpticalFlowContext()
 
 	if (m_TexSharedOpticalFlowSCD)
 		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowSCD, *m_SharedEffectContextId);
-}
-
-bool FFFrameInterpolator::LoadResourceFromNGXParameters(
-	NGXInstanceParameters *NGXParameters,
-	const char *Name,
-	FfxResource *OutFfxResource,
-	FfxResourceStates State)
-{
-	// FSR blatantly ignores the FfxResource size fields. I'm not even going to try using extents.
-	void *resource = nullptr;
-	NGXParameters->GetVoidPointer(Name, reinterpret_cast<void **>(&resource));
-
-	if (!resource)
-	{
-		*OutFfxResource = {};
-		return false;
-	}
-
-	if (IsVulkanBackend())
-	{
-		// Vulkan provides no mechanism to query resource information. Convert it manually.
-		auto resourceHandle = static_cast<const NGXVulkanResourceHandle *>(resource);
-
-		if (resourceHandle->Type != 0)
-			__debugbreak();
-
-		VkImageCreateInfo imageInfo = {};
-		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.format = resourceHandle->ImageMetadata.Format;
-		imageInfo.extent = { resourceHandle->ImageMetadata.Width, resourceHandle->ImageMetadata.Height, 1 };
-		imageInfo.mipLevels = resourceHandle->ImageMetadata.Subresource.levelCount;
-		imageInfo.arrayLayers = resourceHandle->ImageMetadata.Subresource.layerCount;
-		imageInfo.usage |= VK_IMAGE_USAGE_STORAGE_BIT;
-
-		*OutFfxResource = ffxGetResourceVK(resourceHandle->ImageMetadata.Image, GetFfxResourceDescriptionVK(&imageInfo), nullptr, State);
-	}
-	else
-	{
-		// D3D12 provides information via GetDesc()
-		*OutFfxResource = ffxGetResourceDX12(
-			static_cast<ID3D12Resource *>(resource),
-			GetFfxResourceDescriptionDX12(static_cast<ID3D12Resource *>(resource)),
-			nullptr,
-			State);
-	}
-
-	return true;
 }

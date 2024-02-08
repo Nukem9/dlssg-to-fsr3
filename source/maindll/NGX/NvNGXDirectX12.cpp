@@ -1,13 +1,13 @@
 #include <d3d12.h>
 #include <dxgi.h>
+#include "FFFrameInterpolatorDX.h"
 #include "NvNGX.h"
-#include "FFFrameInterpolator.h"
 
 typedef LONG NTSTATUS;
 #include <d3dkmthk.h>
 
 static std::shared_mutex FeatureInstanceHandleLock;
-static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolator>> FeatureInstanceHandles;
+static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolatorDX>> FeatureInstanceHandles;
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	ID3D12CommandList *CommandList,
@@ -39,7 +39,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 	// Then initialize FSR
 	try
 	{
-		auto instance = std::make_shared<FFFrameInterpolator>(device, swapchainWidth, swapchainHeight, Parameters);
+		auto instance = std::make_shared<FFFrameInterpolatorDX>(device, swapchainWidth, swapchainHeight, Parameters);
 
 		std::scoped_lock lock(FeatureInstanceHandleLock);
 		{
@@ -49,7 +49,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_CreateFeature(
 			FeatureInstanceHandles.emplace(handle->InternalId, std::move(instance));
 		}
 	}
-	catch (const std::exception &e)
+	catch (const std::exception& e)
 	{
 		spdlog::error("NVSDK_NGX_D3D12_CreateFeature: Failed to initialize: {}", e.what());
 		device->Release();
@@ -68,16 +68,19 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 	if (!CommandList || !InstanceHandle || !Parameters)
 		return NGX_INVALID_PARAMETER;
 
-	std::shared_ptr<FFFrameInterpolator> instance;
+	const auto instance = [&]()
 	{
 		std::shared_lock lock(FeatureInstanceHandleLock);
 		auto itr = FeatureInstanceHandles.find(InstanceHandle->InternalId);
 
 		if (itr == FeatureInstanceHandles.end())
-			return NGX_FEATURE_NOT_FOUND;
+			return decltype(itr->second){};
 
-		instance = itr->second;
-	}
+		return itr->second;
+	}();
+
+	if (!instance)
+		return NGX_FEATURE_NOT_FOUND;
 
 	const auto status = instance->Dispatch(CommandList, Parameters);
 
@@ -86,7 +89,6 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 	case FFX_OK:
 		return NGX_SUCCESS;
 
-	case FFX_ERROR_INVALID_ARGUMENT:
 	default:
 	{
 		static bool once = [&]()

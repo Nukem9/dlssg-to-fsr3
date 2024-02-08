@@ -36,7 +36,7 @@ FfxErrorCode FFInterfaceWrapper::Initialize(ID3D12Device *Device, uint32_t MaxCo
 
 	auto result = ffxGetInterfaceDX12(this, fsrDevice, ffxScratchMemory, scratchSize, MaxContexts);
 
-	if (result == FFX_OK)
+	if (result == FFX_OK && NGXParameters)
 	{
 		NGXParameters->GetVoidPointer("ResourceAllocCallback", reinterpret_cast<void **>(&userData->m_NGXAllocCallback));
 		NGXParameters->GetVoidPointer("ResourceReleaseCallback", reinterpret_cast<void **>(&userData->m_NGXFreeCallback));
