@@ -39,7 +39,7 @@ private:
 	uint32_t m_PostUpscaleRenderHeight = 0;
 
 public:
-	FFFrameInterpolator(uint32_t OutputWidth, uint32_t OutputHeight, NGXInstanceParameters *NGXParameters);
+	FFFrameInterpolator(uint32_t OutputWidth, uint32_t OutputHeight);
 	FFFrameInterpolator(const FFFrameInterpolator&) = delete;
 	FFFrameInterpolator& operator=(const FFFrameInterpolator&) = delete;
 	~FFFrameInterpolator();
@@ -63,6 +63,10 @@ protected:
 		FfxResource *OutFfxResource,
 		FfxResourceStates State) = 0;
 
+protected:
+	void Create(NGXInstanceParameters *NGXParameters);
+	void Destroy();
+
 private:
 	bool CalculateResourceDimensions(NGXInstanceParameters *NGXParameters);
 	void QueryHDRLuminanceRange(NGXInstanceParameters *NGXParameters);
@@ -70,8 +74,6 @@ private:
 	bool BuildOpticalFlowParameters(FfxOpticalflowDispatchDescription *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildFrameInterpolationParameters(FFInterpolatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 
-	void Create(NGXInstanceParameters *NGXParameters);
-	void Destroy();
 	FfxErrorCode CreateBackend(NGXInstanceParameters *NGXParameters);
 	void DestroyBackend();
 	FfxErrorCode CreateDilationContext();

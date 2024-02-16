@@ -5,19 +5,14 @@
 #include "FFFrameInterpolator.h"
 #include "Util.h"
 
-FFFrameInterpolator::FFFrameInterpolator(
-	uint32_t OutputWidth,
-	uint32_t OutputHeight,
-	NGXInstanceParameters *NGXParameters)
+FFFrameInterpolator::FFFrameInterpolator(uint32_t OutputWidth, uint32_t OutputHeight)
 	: m_SwapchainWidth(OutputWidth),
 	  m_SwapchainHeight(OutputHeight)
 {
-	Create(NGXParameters);
 }
 
 FFFrameInterpolator::~FFFrameInterpolator()
 {
-	Destroy();
 }
 
 FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParameters *NGXParameters)
@@ -82,6 +77,28 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 
 	NGXParameters->Set4("DLSSG.FlushRequired", 0);
 	return dispatchStatus;
+}
+
+void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
+{
+	if (CreateBackend(NGXParameters) != FFX_OK)
+		throw std::runtime_error("Failed to create backend context.");
+
+	if (CreateDilationContext() != FFX_OK)
+		throw std::runtime_error("Failed to create dilation context.");
+
+	if (CreateOpticalFlowContext() != FFX_OK)
+		throw std::runtime_error("Failed to create optical flow context.");
+
+	m_FrameInterpolatorContext.emplace(m_FrameInterpolationBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
+}
+
+void FFFrameInterpolator::Destroy()
+{
+	m_FrameInterpolatorContext.reset();
+	DestroyOpticalFlowContext();
+	DestroyDilationContext();
+	DestroyBackend();
 }
 
 bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGXParameters)
@@ -340,28 +357,6 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	desc.MinMaxLuminance = m_HDRLuminanceRange;
 
 	return true;
-}
-
-void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
-{
-	if (CreateBackend(NGXParameters) != FFX_OK)
-		throw std::runtime_error("Failed to create backend context.");
-
-	if (CreateDilationContext() != FFX_OK)
-		throw std::runtime_error("Failed to create dilation context.");
-
-	if (CreateOpticalFlowContext() != FFX_OK)
-		throw std::runtime_error("Failed to create optical flow context.");
-
-	m_FrameInterpolatorContext.emplace(m_FrameInterpolationBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
-}
-
-void FFFrameInterpolator::Destroy()
-{
-	m_FrameInterpolatorContext.reset();
-	DestroyOpticalFlowContext();
-	DestroyDilationContext();
-	DestroyBackend();
 }
 
 FfxErrorCode FFFrameInterpolator::CreateBackend(NGXInstanceParameters *NGXParameters)

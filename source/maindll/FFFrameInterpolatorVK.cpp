@@ -14,12 +14,14 @@ FFFrameInterpolatorVK::FFFrameInterpolatorVK(
 	NGXInstanceParameters *NGXParameters)
 	: m_Device(LogicalDevice),
 	  m_PhysicalDevice(PhysicalDevice),
-	  FFFrameInterpolator(OutputWidth, OutputHeight, NGXParameters)
+	  FFFrameInterpolator(OutputWidth, OutputHeight)
 {
+	FFFrameInterpolator::Create(NGXParameters);
 }
 
 FFFrameInterpolatorVK::~FFFrameInterpolatorVK()
 {
+	FFFrameInterpolator::Destroy();
 }
 
 FfxErrorCode FFFrameInterpolatorVK::Dispatch(void *CommandList, NGXInstanceParameters *NGXParameters)

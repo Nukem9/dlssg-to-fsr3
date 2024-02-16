@@ -10,13 +10,15 @@ FFFrameInterpolatorDX::FFFrameInterpolatorDX(
 	uint32_t OutputHeight,
 	NGXInstanceParameters *NGXParameters)
 	: m_Device(Device),
-	  FFFrameInterpolator(OutputWidth, OutputHeight, NGXParameters)
+	  FFFrameInterpolator(OutputWidth, OutputHeight)
 {
 	m_Device->AddRef();
+	FFFrameInterpolator::Create(NGXParameters);
 }
 
 FFFrameInterpolatorDX::~FFFrameInterpolatorDX()
 {
+	FFFrameInterpolator::Destroy();
 	m_Device->Release();
 }
 
