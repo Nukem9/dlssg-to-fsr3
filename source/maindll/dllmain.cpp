@@ -48,7 +48,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			BUILD_VERSION_MINOR);
 		spdlog::warn("implementation of AMD's FSR 3.");
 		spdlog::warn("");
-		spdlog::warn("dlssg-to-fsr3 is freely downloadable from https://www.nexusmods.com/site/mods/738?tab=files or "
+		spdlog::warn("dlssg-to-fsr3 is freely downloadable from https://www.nexusmods.com/site/mods/738 or "
 					 "https://github.com/Nukem9/dlssg-to-fsr3/releases.");
 		spdlog::warn("If you paid for these files, you've been scammed.");
 		spdlog::warn("");

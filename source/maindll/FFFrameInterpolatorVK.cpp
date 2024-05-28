@@ -194,18 +194,16 @@ bool FFFrameInterpolatorVK::LoadTextureFromNGXParameters(
 	FfxResource *OutFfxResource,
 	FfxResourceStates State)
 {
-	void *resource = nullptr;
-	NGXParameters->GetVoidPointer(Name, &resource);
+	NGXVulkanResourceHandle *resourceHandle = nullptr;
+	NGXParameters->GetVoidPointer(Name, reinterpret_cast<void **>(&resourceHandle));
 
-	if (!resource)
+	if (!resourceHandle)
 	{
 		*OutFfxResource = {};
 		return false;
 	}
 
 	// Vulkan provides no mechanism to query resource information. Convert it manually.
-	auto resourceHandle = static_cast<const NGXVulkanResourceHandle *>(resource);
-
 	if (resourceHandle->Type != 0)
 		__debugbreak();
 

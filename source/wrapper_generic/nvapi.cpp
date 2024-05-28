@@ -33,7 +33,7 @@ struct NV_SCG_PRIORITY_INFO
 	uint32_t Unknown8; // 14
 };
 
-struct NV_D3DKMT_PRIVATE_DRIVER_DATA // nvwg2umx.dll (546.33)
+struct NV_D3DKMT_PRIVATE_DRIVER_DATA // nvwgf2umx.dll (546.33)
 {
 	uint32_t Header;				 // 0 NVDA
 	char Padding[0xE4];				 // 4

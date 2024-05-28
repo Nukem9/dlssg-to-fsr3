@@ -74,7 +74,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 		auto itr = FeatureInstanceHandles.find(InstanceHandle->InternalId);
 
 		if (itr == FeatureInstanceHandles.end())
-			return decltype(itr->second){};
+			return decltype(itr->second) {};
 
 		return itr->second;
 	}();

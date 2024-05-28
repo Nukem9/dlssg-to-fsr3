@@ -1,6 +1,5 @@
 #pragma once
 
-#include <FidelityFX/host/ffx_interface.h>
 #include <FidelityFX/host/ffx_opticalflow.h>
 #include "FFDilator.h"
 #include "FFInterfaceWrapper.h"

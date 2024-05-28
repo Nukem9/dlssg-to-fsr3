@@ -1,6 +1,5 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <Windows.h>
-#include <stdio.h>
 #include "Util.h"
 
 namespace Util

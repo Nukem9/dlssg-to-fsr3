@@ -6,7 +6,7 @@
 // sl.common.dll      loads  _nvngx.dll       <- we are here
 // _nvngx.dll         loads  nvngx_dlssg.dll  <- intercept this stage
 //
-std::vector<const wchar_t *> TargetLibrariesToHook = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll" };
+std::vector TargetLibrariesToHook = { L"sl.interposer.dll", L"sl.common.dll", L"sl.dlss_g.dll", L"_nvngx.dll" };
 constinit const wchar_t *TargetImplementationDll = L"nvngx_dlssg.dll";
 constinit const wchar_t *RelplacementImplementationDll = L"dlssg_to_fsr3_amd_is_better.dll";
 
@@ -114,9 +114,8 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 	if (!Path || !ModuleHandle)
 		return false;
 
-	const bool isMatch = std::any_of(
-		TargetLibrariesToHook.begin(),
-		TargetLibrariesToHook.end(),
+	const bool isMatch = std::ranges::any_of(
+		TargetLibrariesToHook,
 		[path = std::wstring_view(Path)](const wchar_t *Target)
 		{
 			return path.ends_with(Target);
@@ -159,7 +158,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 			// "Returnal\         Returnal\     Binaries\Win64\Returnal-Win64-Shipping.exe"
 			// "Hogwarts Legacy\  Phoenix\      Binaries\Win64\HogwartsLegacy.exe"
 			// "SW Jedi Survivor\ SwGame\       Binaries\Win64\JediSurvivor.exe"
-			// "Atomic Heart\     AtomicHeart\  Binaries\Win64\AtomicHeart-Win64-Shipping.exe
+			// "Atomic Heart\     AtomicHeart\  Binaries\Win64\AtomicHeart-Win64-Shipping.exe"
 			// "MMS\              MidnightSuns\ Binaries\Win64\MidnightSuns-Win64-Shipping.exe"
 			//
 			// "Dying Light 2\    ph\work\bin\x64\sl.interposer.dll"
@@ -177,10 +176,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 			if (!LoadLibraryW(bruteInterposerPaths[0]))
 			{
-				wchar_t path[2048];
-
 				for (auto interposer : bruteInterposerPaths)
 				{
+					wchar_t path[2048];
 					if (!Util::GetModulePath(path, true, GetModuleHandleW(nullptr)))
 						break;
 
@@ -193,9 +191,8 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		}
 
 		// We probably loaded after sl.interposer.dll and sl.common.dll. Try patching them up front.
-		bool anyPatched = std::count_if(
-			TargetLibrariesToHook.begin(),
-			TargetLibrariesToHook.end(),
+		bool anyPatched = std::ranges::count_if(
+			TargetLibrariesToHook,
 			[](const wchar_t *Target)
 		{
 			return PatchImportsForModule(Target, GetModuleHandleW(Target)) && _wcsicmp(Target, TargetEGSServicesDll) != 0;
