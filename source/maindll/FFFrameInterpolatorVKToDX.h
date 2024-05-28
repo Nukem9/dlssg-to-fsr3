@@ -7,11 +7,13 @@
 #include "NGX/NvNGX.h"
 #include "FFFrameInterpolatorDX.h"
 
-struct IDXGIAdapter1;
 struct ID3D12CommandQueue;
 struct ID3D12CommandAllocator;
+struct ID3D12Device;
 struct ID3D12GraphicsCommandList;
 struct ID3D12Fence;
+struct IDXGIAdapter1;
+struct IDXGraphicsAnalysis;
 
 class FFFrameInterpolatorVKToDX
 {
@@ -45,11 +47,12 @@ private:
 	const VkDevice m_DeviceVK;
 	const VkPhysicalDevice m_PhysicalDeviceVK;
 
+	IDXGraphicsAnalysis *m_GraphicsAnalysisInterface = nullptr;
 	ID3D12Device *m_DeviceDX = nullptr;
 	ID3D12CommandQueue *m_CommandQueueDX = nullptr;
+	std::vector<ID3D12CommandAllocator *> m_CommandAllocatorsDX;
+	size_t m_NextCommandAllocatorIndexDX = 0;
 	ID3D12GraphicsCommandList *m_CommandListDX = nullptr;
-	std::vector<ID3D12CommandAllocator *> m_TransientCommandAllocatorsDX;
-	size_t m_NextTransientCommandAllocatorIndex = 0;
 
 	PfnAppCreateTimelineSyncObjectsCallback *m_AppCreateTimelineSyncObjects = nullptr; // Create S1 and S4
 	PfnAppSyncSignalCallback *m_AppSyncSignal = nullptr;							   // Wait on S0, submit CL1, signal S1, return CL2
@@ -74,6 +77,22 @@ private:
 
 	std::optional<FFFrameInterpolatorDX> m_FrameInterpolator;
 
+	struct CachedSharedImageData
+	{
+		VkImageCreateInfo m_CreateInfo = {};
+		VkImage m_ResourceVK = VK_NULL_HANDLE;
+		VkDeviceMemory m_MemoryVK = VK_NULL_HANDLE;
+		ID3D12Resource *m_ResourceDX = nullptr;
+
+		void Reset(VkDevice DeviceVK);
+	};
+
+	bool m_ResourceFlushRequested = false;
+	CachedSharedImageData m_CachedMVecsImage;
+	CachedSharedImageData m_CachedDepthImage;
+	CachedSharedImageData m_CachedBackbufferImage;
+	CachedSharedImageData m_CachedOutputImage;
+
 public:
 	FFFrameInterpolatorVKToDX(
 		VkDevice LogicalDevice,
@@ -91,18 +110,26 @@ private:
 	void InitializeVulkanBackend(VkPhysicalDevice PhysicalDevice);
 	void InitializeD3D12Backend(IDXGIAdapter1 *Adapter, uint32_t NodeMask);
 
-	void CreateVulkanToDXGIAdapter(VkPhysicalDevice PhysicalDevice, IDXGIAdapter1 *& Adapter, uint32_t& NodeMask);
-	bool CreateVulkanToD3D12SharedFence(uint64_t InitialValue, VkSemaphore& VulkanFence, ID3D12Fence *& D3D12Fence);
-	bool CreateVulkanToD3D12SharedTexture(const VkImageCreateInfo& ImageInfo, VkImage& VulkanImage, ID3D12Resource *& D3D12Resource);
+	bool CreateOrImportSharedSemaphore(uint64_t InitialValue, VkSemaphore& VulkanSemaphore, ID3D12Fence *& D3D12Semaphore);
 
-	ID3D12CommandAllocator *AllocateTransientCommandAllocator();
-	uint32_t FindMemoryTypeIndex(uint32_t MemoryTypeBits, VkMemoryPropertyFlags PropertyFlags);
+	bool CreateSharedTexture(
+		const VkImageCreateInfo& ImageInfo,
+		VkImage& VulkanResource,
+		VkDeviceMemory& VulkanMemory,
+		ID3D12Resource *& D3D12Resource);
 
-	static VkImageMemoryBarrier VkBarrier(VkImage Image, FfxResourceStates SourceState, FfxResourceStates DestinationState);
+	void CopyVulkanTexture(
+		VkCommandBuffer CommandList,
+		VkImage SourceResource,
+		VkImage DestinationResource,
+		FfxResourceStates SourceState,
+		FfxResourceStates DestinationState,
+		VkExtent3D Extent,
+		bool IsDepthAspect);
 
-	static bool LoadVulkanResourceNGXInfo(
-		NGXInstanceParameters *NGXParameters,
-		const char *Name,
-		VkImage& Image,
-		VkImageCreateInfo& ImageInfo);
+	VkImageMemoryBarrier MakeVulkanBarrier(VkImage Resource, FfxResourceStates SourceState, FfxResourceStates DestinationState, bool IsDepthAspect);
+	bool LoadVulkanResourceNGXInfo(NGXInstanceParameters *NGXParameters, const char *Name, VkImageCreateInfo& ImageInfo, VkImage& Resource);
+
+	bool FindEquivalentDXGIAdapter(VkPhysicalDevice PhysicalDevice, IDXGIAdapter1 *& Adapter, uint32_t& NodeMask);
+	uint32_t FindVulkanMemoryTypeIndex(uint32_t MemoryTypeBits, VkMemoryPropertyFlags PropertyFlags);
 };

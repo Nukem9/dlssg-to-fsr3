@@ -347,7 +347,7 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 
 	desc.CameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0);
 	desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0);
-	desc.ViewSpaceToMetersFactor = 0.0f; // TODO
+	desc.ViewSpaceToMetersFactor = 1.0f; // TODO: Defaults to 1.0f. Need a way to query from games?
 
 	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
 	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;

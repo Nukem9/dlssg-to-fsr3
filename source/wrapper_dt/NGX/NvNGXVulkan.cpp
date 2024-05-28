@@ -1,15 +1,6 @@
 #include <vulkan/vulkan.h>
 #include "NvNGX.h"
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(
-	VkCommandBuffer CommandList,
-	void *Unknown,
-	NGXInstanceParameters *Parameters,
-	NGXHandle **OutInstanceHandle)
-{
-	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_CreateFeature)(CommandList, Unknown, Parameters, OutInstanceHandle);
-}
-
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature1(
 	VkDevice LogicalDevice,
 	VkCommandBuffer CommandList,
@@ -18,6 +9,15 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature1(
 	NGXHandle **OutInstanceHandle)
 {
 	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_CreateFeature1)(LogicalDevice, CommandList, Unknown, Parameters, OutInstanceHandle);
+}
+
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature(
+	VkCommandBuffer CommandList,
+	void *Unknown,
+	NGXInstanceParameters *Parameters,
+	NGXHandle **OutInstanceHandle)
+{
+	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_CreateFeature)(CommandList, Unknown, Parameters, OutInstanceHandle);
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_EvaluateFeature(VkCommandBuffer CommandList, NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)
