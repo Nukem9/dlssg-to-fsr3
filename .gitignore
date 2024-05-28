@@ -4,6 +4,7 @@
 
 # Launch.vs.json isn't user-specific in this repo
 !.vs/launch.vs.json
+!.vs/launch_with_automation.ps1
 
 # Artifacts
 bin/*

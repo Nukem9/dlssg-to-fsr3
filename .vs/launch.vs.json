@@ -12,16 +12,12 @@
       "currentDir": "${env.GAME_ROOT_DIRECTORY}",
       "exe": "${env.ComSpec}",
       "args": [
-        "/C \"${env.GAME_ROOT_DIRECTORY}/Cyberpunk2077.exe\" && taskkill /F /IM VsDebugConsole.exe"
+        "/C \"powershell.exe -WindowStyle Hidden -nologo -ExecutionPolicy Bypass -File ^\"${workspaceRoot}/.vs/launch_with_automation.ps1^\" Launch\""
       ],
       "environment": [
         {
-          "name": "VS_DEBUGGER_REQUEST",
-          "value": "${env.VS_DEBUGGER_REQUEST}"
-        },
-        {
-          "name": "VS_DEBUGGER_PROC",
-          "value": "${env.VS_DEBUGGER_PROC}"
+          "name": "GAME_DEBUGGER_CMDLINE",
+          "value": "${env.GAME_DEBUGGER_CMDLINE}"
         }
       ]
     }
