@@ -87,7 +87,15 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 	switch (status)
 	{
 	case FFX_OK:
+	{
+		static bool once = [&]()
+		{
+			spdlog::info("NVSDK_NGX_D3D12_EvaluateFeature: Succeeded.");
+			return true;
+		}();
+
 		return NGX_SUCCESS;
+	}
 
 	default:
 	{

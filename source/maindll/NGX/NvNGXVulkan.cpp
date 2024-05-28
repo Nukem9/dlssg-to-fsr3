@@ -94,7 +94,15 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_EvaluateFeature(VkCommandBuffer CommandL
 	switch (status)
 	{
 	case FFX_OK:
+	{
+		static bool once = [&]()
+		{
+			spdlog::info("NVSDK_NGX_VULKAN_EvaluateFeature: Succeeded.");
+			return true;
+		}();
+
 		return NGX_SUCCESS;
+	}
 
 	default:
 	{
