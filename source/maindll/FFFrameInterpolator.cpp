@@ -75,7 +75,6 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 	if (dispatchStatus == FFX_OK && gameRealOutputResource.resource && gameBackBufferResource.resource)
 		CopyTexture(GetActiveCommandList(), &gameRealOutputResource, &gameBackBufferResource);
 
-	NGXParameters->Set4("DLSSG.FlushRequired", 0);
 	return dispatchStatus;
 }
 

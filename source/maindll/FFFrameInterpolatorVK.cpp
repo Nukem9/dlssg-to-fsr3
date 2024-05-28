@@ -30,13 +30,15 @@ FfxErrorCode FFFrameInterpolatorVK::Dispatch(void *CommandList, NGXInstanceParam
 	const bool isRecordingCommands = NGXParameters->GetUIntOrDefault("DLSSG.IsRecording", 0) != 0;
 	const auto cmdListVk = reinterpret_cast<VkCommandBuffer>(CommandList);
 
+	NGXParameters->Set4("DLSSG.FlushRequired", 0);
+
 	// Begin a new command list in the event our caller didn't set one up
 	if (!isRecordingCommands)
 	{
 		const static bool once = [&]()
 		{
 			spdlog::warn(
-				"Command list wasn't recording. Resetting state: {} 0x{:X}",
+				"Vulkan command list wasn't recording. Resetting state: {} 0x{:X}",
 				enableInterpolation,
 				reinterpret_cast<uintptr_t>(CommandList));
 

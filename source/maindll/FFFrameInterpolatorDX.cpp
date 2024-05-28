@@ -24,30 +24,19 @@ FFFrameInterpolatorDX::~FFFrameInterpolatorDX()
 
 FfxErrorCode FFFrameInterpolatorDX::Dispatch(void *CommandList, NGXInstanceParameters *NGXParameters)
 {
-	const bool enableInterpolation = NGXParameters->GetUIntOrDefault("DLSSG.EnableInterp", 0) != 0;
 	const bool isRecordingCommands = NGXParameters->GetUIntOrDefault("DLSSG.IsRecording", 0) != 0;
 	const auto cmdList12 = reinterpret_cast<ID3D12GraphicsCommandList *>(CommandList);
+
+	NGXParameters->Set4("DLSSG.FlushRequired", 0);
 
 	// Begin a new command list in the event our caller didn't set one up
 	if (!isRecordingCommands)
 	{
-		void *recordingQueue = nullptr;
-		NGXParameters->GetVoidPointer("DLSSG.CmdQueue", &recordingQueue);
+		ID3D12CommandQueue *recordingQueue = nullptr;
+		NGXParameters->GetVoidPointer("DLSSG.CmdQueue", reinterpret_cast<void **>(&recordingQueue));
 
 		ID3D12CommandAllocator *recordingAllocator = nullptr;
 		NGXParameters->GetVoidPointer("DLSSG.CmdAlloc", reinterpret_cast<void **>(&recordingAllocator));
-
-		const static bool once = [&]()
-		{
-			spdlog::warn(
-				"Command list wasn't recording. Resetting state: {} 0x{:X} 0x{:X} 0x{:X}",
-				enableInterpolation,
-				reinterpret_cast<uintptr_t>(CommandList),
-				reinterpret_cast<uintptr_t>(recordingQueue),
-				reinterpret_cast<uintptr_t>(recordingAllocator));
-
-			return false;
-		}();
 
 		cmdList12->Reset(recordingAllocator, nullptr);
 	}
