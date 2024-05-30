@@ -554,9 +554,10 @@ void FFFrameInterpolatorVKToDX::CopyVulkanTexture(
 	VkExtent3D Extent,
 	bool IsDepthAspect)
 {
-	VkImageMemoryBarrier barriers[2] = {};
-	barriers[0] = MakeVulkanBarrier(SourceResource, SourceState, FFX_RESOURCE_STATE_COPY_SRC, IsDepthAspect);
-	barriers[1] = MakeVulkanBarrier(DestinationResource, DestinationState, FFX_RESOURCE_STATE_COPY_DEST, IsDepthAspect);
+	std::array<VkImageMemoryBarrier, 2> barriers = {
+		MakeVulkanBarrier(SourceResource, SourceState, FFX_RESOURCE_STATE_COPY_SRC, IsDepthAspect),
+		MakeVulkanBarrier(DestinationResource, DestinationState, FFX_RESOURCE_STATE_COPY_DEST, IsDepthAspect),
+	};
 
 	vkCmdPipelineBarrier(
 		CommandList,
@@ -567,8 +568,8 @@ void FFFrameInterpolatorVKToDX::CopyVulkanTexture(
 		nullptr,
 		0,
 		nullptr,
-		1,
-		barriers);
+		static_cast<uint32_t>(barriers.size()),
+		barriers.data());
 
 	VkImageCopy copyRegion = {};
 	copyRegion.extent = Extent;
@@ -594,8 +595,8 @@ void FFFrameInterpolatorVKToDX::CopyVulkanTexture(
 		nullptr,
 		0,
 		nullptr,
-		1,
-		barriers);
+		static_cast<uint32_t>(barriers.size()),
+		barriers.data());
 }
 
 VkImageMemoryBarrier FFFrameInterpolatorVKToDX::MakeVulkanBarrier(
