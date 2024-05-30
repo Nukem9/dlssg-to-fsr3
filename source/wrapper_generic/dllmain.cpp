@@ -66,9 +66,7 @@ HMODULE WINAPI HookedLoadLibraryExW(LPCWSTR lpLibFileName, HANDLE hFile, DWORD d
 {
 	HMODULE libraryHandle = nullptr;
 
-	if (RedirectModule(lpLibFileName, &libraryHandle))
-		return libraryHandle;
-	else
+	if (!RedirectModule(lpLibFileName, &libraryHandle))
 		libraryHandle = LoadLibraryExW(lpLibFileName, hFile, dwFlags);
 
 	PatchImportsForModule(lpLibFileName, libraryHandle);
@@ -79,9 +77,7 @@ HMODULE WINAPI HookedLoadLibraryW(LPCWSTR lpLibFileName)
 {
 	HMODULE libraryHandle = nullptr;
 
-	if (RedirectModule(lpLibFileName, &libraryHandle))
-		return libraryHandle;
-	else
+	if (!RedirectModule(lpLibFileName, &libraryHandle))
 		libraryHandle = LoadLibraryW(lpLibFileName);
 
 	PatchImportsForModule(lpLibFileName, libraryHandle);
@@ -184,7 +180,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 					wcscat_s(path, interposer);
 
-					if (LoadLibraryW(path))
+					if (LoadLibraryExW(path, nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS))
 						break;
 				}
 			}
