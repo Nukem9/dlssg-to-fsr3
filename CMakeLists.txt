@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 
 project(
     dlssg-to-fsr3
-    VERSION 0.90
+    VERSION 0.100
     LANGUAGES CXX
 )
 
