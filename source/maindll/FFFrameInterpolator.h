@@ -1,7 +1,6 @@
 #pragma once
 
 #include <FidelityFX/host/ffx_opticalflow.h>
-#include "FFDilator.h"
 #include "FFInterfaceWrapper.h"
 #include "FFInterpolator.h"
 
@@ -14,7 +13,6 @@ private:
 	FFInterfaceWrapper m_SharedBackendInterface;
 	std::optional<FfxUInt32> m_SharedEffectContextId;
 
-	std::optional<FFDilator> m_DilationContext;
 	std::optional<FfxOpticalflowContext> m_OpticalFlowContext;
 	std::optional<FFInterpolator> m_FrameInterpolatorContext;
 
@@ -69,14 +67,11 @@ protected:
 private:
 	bool CalculateResourceDimensions(NGXInstanceParameters *NGXParameters);
 	void QueryHDRLuminanceRange(NGXInstanceParameters *NGXParameters);
-	bool BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildOpticalFlowParameters(FfxOpticalflowDispatchDescription *OutParameters, NGXInstanceParameters *NGXParameters);
 	bool BuildFrameInterpolationParameters(FFInterpolatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters);
 
 	FfxErrorCode CreateBackend(NGXInstanceParameters *NGXParameters);
 	void DestroyBackend();
-	FfxErrorCode CreateDilationContext();
-	void DestroyDilationContext();
 	FfxErrorCode CreateOpticalFlowContext();
 	void DestroyOpticalFlowContext();
 };

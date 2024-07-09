@@ -36,46 +36,73 @@ FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Pa
 {
 	FFX_RETURN_ON_FAIL(InternalDeferredSetupContext(Parameters)); // Massive frame hitch on first call
 
-	FfxFrameInterpolationDispatchDescription desc = {};
+	FfxFrameInterpolationDispatchDescription dispatchDesc = {};
+	{
+		if (Parameters.DebugTearLines)
+			dispatchDesc.flags |= FFX_FRAMEINTERPOLATION_DISPATCH_DRAW_DEBUG_TEAR_LINES;
 
-	if (Parameters.DebugTearLines)
-		desc.flags |= FFX_FRAMEINTERPOLATION_DISPATCH_DRAW_DEBUG_TEAR_LINES;
+		if (Parameters.DebugView)
+			dispatchDesc.flags |= FFX_FRAMEINTERPOLATION_DISPATCH_DRAW_DEBUG_VIEW;
 
-	if (Parameters.DebugView)
-		desc.flags |= FFX_FRAMEINTERPOLATION_DISPATCH_DRAW_DEBUG_VIEW;
+		dispatchDesc.commandList = Parameters.CommandList;
+		dispatchDesc.displaySize = Parameters.OutputSize;
+		dispatchDesc.renderSize = Parameters.RenderSize;
 
-	desc.commandList = Parameters.CommandList;
-	desc.displaySize = Parameters.OutputSize;
-	desc.renderSize = Parameters.RenderSize;
+		dispatchDesc.currentBackBuffer = Parameters.InputColorBuffer;
+		dispatchDesc.currentBackBuffer_HUDLess = Parameters.InputHUDLessColorBuffer;
+		dispatchDesc.output = Parameters.OutputInterpolatedColorBuffer;
 
-	desc.currentBackBuffer = Parameters.InputColorBuffer;
-	desc.currentBackBuffer_HUDLess = Parameters.InputHUDLessColorBuffer;
-	desc.output = Parameters.OutputInterpolatedColorBuffer;
-	desc.dilatedDepth = Parameters.InputDilatedDepth;
-	desc.dilatedMotionVectors = Parameters.InputDilatedMotionVectors;
-	desc.reconstructPrevNearDepth = Parameters.InputReconstructedPreviousNearDepth;
+		dispatchDesc.interpolationRect = { 0,
+										   0,
+										   static_cast<int>(dispatchDesc.displaySize.width),
+										   static_cast<int>(dispatchDesc.displaySize.height) };
 
-	desc.interpolationRect = { 0, 0, static_cast<int>(desc.displaySize.width), static_cast<int>(desc.displaySize.height) };
+		dispatchDesc.opticalFlowVector = Parameters.InputOpticalFlowVector;
+		dispatchDesc.opticalFlowSceneChangeDetection = Parameters.InputOpticalFlowSceneChangeDetection;
+		// dispatchDesc.opticalFlowBufferSize = Parameters.OpticalFlowBufferSize; // Completely unused?
+		dispatchDesc.opticalFlowScale = Parameters.OpticalFlowScale;
+		dispatchDesc.opticalFlowBlockSize = Parameters.OpticalFlowBlockSize;
 
-	desc.opticalFlowVector = Parameters.InputOpticalFlowVector;
-	desc.opticalFlowSceneChangeDetection = Parameters.InputOpticalFlowSceneChangeDetection;
-	desc.opticalFlowBufferSize = Parameters.OpticalFlowBufferSize;
-	desc.opticalFlowScale = Parameters.OpticalFlowScale;
-	desc.opticalFlowBlockSize = Parameters.OpticalFlowBlockSize;
+		dispatchDesc.cameraNear = Parameters.CameraNear;
+		dispatchDesc.cameraFar = Parameters.CameraFar;
+		dispatchDesc.cameraFovAngleVertical = Parameters.CameraFovAngleVertical;
+		dispatchDesc.viewSpaceToMetersFactor = Parameters.ViewSpaceToMetersFactor;
 
-	desc.cameraNear = Parameters.CameraNear;
-	desc.cameraFar = Parameters.CameraFar;
-	desc.cameraFovAngleVertical = Parameters.CameraFovAngleVertical;
-	desc.viewSpaceToMetersFactor = Parameters.ViewSpaceToMetersFactor;
+		dispatchDesc.frameTimeDelta = 1000.0f / 60.0f; // Unused
+		dispatchDesc.reset = Parameters.Reset;
 
-	desc.frameTimeDelta = 1000.0f / 60.0f; // Unused
-	desc.reset = Parameters.Reset;
+		dispatchDesc.backBufferTransferFunction = Parameters.HDR ? FFX_BACKBUFFER_TRANSFER_FUNCTION_PQ
+																 : FFX_BACKBUFFER_TRANSFER_FUNCTION_SRGB;
+		dispatchDesc.minMaxLuminance[0] = Parameters.MinMaxLuminance.x;
+		dispatchDesc.minMaxLuminance[1] = Parameters.MinMaxLuminance.y;
 
-	desc.backBufferTransferFunction = Parameters.HDR ? FFX_BACKBUFFER_TRANSFER_FUNCTION_PQ : FFX_BACKBUFFER_TRANSFER_FUNCTION_SRGB;
-	desc.minMaxLuminance[0] = Parameters.MinMaxLuminance.x;
-	desc.minMaxLuminance[1] = Parameters.MinMaxLuminance.y;
+		dispatchDesc.frameID = 0; // Not async and not bindless. Don't bother.
+	}
 
-	return ffxFrameInterpolationDispatch(&m_FSRContext.value(), &desc);
+	FfxFrameInterpolationPrepareDescription prepareDesc = {};
+	{
+		prepareDesc.flags = dispatchDesc.flags;
+		prepareDesc.commandList = dispatchDesc.commandList;
+		prepareDesc.renderSize = dispatchDesc.renderSize;
+		prepareDesc.jitterOffset = Parameters.MotionVectorJitterOffsets;
+		prepareDesc.motionVectorScale = Parameters.MotionVectorScale;
+
+		prepareDesc.frameTimeDelta = dispatchDesc.frameTimeDelta;
+		prepareDesc.cameraNear = dispatchDesc.cameraNear;
+		prepareDesc.cameraFar = dispatchDesc.cameraFar;
+		prepareDesc.viewSpaceToMetersFactor = dispatchDesc.viewSpaceToMetersFactor;
+		prepareDesc.cameraFovAngleVertical = dispatchDesc.cameraFovAngleVertical;
+
+		prepareDesc.depth = Parameters.InputDepth;
+		prepareDesc.motionVectors = Parameters.InputMotionVectors;
+
+		prepareDesc.frameID = dispatchDesc.frameID;
+	}
+
+	if (auto result = ffxFrameInterpolationPrepare(&m_FSRContext.value(), &prepareDesc) != FFX_OK)
+		return result;
+
+	return ffxFrameInterpolationDispatch(&m_FSRContext.value(), &dispatchDesc);
 }
 
 FfxErrorCode FFInterpolator::InternalDeferredSetupContext(const FFInterpolatorDispatchParameters& Parameters)
@@ -85,11 +112,20 @@ FfxErrorCode FFInterpolator::InternalDeferredSetupContext(const FFInterpolatorDi
 		FfxFrameInterpolationContextDescription desc = {};
 		desc.backendInterface = m_BackendInterface;
 
+		if (Parameters.DepthInverted)
+			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_DEPTH_INVERTED;
+
 		if (Parameters.HDR)
 			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_HDR_COLOR_INPUT;
 
-		if (Parameters.DepthInverted)
-			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_DEPTH_INVERTED;
+		if (Parameters.MotionVectorsFullResolution)
+			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_DISPLAY_RESOLUTION_MOTION_VECTORS;
+
+		if (Parameters.MotionVectorJitterCancellation)
+			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_JITTER_MOTION_VECTORS;
+
+		if (Parameters.MotionVectorsDilated)
+			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_PREDILATED_MOTION_VECTORS;
 
 		desc.maxRenderSize = { m_MaxRenderWidth, m_MaxRenderHeight };
 		desc.displaySize = desc.maxRenderSize;
@@ -158,10 +194,9 @@ FfxErrorCode FFInterpolator::InternalSwapResources(FfxSurfaceFormat NewFormat)
 				FFX_HEAP_TYPE_DEFAULT,
 				newCopyDescription,
 				FFX_RESOURCE_STATE_UNORDERED_ACCESS,
-				0,
-				nullptr,
 				L"FI_PreviousInterpolationSourceHACK",
-				resourceId
+				resourceId,
+				{ FFX_RESOURCE_INIT_DATA_TYPE_UNINITIALIZED }
 			};
 			// clang-format on
 

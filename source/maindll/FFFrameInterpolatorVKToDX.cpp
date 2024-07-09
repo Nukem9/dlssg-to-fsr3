@@ -1,10 +1,10 @@
 #include <FidelityFX/host/backends/vk/ffx_vk.h>
+#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
 #include <d3d12.h>
 #include <dxgi1_3.h>
 #include <DXProgrammableCapture.h>
 #include "FFFrameInterpolatorVKToDX.h"
 
-DXGI_FORMAT ffxGetDX12FormatFromSurfaceFormat(FfxSurfaceFormat surfaceFormat);
 VkAccessFlags getVKAccessFlagsFromResourceState(FfxResourceStates state);
 VkImageLayout getVKImageLayoutFromResourceState(FfxResourceStates state);
 

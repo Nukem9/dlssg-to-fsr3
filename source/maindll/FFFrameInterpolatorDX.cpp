@@ -113,6 +113,6 @@ bool FFFrameInterpolatorDX::LoadTextureFromNGXParameters(
 		return false;
 	}
 
-	*OutFfxResource = ffxGetResourceDX12(resource, GetFfxResourceDescriptionDX12(resource), nullptr, State);
+	*OutFfxResource = ffxGetResourceDX12(resource, ffxGetResourceDescriptionDX12(resource), nullptr, State);
 	return true;
 }

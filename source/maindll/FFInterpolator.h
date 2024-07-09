@@ -11,17 +11,22 @@ struct FFInterpolatorDispatchParameters
 
     FfxResource InputColorBuffer;
     FfxResource InputHUDLessColorBuffer;
-    FfxResource InputDilatedDepth;
-    FfxResource InputDilatedMotionVectors;
-    FfxResource InputReconstructedPreviousNearDepth;
+    FfxResource InputDepth;
+    FfxResource InputMotionVectors;
 
     FfxResource InputOpticalFlowVector;
     FfxResource InputOpticalFlowSceneChangeDetection;
-    FfxDimensions2D OpticalFlowBufferSize;
     FfxFloatCoords2D OpticalFlowScale;
     int OpticalFlowBlockSize;
 
     FfxResource OutputInterpolatedColorBuffer;
+
+	bool MotionVectorsFullResolution;
+	bool MotionVectorJitterCancellation;
+	bool MotionVectorsDilated;
+
+	FfxFloatCoords2D MotionVectorScale;
+	FfxFloatCoords2D MotionVectorJitterOffsets;
 
 	bool HDR;
 	bool DepthInverted;

@@ -5,8 +5,7 @@
 
 D3D12_RESOURCE_FLAGS ffxGetDX12ResourceFlags(FfxResourceUsage flags);
 D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
-DXGI_FORMAT ffxGetDX12FormatFromSurfaceFormat(FfxSurfaceFormat surfaceFormat);
-ID3D12Resource *getDX12ResourcePtr(BackendContext_DX12 *backendContext, int32_t resourceIndex);
+ID3D12Resource *getDX12ResourcePtr(struct BackendContext_DX12 *backendContext, int32_t resourceIndex);
 
 static DXGI_FORMAT convertFormatUav(DXGI_FORMAT format);
 static DXGI_FORMAT convertFormatSrv(DXGI_FORMAT format);
@@ -36,15 +35,15 @@ FfxErrorCode FFInterfaceWrapper::Initialize(ID3D12Device *Device, uint32_t MaxCo
 
 	auto result = ffxGetInterfaceDX12(this, fsrDevice, ffxScratchMemory, scratchSize, MaxContexts);
 
-	if (result == FFX_OK && NGXParameters)
+	if (result == FFX_OK && NGXParameters && false)
 	{
 		NGXParameters->GetVoidPointer("ResourceAllocCallback", reinterpret_cast<void **>(&userData->m_NGXAllocCallback));
 		NGXParameters->GetVoidPointer("ResourceReleaseCallback", reinterpret_cast<void **>(&userData->m_NGXFreeCallback));
 
 		if (userData->m_NGXAllocCallback && userData->m_NGXFreeCallback)
 		{
-			fpCreateResource = CustomCreateResourceDX12;
-			fpDestroyResource = CustomDestroyResourceDX12;
+			//fpCreateResource = CustomCreateResourceDX12;
+			//fpDestroyResource = CustomDestroyResourceDX12;
 		}
 	}
 
@@ -58,7 +57,7 @@ FFInterfaceWrapper::UserDataHack *FFInterfaceWrapper::GetUserData()
 
 	return reinterpret_cast<UserDataHack *>(reinterpret_cast<uintptr_t>(scratchBuffer) - sizeof(UserDataHack));
 }
-
+#if 0
 //
 // Everything after this point is lifted verbatim from /sdk/src/backends/dx12/ffx_dx12.cpp.
 //
@@ -562,3 +561,4 @@ DXGI_FORMAT convertFormatSrv(DXGI_FORMAT format)
 		return format;
 	}
 }
+#endif

@@ -36,12 +36,8 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		QueryHDRLuminanceRange(NGXParameters);
 
 		// Parameter setup
-		FFDilatorDispatchParameters fsrDilationDesc = {};
 		FfxOpticalflowDispatchDescription fsrOfDispatchDesc = {};
 		FFInterpolatorDispatchParameters fsrFiDispatchDesc = {};
-
-		if (!BuildDilationParameters(&fsrDilationDesc, NGXParameters))
-			return FFX_ERROR_INVALID_ARGUMENT;
 
 		if (!BuildOpticalFlowParameters(&fsrOfDispatchDesc, NGXParameters))
 			return FFX_ERROR_INVALID_ARGUMENT;
@@ -57,10 +53,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
 
 		// Record commands
-		auto status = m_DilationContext->Dispatch(fsrDilationDesc);
-		FFX_RETURN_ON_FAIL(status);
-
-		status = ffxOpticalflowContextDispatch(&m_OpticalFlowContext.value(), &fsrOfDispatchDesc);
+		auto status = ffxOpticalflowContextDispatch(&m_OpticalFlowContext.value(), &fsrOfDispatchDesc);
 		FFX_RETURN_ON_FAIL(status);
 
 		status = m_FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
@@ -83,9 +76,6 @@ void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
 	if (CreateBackend(NGXParameters) != FFX_OK)
 		throw std::runtime_error("Failed to create backend context.");
 
-	if (CreateDilationContext() != FFX_OK)
-		throw std::runtime_error("Failed to create dilation context.");
-
 	if (CreateOpticalFlowContext() != FFX_OK)
 		throw std::runtime_error("Failed to create optical flow context.");
 
@@ -96,7 +86,6 @@ void FFFrameInterpolator::Destroy()
 {
 	m_FrameInterpolatorContext.reset();
 	DestroyOpticalFlowContext();
-	DestroyDilationContext();
 	DestroyBackend();
 }
 
@@ -234,49 +223,6 @@ void FFFrameInterpolator::QueryHDRLuminanceRange(NGXInstanceParameters *NGXParam
 	spdlog::info("Using assumed HDR luminance range: {} to {} nits", m_HDRLuminanceRange.x, m_HDRLuminanceRange.y);
 }
 
-bool FFFrameInterpolator::BuildDilationParameters(FFDilatorDispatchParameters *OutParameters, NGXInstanceParameters *NGXParameters)
-{
-	auto& desc = *OutParameters;
-	desc.CommandList = GetActiveCommandList();
-
-	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Depth", &desc.InputDepth, FFX_RESOURCE_STATE_COPY_DEST))
-		return false;
-
-	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST))
-		return false;
-
-	desc.OutputDilatedDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedDepth);
-	desc.OutputDilatedMotionVectors = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedMotionVectors);
-	desc.OutputReconstructedPrevNearestDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedPreviousNearestDepth);
-
-	desc.RenderSize = { m_PreUpscaleRenderWidth, m_PreUpscaleRenderHeight };
-	desc.OutputSize = { m_PostUpscaleRenderWidth, m_PostUpscaleRenderHeight };
-
-	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
-	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
-
-	const FfxDimensions2D mvecExtents = {
-		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectWidth", desc.InputMotionVectors.description.width),
-		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectHeight", desc.InputMotionVectors.description.height),
-	};
-
-	desc.MotionVectorScale = {
-		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleX", 1.0f),
-		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleY", 1.0f),
-	};
-
-	desc.MotionVectorJitterOffsets = {
-		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetX", 0),
-		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetY", 0),
-	};
-
-	desc.MotionVectorsDilated = NGXParameters->GetUIntOrDefault("DLSSG.MvecDilated", 0) != 0;
-	desc.MotionVectorsFullResolution = m_PostUpscaleRenderWidth == mvecExtents.width && m_PostUpscaleRenderHeight == mvecExtents.height;
-	desc.MotionVectorJitterCancellation = NGXParameters->GetUIntOrDefault("DLSSG.MvecJittered", 0) != 0;
-
-	return true;
-}
-
 bool FFFrameInterpolator::BuildOpticalFlowParameters(
 	FfxOpticalflowDispatchDescription *OutParameters,
 	NGXInstanceParameters *NGXParameters)
@@ -313,6 +259,9 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	auto& desc = *OutParameters;
 	desc.CommandList = GetActiveCommandList();
 
+	desc.RenderSize = { m_PreUpscaleRenderWidth, m_PreUpscaleRenderHeight };
+	desc.OutputSize = { m_SwapchainWidth, m_SwapchainHeight };
+
 	LoadTextureFromNGXParameters(NGXParameters, "DLSSG.HUDLess", &desc.InputHUDLessColorBuffer, FFX_RESOURCE_STATE_COPY_DEST);
 
 	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &desc.InputColorBuffer, FFX_RESOURCE_STATE_COMPUTE_READ) &&
@@ -326,18 +275,40 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 			FFX_RESOURCE_STATE_UNORDERED_ACCESS))
 		return false;
 
-	desc.InputDilatedDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedDepth);
-	desc.InputDilatedMotionVectors = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedDilatedMotionVectors);
-	desc.InputReconstructedPreviousNearDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedPreviousNearestDepth);
+	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Depth", &desc.InputDepth, FFX_RESOURCE_STATE_COPY_DEST))
+		return false;
+
+	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST))
+		return false;
+
 	desc.InputOpticalFlowVector = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowVector);
 	desc.InputOpticalFlowSceneChangeDetection = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
 
-	desc.RenderSize = { m_PreUpscaleRenderWidth, m_PreUpscaleRenderHeight };
-	desc.OutputSize = { m_SwapchainWidth, m_SwapchainHeight };
-
-	desc.OpticalFlowBufferSize = { desc.InputOpticalFlowVector.description.width, desc.InputOpticalFlowVector.description.height };
-	desc.OpticalFlowBlockSize = 8;
 	desc.OpticalFlowScale = { 1.0f / m_PostUpscaleRenderWidth, 1.0f / m_PostUpscaleRenderHeight };
+	desc.OpticalFlowBlockSize = 8;
+
+	const FfxDimensions2D mvecExtents = {
+		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectWidth", desc.InputMotionVectors.description.width),
+		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectHeight", desc.InputMotionVectors.description.height),
+	};
+
+	desc.MotionVectorsFullResolution = m_PostUpscaleRenderWidth == mvecExtents.width && m_PostUpscaleRenderHeight == mvecExtents.height;
+	desc.MotionVectorJitterCancellation = NGXParameters->GetUIntOrDefault("DLSSG.MvecJittered", 0) != 0;
+	desc.MotionVectorsDilated = NGXParameters->GetUIntOrDefault("DLSSG.MvecDilated", 0) != 0;
+
+	desc.MotionVectorScale = {
+		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleX", 1.0f),
+		NGXParameters->GetFloatOrDefault("DLSSG.MvecScaleY", 1.0f),
+	};
+
+	desc.MotionVectorJitterOffsets = {
+		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetX", 0.0f),
+		NGXParameters->GetFloatOrDefault("DLSSG.JitterOffsetY", 0.0f),
+	};
+
+	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
+	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
+	desc.Reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
 	// Games require a deg2rad fixup because...reasons
 	desc.CameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0);
@@ -348,10 +319,6 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	desc.CameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0);
 	desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0);
 	desc.ViewSpaceToMetersFactor = 1.0f; // TODO: Defaults to 1.0f. Need a way to query from games?
-
-	desc.HDR = NGXParameters->GetUIntOrDefault("DLSSG.ColorBuffersHDR", 0) != 0;
-	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
-	desc.Reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
 	desc.MinMaxLuminance = m_HDRLuminanceRange;
 
@@ -364,7 +331,7 @@ FfxErrorCode FFFrameInterpolator::CreateBackend(NGXInstanceParameters *NGXParame
 	FFX_RETURN_ON_FAIL(InitializeBackendInterface(&m_SharedBackendInterface, maxContexts, NGXParameters));
 	FFX_RETURN_ON_FAIL(InitializeBackendInterface(&m_FrameInterpolationBackendInterface, maxContexts, NGXParameters));
 
-	const auto status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, &m_SharedEffectContextId.emplace());
+	const auto status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, nullptr, &m_SharedEffectContextId.emplace());
 
 	if (status != FFX_OK)
 	{
@@ -379,64 +346,6 @@ void FFFrameInterpolator::DestroyBackend()
 {
 	if (m_SharedEffectContextId)
 		m_SharedBackendInterface.fpDestroyBackendContext(&m_SharedBackendInterface, *m_SharedEffectContextId);
-}
-
-FfxErrorCode FFFrameInterpolator::CreateDilationContext()
-{
-	m_DilationContext.emplace(m_SharedBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
-	const auto resourceDescs = m_DilationContext->GetSharedResourceDescriptions();
-
-	auto status = m_SharedBackendInterface.fpCreateResource(
-		&m_SharedBackendInterface,
-		&resourceDescs.dilatedDepth,
-		*m_SharedEffectContextId,
-		&m_TexSharedDilatedDepth.emplace());
-
-	if (status != FFX_OK)
-	{
-		m_TexSharedDilatedDepth.reset();
-		return status;
-	}
-
-	status = m_SharedBackendInterface.fpCreateResource(
-		&m_SharedBackendInterface,
-		&resourceDescs.dilatedMotionVectors,
-		*m_SharedEffectContextId,
-		&m_TexSharedDilatedMotionVectors.emplace());
-
-	if (status != FFX_OK)
-	{
-		m_TexSharedDilatedMotionVectors.reset();
-		return status;
-	}
-
-	status = m_SharedBackendInterface.fpCreateResource(
-		&m_SharedBackendInterface,
-		&resourceDescs.reconstructedPrevNearestDepth,
-		*m_SharedEffectContextId,
-		&m_TexSharedPreviousNearestDepth.emplace());
-
-	if (status != FFX_OK)
-	{
-		m_TexSharedPreviousNearestDepth.reset();
-		return status;
-	}
-
-	return FFX_OK;
-}
-
-void FFFrameInterpolator::DestroyDilationContext()
-{
-	m_DilationContext.reset();
-
-	if (m_TexSharedDilatedDepth)
-		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedDilatedDepth, *m_SharedEffectContextId);
-
-	if (m_TexSharedDilatedMotionVectors)
-		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedDilatedMotionVectors, *m_SharedEffectContextId);
-
-	if (m_TexSharedPreviousNearestDepth)
-		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedPreviousNearestDepth, *m_SharedEffectContextId);
 }
 
 FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
