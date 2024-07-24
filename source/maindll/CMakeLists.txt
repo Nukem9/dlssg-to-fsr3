@@ -116,7 +116,6 @@ target_link_options(
 	PRIVATE
 		"/DELAYLOAD:gdi32.dll"
 		"/DELAYLOAD:dxgi.dll"
-		"/DELAYLOAD:d3d12.dll"
 )
 
 target_link_libraries(
@@ -124,7 +123,6 @@ target_link_libraries(
 	PRIVATE
 		delayimp
 		dxgi
-		d3d12
 )
 
 # Spdlog

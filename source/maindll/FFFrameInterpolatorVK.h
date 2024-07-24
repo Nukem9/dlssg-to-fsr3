@@ -41,4 +41,10 @@ private:
 		const char *Name,
 		FfxResource *OutFfxResource,
 		FfxResourceStates State) override;
+
+	static VkImageMemoryBarrier MakeVulkanBarrier(
+		VkImage Resource,
+		FfxResourceStates SourceState,
+		FfxResourceStates DestinationState,
+		bool IsDepthAspect);
 };

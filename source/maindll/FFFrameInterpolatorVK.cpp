@@ -1,5 +1,4 @@
 #include <FidelityFX/host/backends/vk/ffx_vk.h>
-#include <vulkan/vulkan.h>
 #include "NGX/NvNGX.h"
 #include "FFFrameInterpolatorVK.h"
 
@@ -45,8 +44,9 @@ FfxErrorCode FFFrameInterpolatorVK::Dispatch(void *CommandList, NGXInstanceParam
 			return false;
 		}();
 
-		VkCommandBufferBeginInfo info = {};
-		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		VkCommandBufferBeginInfo info = {
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		};
 
 		vkResetCommandBuffer(cmdListVk, 0);
 		vkBeginCommandBuffer(cmdListVk, &info);
@@ -67,20 +67,7 @@ FfxErrorCode FFFrameInterpolatorVK::InitializeBackendInterface(
 	uint32_t MaxContexts,
 	NGXInstanceParameters *NGXParameters)
 {
-	VkDeviceContext vkContext = {
-		.vkDevice = m_Device,
-		.vkPhysicalDevice = m_PhysicalDevice,
-		.vkDeviceProcAddr = nullptr,
-	};
-
-	// TODO
-
-	// const auto fsrDevice = ffxGetDeviceVK(&vkContext);
-	// const auto scratchSize = ffxGetScratchMemorySizeVK(vkContext.vkPhysicalDevice, maxContexts);
-
-	// FFX_RETURN_ON_FAIL(m_SharedBackendInterface.Initialize(fsrDevice, maxContexts));
-
-	return FFX_ERROR_INCOMPLETE_INTERFACE;
+	return BackendInterface->Initialize(m_Device, m_PhysicalDevice, MaxContexts, NGXParameters);
 }
 
 FfxCommandList FFFrameInterpolatorVK::GetActiveCommandList() const
@@ -90,12 +77,14 @@ FfxCommandList FFFrameInterpolatorVK::GetActiveCommandList() const
 
 std::array<uint8_t, 8> FFFrameInterpolatorVK::GetActiveAdapterLUID() const
 {
-	VkPhysicalDeviceIDProperties idProperties = {};
-	idProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES;
+	VkPhysicalDeviceIDProperties idProperties = {
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES,
+	};
 
-	VkPhysicalDeviceProperties2 properties = {};
-	properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-	properties.pNext = &idProperties;
+	VkPhysicalDeviceProperties2 properties = {
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+		.pNext = &idProperties,
+	};
 
 	vkGetPhysicalDeviceProperties2(m_PhysicalDevice, &properties);
 
@@ -112,80 +101,51 @@ void FFFrameInterpolatorVK::CopyTexture(FfxCommandList CommandList, const FfxRes
 {
 	const auto cmdListVk = reinterpret_cast<VkCommandBuffer>(CommandList);
 
-	// Transition
-	VkImageMemoryBarrier barriers[2] = {};
-	{
-		barriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barriers[0].srcAccessMask = getVKAccessFlagsFromResourceState(Destination->state);
-		barriers[0].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-		barriers[0].oldLayout = getVKImageLayoutFromResourceState(Destination->state);
-		barriers[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-		barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barriers[0].image = static_cast<VkImage>(Destination->resource); // Destination
-		barriers[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barriers[0].subresourceRange.baseMipLevel = 0;
-		barriers[0].subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
-		barriers[0].subresourceRange.baseArrayLayer = 0;
-		barriers[0].subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+	std::array<VkImageMemoryBarrier, 2> barriers = {
+		MakeVulkanBarrier(static_cast<VkImage>(Source->resource), Source->state, FFX_RESOURCE_STATE_COPY_SRC, false),
+		MakeVulkanBarrier(static_cast<VkImage>(Destination->resource), Destination->state, FFX_RESOURCE_STATE_COPY_DEST, false),
+	};
 
-		barriers[1] = barriers[0];
-		barriers[1].srcAccessMask = getVKAccessFlagsFromResourceState(Source->state);
-		barriers[1].dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-		barriers[1].oldLayout = getVKImageLayoutFromResourceState(Source->state);
-		barriers[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-		barriers[1].image = static_cast<VkImage>(Source->resource); // Source
+	vkCmdPipelineBarrier(
+		cmdListVk,
+		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+		VK_PIPELINE_STAGE_TRANSFER_BIT,
+		0,
+		0,
+		nullptr,
+		0,
+		nullptr,
+		static_cast<uint32_t>(barriers.size()),
+		barriers.data());
 
-		vkCmdPipelineBarrier(
-			cmdListVk,
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-			VK_PIPELINE_STAGE_TRANSFER_BIT,
-			0,
-			0,
-			nullptr,
-			0,
-			nullptr,
-			2,
-			barriers);
-	}
+	VkImageCopy copyRegion = {};
+	copyRegion.extent.width = Destination->description.width;
+	copyRegion.extent.height = Destination->description.height;
+	copyRegion.extent.depth = Destination->description.depth;
+	copyRegion.dstSubresource.aspectMask = barriers[0].subresourceRange.aspectMask;
+	copyRegion.dstSubresource.mipLevel = barriers[0].subresourceRange.baseMipLevel;
+	copyRegion.dstSubresource.baseArrayLayer = barriers[0].subresourceRange.baseArrayLayer;
+	copyRegion.dstSubresource.layerCount = barriers[0].subresourceRange.layerCount;
+	copyRegion.srcSubresource = copyRegion.dstSubresource;
 
-	// Copy
-	{
-		VkImageCopy copyRegion = {};
-		copyRegion.extent = { Destination->description.width, Destination->description.height, 1 };
+	vkCmdCopyImage(cmdListVk, barriers[0].image, barriers[0].newLayout, barriers[1].image, barriers[1].newLayout, 1, &copyRegion);
 
-		copyRegion.dstSubresource.aspectMask = barriers[0].subresourceRange.aspectMask;
-		copyRegion.dstSubresource.mipLevel = barriers[0].subresourceRange.baseMipLevel;
-		copyRegion.dstSubresource.baseArrayLayer = barriers[0].subresourceRange.baseArrayLayer;
-		copyRegion.dstSubresource.layerCount = barriers[0].subresourceRange.layerCount;
+	std::swap(barriers[0].srcAccessMask, barriers[0].dstAccessMask);
+	std::swap(barriers[0].oldLayout, barriers[0].newLayout);
+	std::swap(barriers[1].srcAccessMask, barriers[1].dstAccessMask);
+	std::swap(barriers[1].oldLayout, barriers[1].newLayout);
 
-		copyRegion.srcSubresource.aspectMask = barriers[1].subresourceRange.aspectMask;
-		copyRegion.srcSubresource.mipLevel = barriers[1].subresourceRange.baseMipLevel;
-		copyRegion.srcSubresource.baseArrayLayer = barriers[1].subresourceRange.baseArrayLayer;
-		copyRegion.srcSubresource.layerCount = barriers[1].subresourceRange.layerCount;
-
-		vkCmdCopyImage(cmdListVk, barriers[1].image, barriers[1].newLayout, barriers[0].image, barriers[0].newLayout, 1, &copyRegion);
-	}
-
-	// Transition
-	{
-		std::swap(barriers[0].srcAccessMask, barriers[0].dstAccessMask);
-		std::swap(barriers[0].oldLayout, barriers[0].newLayout);
-		std::swap(barriers[1].srcAccessMask, barriers[1].dstAccessMask);
-		std::swap(barriers[1].oldLayout, barriers[1].newLayout);
-
-		vkCmdPipelineBarrier(
-			cmdListVk,
-			VK_PIPELINE_STAGE_TRANSFER_BIT,
-			VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-			0,
-			0,
-			nullptr,
-			0,
-			nullptr,
-			2,
-			barriers);
-	}
+	vkCmdPipelineBarrier(
+		cmdListVk,
+		VK_PIPELINE_STAGE_TRANSFER_BIT,
+		VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+		0,
+		0,
+		nullptr,
+		0,
+		nullptr,
+		static_cast<uint32_t>(barriers.size()),
+		barriers.data());
 }
 
 bool FFFrameInterpolatorVK::LoadTextureFromNGXParameters(
@@ -203,23 +163,63 @@ bool FFFrameInterpolatorVK::LoadTextureFromNGXParameters(
 		return false;
 	}
 
+	if (resourceHandle->Type != 0) // TODO: Figure out where this is defined
+	{
+		*OutFfxResource = {};
+		return false;
+	}
+
 	// Vulkan provides no mechanism to query resource information. Convert it manually.
-	if (resourceHandle->Type != 0)
-		__debugbreak();
+	VkImageCreateInfo imageInfo = {
+		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+		.imageType = VK_IMAGE_TYPE_2D,
+		.format = resourceHandle->ImageMetadata.Format,
+		.extent = { resourceHandle->ImageMetadata.Width, resourceHandle->ImageMetadata.Height, 1 },
+		.mipLevels = resourceHandle->ImageMetadata.Subresource.levelCount,
+		.arrayLayers = resourceHandle->ImageMetadata.Subresource.layerCount,
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.tiling = VK_IMAGE_TILING_OPTIMAL,
+		.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+	};
 
-	VkImageCreateInfo imageInfo = {};
-	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.format = resourceHandle->ImageMetadata.Format;
-	imageInfo.extent = { resourceHandle->ImageMetadata.Width, resourceHandle->ImageMetadata.Height, 1 };
-	imageInfo.mipLevels = resourceHandle->ImageMetadata.Subresource.levelCount;
-	imageInfo.arrayLayers = resourceHandle->ImageMetadata.Subresource.layerCount;
-	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-	imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	if (imageInfo.format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+	{
+		imageInfo.format = VK_FORMAT_D32_SFLOAT;
+		imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	}
 
-	//*OutFfxResource = ffxGetResourceVK(resourceHandle->ImageMetadata.Image, GetFfxResourceDescriptionVK(&imageInfo), nullptr, State);
+	*OutFfxResource = ffxGetResourceVK(
+		resourceHandle->ImageMetadata.Image,
+		ffxGetImageResourceDescriptionVK(resourceHandle->ImageMetadata.Image, imageInfo),
+		nullptr,
+		State);
+
 	return true;
+}
+
+VkImageMemoryBarrier FFFrameInterpolatorVK::MakeVulkanBarrier(
+	VkImage Resource,
+	FfxResourceStates SourceState,
+	FfxResourceStates DestinationState,
+	bool IsDepthAspect)
+{
+	return VkImageMemoryBarrier {
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.srcAccessMask = getVKAccessFlagsFromResourceState(SourceState),
+		.dstAccessMask = getVKAccessFlagsFromResourceState(DestinationState),
+		.oldLayout = getVKImageLayoutFromResourceState(SourceState),
+		.newLayout = getVKImageLayoutFromResourceState(DestinationState),
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED, // All on compute queue
+		.image = Resource,
+		.subresourceRange = {
+			.aspectMask = static_cast<VkImageAspectFlags>(IsDepthAspect ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT),
+			.baseMipLevel = 0,
+			.levelCount = VK_REMAINING_MIP_LEVELS,
+			.baseArrayLayer = 0,
+			.layerCount = VK_REMAINING_ARRAY_LAYERS,
+		},
+	};
 }

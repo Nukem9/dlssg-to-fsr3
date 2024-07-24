@@ -6,6 +6,7 @@ struct ID3D12Device;
 struct ID3D12Resource;
 struct NGXInstanceParameters;
 
+#include <vulkan/vulkan.h>
 #include <FidelityFX/host/ffx_interface.h>
 
 class FFInterfaceWrapper : public FfxInterface
@@ -25,9 +26,11 @@ public:
 	FFInterfaceWrapper();
 	FFInterfaceWrapper(const FFInterfaceWrapper&) = delete;
 	FFInterfaceWrapper& operator=(const FFInterfaceWrapper&) = delete;
+	FFInterfaceWrapper(FFInterfaceWrapper&&) = delete;
 	~FFInterfaceWrapper();
 
 	FfxErrorCode Initialize(ID3D12Device *Device, uint32_t MaxContexts, NGXInstanceParameters *NGXParameters);
+	FfxErrorCode Initialize(VkDevice Device, VkPhysicalDevice PhysicalDevice, uint32_t MaxContexts, NGXInstanceParameters *NGXParameters);
 
 private:
 	UserDataHack *GetUserData();

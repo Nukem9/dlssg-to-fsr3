@@ -1,5 +1,6 @@
 #include <directx/d3dx12.h>
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
+#include <FidelityFX/host/backends/vk/ffx_vk.h>
 #include "NGX/NvNGX.h"
 #include "FFInterfaceWrapper.h"
 
@@ -48,6 +49,33 @@ FfxErrorCode FFInterfaceWrapper::Initialize(ID3D12Device *Device, uint32_t MaxCo
 	}
 
 	return result;
+}
+
+FfxErrorCode FFInterfaceWrapper::Initialize(
+	VkDevice Device,
+	VkPhysicalDevice PhysicalDevice,
+	uint32_t MaxContexts,
+	NGXInstanceParameters *NGXParameters)
+{
+	VkDeviceContext vkContext = {
+		.vkDevice = Device,
+		.vkPhysicalDevice = PhysicalDevice,
+		.vkDeviceProcAddr = nullptr,
+	};
+
+	const auto fsrDevice = ffxGetDeviceVK(&vkContext);
+	const auto scratchSize = ffxGetScratchMemorySizeVK(vkContext.vkPhysicalDevice, MaxContexts);
+
+	// Adjust the allocation offset
+	auto scratchMemory = new uint8_t[sizeof(UserDataHack) + scratchSize];
+	auto userData = new (scratchMemory) UserDataHack;
+
+	(void)userData;
+
+	auto ffxScratchMemory = reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(scratchMemory) + sizeof(UserDataHack));
+	memset(ffxScratchMemory, 0, scratchSize);
+
+	return ffxGetInterfaceVK(this, fsrDevice, ffxScratchMemory, scratchSize, MaxContexts);
 }
 
 FFInterfaceWrapper::UserDataHack *FFInterfaceWrapper::GetUserData()

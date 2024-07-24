@@ -1,8 +1,8 @@
 #include "NvNGX.h"
-#include "FFFrameInterpolatorVKToDX.h"
+#include "FFFrameInterpolatorVK.h"
 
 static std::shared_mutex FeatureInstanceHandleLock;
-static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolatorVKToDX>> FeatureInstanceHandles;
+static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolatorVK>> FeatureInstanceHandles;
 
 VkDevice g_LogicalDevice = VK_NULL_HANDLE;
 VkPhysicalDevice g_PhysicalDevice = VK_NULL_HANDLE;
@@ -32,7 +32,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature1(
 	// Then initialize FSR
 	try
 	{
-		auto instance = std::make_shared<FFFrameInterpolatorVKToDX>(
+		auto instance = std::make_shared<FFFrameInterpolatorVK>(
 			LogicalDevice,
 			g_PhysicalDevice,
 			swapchainWidth,
