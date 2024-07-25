@@ -1,0 +1,54 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(PARALLELSORT_BASE_ARGS
+    -reflection -deps=gcc -DFFX_GPU=1)
+
+set(PARALLELSORT_PERMUTATION_ARGS
+	-DFFX_PARALLELSORT_OPTION_HAS_PAYLOAD={0,1})
+	
+set(PARALLELSORT_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/parallelsort")
+
+set(PARALLELSORT_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/parallelsort")
+
+if (NOT PARALLELSORT_SHADER_EXT)
+    set(PARALLELSORT_SHADER_EXT *)
+endif()
+
+file(GLOB PARALLELSORT_SHADERS
+    "shaders/parallelsort/ffx_parallelsort_reduce_pass.${PARALLELSORT_SHADER_EXT}"
+	"shaders/parallelsort/ffx_parallelsort_scan_add_pass.${PARALLELSORT_SHADER_EXT}"
+	"shaders/parallelsort/ffx_parallelsort_scan_pass.${PARALLELSORT_SHADER_EXT}"
+	"shaders/parallelsort/ffx_parallelsort_scatter_pass.${PARALLELSORT_SHADER_EXT}"
+	"shaders/parallelsort/ffx_parallelsort_setup_indirect_args_pass.${PARALLELSORT_SHADER_EXT}"
+	"shaders/parallelsort/ffx_parallelsort_sum_pass.${PARALLELSORT_SHADER_EXT}")
+
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${PARALLELSORT_BASE_ARGS}" "${PARALLELSORT_API_BASE_ARGS}" "${PARALLELSORT_PERMUTATION_ARGS}" "${PARALLELSORT_INCLUDE_ARGS}"
+    "${PARALLELSORT_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" PARALLELSORT_PERMUTATION_OUTPUTS)
+
+add_shader_output("${PARALLELSORT_PERMUTATION_OUTPUTS}")

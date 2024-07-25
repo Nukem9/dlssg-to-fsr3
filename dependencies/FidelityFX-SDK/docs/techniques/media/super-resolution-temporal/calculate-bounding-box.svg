@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="153.31731mm"
+   height="95.659805mm"
+   viewBox="0 0 153.31731 95.659804"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="calculate-bounding-box.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="2170.4619"
+     inkscape:cy="970.79308"
+     inkscape:window-width="3699"
+     inkscape:window-height="2126"
+     inkscape:window-x="130"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <clipPath
+       id="clip0">
+      <rect
+         x="91"
+         y="126"
+         width="818"
+         height="533"
+         id="rect9" />
+    </clipPath>
+    <clipPath
+       id="clip0-4">
+      <rect
+         x="90"
+         y="126"
+         width="591"
+         height="386"
+         id="rect578" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(469.25724,108.45535)">
+    <g
+       clip-path="url(#clip0-4)"
+       transform="matrix(0.26458333,0,0,0.26458333,-493.33432,-144.57045)"
+       id="g667">
+      <rect
+         x="357"
+         y="173"
+         width="260"
+         height="258"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         stroke-dasharray="6, 2"
+         fill="#ffffff"
+         id="rect583" />
+      <rect
+         x="92"
+         y="266"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect585" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(101.408,286)"
+         id="text587">1</text>
+      <rect
+         x="92"
+         y="294"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#262626"
+         id="rect589" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(101.408,314)"
+         id="text591">4</text>
+      <rect
+         x="92"
+         y="322"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#7f7f7f"
+         id="rect593" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(101.408,342)"
+         id="text595">7</text>
+      <rect
+         x="120"
+         y="266"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#bfbfbf"
+         id="rect597" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(129.92,286)"
+         id="text599">2</text>
+      <rect
+         x="120"
+         y="294"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#7f7f7f"
+         id="rect601" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(129.92,314)"
+         id="text603">5</text>
+      <rect
+         x="120"
+         y="322"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#404040"
+         id="rect605" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(129.919,342)"
+         id="text607">8</text>
+      <rect
+         x="149"
+         y="266"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#a6a6a6"
+         id="rect609" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(158.431,286)"
+         id="text611">3</text>
+      <rect
+         x="149"
+         y="294"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         id="rect613" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(158.431,314)"
+         id="text615">6</text>
+      <rect
+         x="149"
+         y="322"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#262626"
+         id="rect617" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(158.431,342)"
+         id="text619">9</text>
+      <rect
+         x="386"
+         y="225"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect621" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(394.451,247)"
+         id="text623">1</text>
+      <rect
+         x="588"
+         y="373"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#262626"
+         id="rect625" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(596.927,395)"
+         id="text627">9</text>
+      <rect
+         x="501"
+         y="229"
+         width="28"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#7f7f7f"
+         id="rect629" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(509.738,251)"
+         id="text631">5</text>
+      <rect
+         x="414"
+         y="173"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#bfbfbf"
+         id="rect633" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(423.376,195)"
+         id="text635">2</text>
+      <rect
+         x="472"
+         y="288"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#7f7f7f"
+         id="rect637" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(481.227,309)"
+         id="text639">7</text>
+      <rect
+         x="530"
+         y="403"
+         width="29"
+         height="27"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#404040"
+         id="rect641" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(539.077,424)"
+         id="text643">8</text>
+      <rect
+         x="443"
+         y="316"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#a6a6a6"
+         id="rect645" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(452.301,337)"
+         id="text647">3</text>
+      <rect
+         x="357"
+         y="342"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         id="rect649" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(366.039,364)"
+         id="text651">6</text>
+      <rect
+         x="559"
+         y="243"
+         width="29"
+         height="28"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#262626"
+         id="rect653" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(568.002,265)"
+         id="text655">4</text>
+      <path
+         d="m 301.5,474 h 367.978 v 1 H 301.5 Z m 356.227,-6.932 12.74,7.432 -12.74,7.432 c -0.239,0.139 -0.545,0.059 -0.684,-0.18 -0.139,-0.238 -0.058,-0.545 0.18,-0.684 l 12,-7 v 0.864 l -12,-7 c -0.238,-0.139 -0.319,-0.445 -0.18,-0.684 0.139,-0.238 0.445,-0.319 0.684,-0.18 z"
+         id="path657" />
+      <path
+         d="m 300.463,474.811 -1.459,-337.328 1,-0.004 1.459,337.328 z m -8.34,-325.541 7.377,-12.772 7.487,12.708 c 0.14,0.238 0.061,0.544 -0.177,0.684 -0.238,0.141 -0.545,0.061 -0.685,-0.177 l -7.052,-11.969 0.864,-0.004 -6.948,12.03 c -0.138,0.239 -0.444,0.321 -0.683,0.183 -0.239,-0.138 -0.321,-0.444 -0.183,-0.683 z"
+         id="path659" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="16px"
+         transform="translate(482.727,498)"
+         id="text663">Y<tspan
+   font-size="16px"
+   x="-207.86301"
+   y="-184"
+   id="tspan661">Co</tspan></text>
+      <path
+         d="m 194,303 h 49.772 v 6 H 194 Z m 46.772,-6 18,9 -18,9 z"
+         id="path665" />
+    </g>
+  </g>
+</svg>

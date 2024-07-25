@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="108.68822mm"
+   height="91.637817mm"
+   viewBox="0 0 108.68822 91.637818"
+   version="1.1"
+   id="svg201"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="clamp-to-box.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview203"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="1852.8647"
+     inkscape:cy="639.05187"
+     inkscape:window-width="3699"
+     inkscape:window-height="2126"
+     inkscape:window-x="130"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs198">
+    <clipPath
+       id="clip0">
+      <rect
+         x="75"
+         y="244"
+         width="718"
+         height="568"
+         id="rect205" />
+    </clipPath>
+    <clipPath
+       id="clip0-4">
+      <rect
+         x="75"
+         y="210"
+         width="455"
+         height="376"
+         id="rect415" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(385.15442,20.48774)">
+    <g
+       clip-path="url(#clip0-4)"
+       transform="matrix(0.26458333,0,0,0.26458333,-414.38962,-79.413341)"
+       id="g450">
+      <rect
+         x="148"
+         y="310.75"
+         width="206.25"
+         height="211.25"
+         fill="#ffffff"
+         id="rect420" />
+      <path
+         d="M 354.25,310.75 423,242 V 453.25 L 354.25,522 Z"
+         fill="#cdcdcd"
+         fill-rule="evenodd"
+         id="path422" />
+      <path
+         d="M 148,310.75 216.75,242 H 423 l -68.75,68.75 z"
+         fill="#ffffff"
+         fill-rule="evenodd"
+         id="path424" />
+      <path
+         d="M 148,310.75 216.75,242 H 423 V 453.25 L 354.25,522 H 148 Z m 0,0 H 354.25 L 423,242 m -68.75,68.75 V 522"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path426" />
+      <path
+         d="m 149.491,539 h 205.131 v 1 H 149.491 Z m 11.747,7.932 -12.74,-7.432 12.74,-7.432 c 0.239,-0.139 0.545,-0.058 0.684,0.18 0.139,0.239 0.058,0.545 -0.18,0.684 l -12,7 v -0.864 l 12,7 c 0.238,0.139 0.319,0.445 0.18,0.684 -0.139,0.238 -0.445,0.319 -0.684,0.18 z m 181.637,-14.864 12.741,7.432 -12.741,7.432 c -0.238,0.139 -0.545,0.059 -0.684,-0.18 -0.139,-0.238 -0.058,-0.545 0.18,-0.684 l 12,-7 v 0.864 l -12,-7 c -0.238,-0.139 -0.319,-0.445 -0.18,-0.684 0.139,-0.238 0.446,-0.319 0.684,-0.18 z"
+         id="path428" />
+      <path
+         d="m 136,310.486 v 211.739 h -1 V 310.486 Z m -7.932,11.752 7.432,-12.74 7.432,12.74 c 0.139,0.239 0.058,0.545 -0.18,0.684 -0.239,0.139 -0.545,0.058 -0.684,-0.18 l -7,-12 h 0.864 l -7,12 c -0.139,0.238 -0.445,0.319 -0.684,0.18 -0.238,-0.139 -0.319,-0.445 -0.18,-0.684 z m 14.864,188.24 -7.432,12.74 -7.432,-12.74 c -0.139,-0.239 -0.058,-0.545 0.18,-0.684 0.239,-0.139 0.545,-0.058 0.684,0.18 l 7,12 h -0.864 l 7,-12 c 0.139,-0.238 0.446,-0.319 0.684,-0.18 0.239,0.139 0.319,0.445 0.18,0.684 z"
+         id="path430" />
+      <path
+         d="M 1.04255,0.377307 66.9117,70.2796 66.1839,70.9654 0.314756,1.06311 Z M 3.32688,14.3674 -0.00158941,-0.00168668 14.1446,4.17387 c 0.2649,0.07818 0.4162,0.35625 0.338,0.6211 -0.0782,0.26484 -0.3562,0.41617 -0.6211,0.338 L 0.537392,1.20006 1.16604,0.607681 4.30109,14.1418 C 4.3634,14.4108 4.19584,14.6794 3.92682,14.7417 3.6578,14.804 3.3892,14.6365 3.32688,14.3674 Z M 63.9003,56.9762 67.2288,71.3453 53.0826,67.1698 c -0.2648,-0.0782 -0.4162,-0.3562 -0.338,-0.6211 0.0782,-0.2648 0.3563,-0.4162 0.6211,-0.338 l 13.3241,3.9329 -0.6286,0.5923 -3.1351,-13.534 c -0.0623,-0.269 0.1052,-0.5376 0.3743,-0.6 0.269,-0.0623 0.5376,0.1053 0.5999,0.3743 z"
+         transform="matrix(-1,0,0,1,436.727,459.5)"
+         id="path432" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(246.842,569)"
+         id="text438">Y<tspan
+   font-size="20px"
+   x="158.099"
+   y="-52"
+   id="tspan434">Cg</tspan><tspan
+   font-size="20px"
+   x="-137.29401"
+   y="-139"
+   id="tspan436">Co</tspan></text>
+      <path
+         d="m 475,249.5 c 0,-4.142 3.358,-7.5 7.5,-7.5 4.142,0 7.5,3.358 7.5,7.5 0,4.142 -3.358,7.5 -7.5,7.5 -4.142,0 -7.5,-3.358 -7.5,-7.5 z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path440" />
+      <path
+         d="M 1.04793,0.36318 86.4139,88.4899 85.6956,89.1857 0.329665,1.05895 Z M 3.52476,14.3202 -0.0016124,-0.00166446 14.2008,3.97836 c 0.2659,0.07451 0.4211,0.35047 0.3466,0.61637 -0.0745,0.2659 -0.3505,0.42105 -0.6164,0.34654 L 0.553895,1.19253 1.17431,0.591538 4.49575,14.0811 C 4.56178,14.3492 4.39793,14.6201 4.1298,14.6861 3.86166,14.7522 3.59078,14.5883 3.52476,14.3202 Z M 83.2195,75.2292 86.7457,89.5511 72.5433,85.571 c -0.2659,-0.0745 -0.4211,-0.3505 -0.3465,-0.6164 0.0745,-0.2659 0.3504,-0.421 0.6163,-0.3465 l 13.3771,3.7488 -0.6204,0.601 -3.3213,-13.4896 c -0.0661,-0.2681 0.0978,-0.539 0.3659,-0.605 0.2682,-0.066 0.539,0.0978 0.6051,0.3659 z"
+         transform="matrix(-1,0,0,1,477.244,255.5)"
+         id="path442" />
+      <text
+         font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+         font-weight="400"
+         font-size="28px"
+         transform="translate(498.106,236)"
+         id="text448">𝑠<tspan
+   font-size="20px"
+   x="12.32"
+   y="6"
+   id="tspan444">ℎ</tspan><tspan
+   font-size="28px"
+   x="-56.324799"
+   y="76"
+   id="tspan446">𝑑</tspan></text>
+    </g>
+  </g>
+</svg>

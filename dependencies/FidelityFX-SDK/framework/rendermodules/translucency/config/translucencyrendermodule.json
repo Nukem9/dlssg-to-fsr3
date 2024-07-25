@@ -1,0 +1,8 @@
+{
+    "TranslucencyRenderModule": {
+
+        "RenderModuleOptions": {
+            "VariableShading": false
+        }
+    }
+}

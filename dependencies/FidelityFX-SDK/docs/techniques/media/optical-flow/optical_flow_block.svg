@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="45mm"
+   viewBox="0 0 210 45"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="optical_flow_block.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.74564394"
+     inkscape:cx="396.97231"
+     inkscape:cy="347.35077"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       transform="matrix(0.1965065,0,0,0.1965065,-19.94138,-47.39622)"
+       id="g35">
+      <path
+         d="m 457.5,295.168 c 0,-18.042 14.626,-32.668 32.667,-32.668 h 300.666 c 18.041,0 32.667,14.626 32.667,32.668 v 130.665 c 0,18.041 -14.626,32.667 -32.667,32.667 H 490.167 c -18.041,0 -32.667,-14.626 -32.667,-32.667 z"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#deebf7"
+         fill-rule="evenodd"
+         id="path9" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(579.7,368)"
+         id="text11">Optical Flow</text>
+      <rect
+         x="115.5"
+         y="328.5"
+         width="232"
+         height="64"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e2f0d9"
+         id="rect13" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(204.919,368)"
+         id="text15">Color</text>
+      <rect
+         x="923.5"
+         y="285.5"
+         width="233"
+         height="65"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#fbe5d6"
+         id="rect17" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(969.114,310)"
+         id="text19">Motion Vector</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(997.354,339)"
+         id="text21">Estimate</text>
+      <rect
+         x="923.5"
+         y="369.5"
+         width="233"
+         height="64"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         id="rect23" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(971.501,394)"
+         id="text25">Scene Change</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(991.841,423)"
+         id="text27">Detection</text>
+      <path
+         d="m 347.5,360.167 h 103.171 v 0.666 H 347.5 Z m 101.838,-3.667 8,4 -8,4 z"
+         id="path29" />
+      <path
+         d="m 823.5,317.167 h 93.658 v 0.666 H 823.5 Z m 92.324,-3.667 8,4 -8,4 z"
+         id="path31" />
+      <path
+         d="m 823.5,401.167 h 93.658 v 0.666 H 823.5 Z m 92.324,-3.667 8,4 -8,4 z"
+         id="path33" />
+    </g>
+  </g>
+</svg>

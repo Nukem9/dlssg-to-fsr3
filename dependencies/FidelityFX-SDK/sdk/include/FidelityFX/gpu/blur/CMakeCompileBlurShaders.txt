@@ -1,0 +1,48 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(BLUR_BASE_ARGS
+    -reflection -deps=gcc -DFFX_GPU=1)
+
+set(BLUR_PERMUTATION_ARGS
+    -DFFX_BLUR_OPTION_KERNEL_DIMENSION={3,5,7,9,11,13,15,17,19,21}
+	-DFFX_BLUR_OPTION_KERNEL_PERMUTATION={0,1,2})
+	
+set(BLUR_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/blur")
+
+if (NOT BLUR_SHADER_EXT)
+    set(BLUR_SHADER_EXT *)
+endif()
+
+file(GLOB BLUR_SHADERS
+    "shaders/blur/ffx_blur_pass.${BLUR_SHADER_EXT}")
+	
+# compile all the shaders	
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${BLUR_BASE_ARGS}" "${BLUR_API_BASE_ARGS}" "${BLUR_PERMUTATION_ARGS}" "${BLUR_INCLUDE_ARGS}"
+    "${BLUR_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" BLUR_PERMUTATION_OUTPUTS)
+
+# add the header files they generate to the main list of dependencies
+add_shader_output("${BLUR_PERMUTATION_OUTPUTS}")

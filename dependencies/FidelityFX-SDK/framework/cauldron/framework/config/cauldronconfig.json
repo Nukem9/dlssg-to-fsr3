@@ -1,0 +1,73 @@
+{
+    "Cauldron": {
+
+        "Validation": {
+            "CpuValidationLayerEnabled": false,
+            "GpuValidationLayerEnabled": false
+        },
+
+        "FeatureSupport": {
+            "VRSTier1": false,
+            "VRSTier2": false,
+            "RT1.0": false,
+            "RT1.1": false,
+            "FP16": false,
+            "ShaderStorageBufferArrayNonUniformIndexing": false,
+            "ShaderModel": "SM5_1"
+        },
+
+        "Presentation": {
+            "BackBufferCount": 3,
+            "Vsync": true,
+            "Fullscreen": false,
+            "Width": 2560,
+            "Height": 1440,
+            "Mode": "DISPLAYMODE_LDR"
+        },
+
+        "RenderResources": {
+            "HDR11Color": {
+                "Format": "RG11B10_FLOAT",
+                "AllowUAV": true
+            },
+            "DepthTarget": {
+                "Format": "D32_FLOAT"
+            }
+        },
+
+        "FontSize": 13,
+        "AGSEnabled": false,
+        "StablePowerState": false,
+        "InvertedDepth": true,
+        "MotionVectorGeneration": "",
+        "OverrideSceneSamplers": true,
+        "BuildRayTracingAccelerationStructure": false,
+
+        "Allocations": {
+            "UploadHeapSize": 419430400,
+            "DynamicBufferPoolSize": 78643200,
+            "GPUSamplerViewCount": 300,
+            "GPUResourceViewCount": 50000,
+            "CPUResourceViewCount": 50000,
+            "CPURenderViewCount": 100,
+            "CPUDepthViewCount": 100
+        },
+
+        "DebugOptions": {
+            "DevelopmentMode": false,
+            "DebugShaders": false,
+            "EnableRenderDocCapture": false,
+            "EnablePixCapture": false
+        },
+
+        "FPSLimiter": {
+            "Enable": false,
+            "UseGPULimiter": false,
+            "TargetFPS": 60
+        },
+
+        "Content": {
+            "SceneExposure": 1.0
+        }
+    }
+}

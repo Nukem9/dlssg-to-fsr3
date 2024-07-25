@@ -1,0 +1,35 @@
+{
+    "FidelityFX SSSR": {
+
+        "RenderResources": {
+            "SSSR_Output": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": false,
+                "RenderResolution": true
+            }
+        },
+
+        "MotionVectorGeneration": "GBufferRenderModule",
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "SSSRRenderModule",
+            "TranslucencyRenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "Content": {
+            "Scenes": [
+                "../media/Chess/scene.gltf"
+            ],
+            "Camera": "Camera.003",
+            "DiffuseIBL": "../media/IBL/Lilienstein_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/Lilienstein_Specular.dds",
+            "SkyMap": "../media/IBL/Lilienstein_Specular.dds",
+            "SceneExposure": 2.5
+        }
+    }
+}

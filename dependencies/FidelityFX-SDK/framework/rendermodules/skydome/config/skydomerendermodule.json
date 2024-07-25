@@ -1,0 +1,15 @@
+{
+    "SkyDomeRenderModule": {
+
+        "RenderModuleOptions": {
+            "Procedural": false,
+            "Hour": 12,
+            "Minute": 0,
+            "Rayleigh": 2.0,
+            "Turbidity": 10.0,
+            "Mie": 0.005,
+            "Luminance": 3.5,
+            "MieDir": 0.8
+        }
+    }
+}

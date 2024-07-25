@@ -1,0 +1,99 @@
+{
+    "FidelityFX FSR FFXAPI": {
+        "MotionVectorGeneration": "GBufferRenderModule",
+
+        "RenderResources": {
+            "ReactiveMask": {
+                "Format": "R8_UNORM",
+                "AllowUAV": true,
+                "RenderResolution": false
+            },
+            "TransCompMask": {
+                "Format": "R8_UNORM",
+                "AllowUAV": true,
+                "RenderResolution": false
+            }
+        },
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "AnimatedTexturesRenderModule",
+            "TranslucencyRenderModule",
+            "GPUParticleRenderModule",
+            "TAARenderModule",
+            "FSRApiRenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "RenderModuleOverrides": {
+            "SkyDomeRenderModule": {
+                "Procedural": true
+            }
+        },
+
+        "Content": {
+            "Scenes": [
+                "../media/SponzaNew/MainSponza.gltf"
+            ],
+            "Camera": "PhysCamera003",
+            "DiffuseIBL": "../media/IBL/mud_road_puresky_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/mud_road_puresky_Specular.dds",
+            "SceneExposure": 1.355,
+            "IBLFactor": 0.035,
+
+            "ParticleSpawners": [
+                {
+                    "Name": "FSRSpawner",
+                    "AtlasPath": "../media/Textures/Particles/atlas.dds",
+                    "Position": [ 0.0, 0.0, 0.0 ],
+                    "Sort": true,
+                    "Emitters": [
+                        {
+                            "Name": "Smoke",
+                            "SpawnOffset": [ 3.0, 0.0, 1.4 ],
+                            "SpawnOffsetVariance": [ 0.1, 0.0, 0.1 ],
+                            "SpawnVelocity": [ 0.0, 0.2, 0.0 ],
+                            "SpawnVelocityVariance": 1.0,
+                            "ParticlesPerSecond": 10,
+                            "Lifespan": 50.0,
+                            "SpawnSize": 0.4,
+                            "KillSize": 1.0,
+                            "Mass": 0.0003,
+                            "AtlasIndex": 0,
+                            "Flags": {
+                                "Reactive": true,
+                                "Streaks": false
+                            }
+                        },
+                        {
+                            "Name": "Spark",
+                            "SpawnOffset": [ -3.0, 0.0, -1.4 ],
+                            "SpawnOffsetVariance": [ 0.05, 0.0, 0.05 ],
+                            "SpawnVelocity": [ 0.0, 4.0, 0.0 ],
+                            "SpawnVelocityVariance": 0.5,
+                            "ParticlesPerSecond": 500,
+                            "Lifespan": 1.0,
+                            "SpawnSize": 0.02,
+                            "KillSize": 0.02,
+                            "Mass": 1.0,
+                            "AtlasIndex": 1,
+                            "Flags": {
+                                "Reactive": true,
+                                "Streaks": true
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+
+        "FPSLimiter": {
+            "Enable": true,
+            "UseGPULimiter": false,
+            "TargetFPS": 60
+        }
+    }
+}

@@ -1,0 +1,1211 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="252.94167mm"
+   height="143.66719mm"
+   viewBox="0 0 252.94167 143.66719"
+   version="1.1"
+   id="svg12"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="upsample-with-lanczos.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview14"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="1413.1147"
+     inkscape:cy="551.6162"
+     inkscape:window-width="3699"
+     inkscape:window-height="2126"
+     inkscape:window-x="130"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs9">
+    <clipPath
+       id="clip0">
+      <rect
+         x="452"
+         y="237"
+         width="956"
+         height="561"
+         id="rect16" />
+    </clipPath>
+    <clipPath
+       id="clip1">
+      <rect
+         x="0"
+         y="0"
+         width="1847850"
+         height="679450"
+         id="rect19" />
+    </clipPath>
+    <image
+       width="128"
+       height="133"
+       xlink:href="data:image/png;base64,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"
+       preserveAspectRatio="none"
+       id="img2" />
+    <clipPath
+       id="clip3">
+      <rect
+         x="0"
+         y="0"
+         width="653907"
+         height="679450"
+         id="rect23" />
+    </clipPath>
+    <clipPath
+       id="clip4">
+      <rect
+         x="4.6566101e-10"
+         y="9.3132302e-10"
+         width="1841500"
+         height="679450"
+         id="rect26" />
+    </clipPath>
+    <clipPath
+       id="clip5">
+      <rect
+         x="0"
+         y="0"
+         width="653907"
+         height="679450"
+         id="rect29" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(268.67701,-2.3313494)">
+    <g
+       clip-path="url(#clip0)"
+       transform="matrix(0.26458333,0,0,0.26458333,-388.26868,-65.13895)"
+       id="g406">
+      <rect
+         x="1128"
+         y="522"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect34" />
+      <path
+         d="m 1138,536 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path36" />
+      <path
+         d="m 1164,536 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path38" />
+      <path
+         d="m 1138,562 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path40" />
+      <path
+         d="m 1164,562 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path42" />
+      <path
+         d="m 1151,554.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path44" />
+      <path
+         d="m 1151,554 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path46" />
+      <rect
+         x="972"
+         y="522"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect48" />
+      <rect
+         x="1025"
+         y="522"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect50" />
+      <rect
+         x="1077"
+         y="522"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect52" />
+      <path
+         d="m 1086,536 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path54" />
+      <path
+         d="m 1112,534.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path56" />
+      <path
+         d="m 1086,562 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path58" />
+      <path
+         d="m 1113,561 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path60" />
+      <path
+         d="m 982,536 c 0,-2.209 1.791,-4 4,-4 2.209,0 4,1.791 4,4 0,2.209 -1.791,4 -4,4 -2.209,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path62" />
+      <path
+         d="m 1008,536 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path64" />
+      <path
+         d="m 982,562.5 c 0,-1.933 1.791,-3.5 4,-3.5 2.209,0 4,1.567 4,3.5 0,1.933 -1.791,3.5 -4,3.5 -2.209,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path66" />
+      <path
+         d="m 1008,562.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path68" />
+      <path
+         d="m 1034,536 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path70" />
+      <path
+         d="m 1060,536 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path72" />
+      <path
+         d="m 1034,562.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path74" />
+      <path
+         d="m 1060,562.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path76" />
+      <path
+         d="m 1101,554.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path78" />
+      <path
+         d="m 1046,555 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path80" />
+      <path
+         d="m 995,555 c 0,-2.209 1.567,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path82" />
+      <path
+         d="m 1101,554 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path84" />
+      <path
+         d="m 1046,554 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path86" />
+      <path
+         d="m 995,554.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path88" />
+      <rect
+         x="920"
+         y="522"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect90" />
+      <path
+         d="m 930,536 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path92" />
+      <path
+         d="m 956,536 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path94" />
+      <path
+         d="m 930,562 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path96" />
+      <path
+         d="m 956,562 c 0,-2.209 1.791,-4 4,-4 2.209,0 4,1.791 4,4 0,2.209 -1.791,4 -4,4 -2.209,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path98" />
+      <path
+         d="m 943,554.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path100" />
+      <path
+         d="m 943,554 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path102" />
+      <text
+         font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+         font-weight="400"
+         font-size="36px"
+         transform="translate(1206.74,427)"
+         id="text104">𝑆</text>
+      <rect
+         x="1128"
+         y="314"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect106" />
+      <path
+         d="m 1138,328 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path108" />
+      <path
+         d="m 1163,328 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path110" />
+      <path
+         d="m 1138,354 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path112" />
+      <path
+         d="m 1164,354 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path114" />
+      <rect
+         x="1128"
+         y="366"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect116" />
+      <rect
+         x="1128"
+         y="418"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect118" />
+      <rect
+         x="1128"
+         y="470"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect120" />
+      <path
+         d="m 1138,379 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path122" />
+      <path
+         d="m 1163,379 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path124" />
+      <path
+         d="m 1138,405.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path126" />
+      <path
+         d="m 1164,405.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path128" />
+      <path
+         d="m 1137,431 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path130" />
+      <path
+         d="m 1163,431 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path132" />
+      <path
+         d="m 1137,483 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path134" />
+      <path
+         d="m 1163,483 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path136" />
+      <path
+         d="m 1137,509.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path138" />
+      <path
+         d="m 1163,509.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path140" />
+      <rect
+         x="972"
+         y="315"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect142" />
+      <rect
+         x="1024"
+         y="315"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect144" />
+      <rect
+         x="1076"
+         y="315"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect146" />
+      <path
+         d="m 1085,328 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path148" />
+      <path
+         d="m 1112,326.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path150" />
+      <path
+         d="m 1085,354 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path152" />
+      <path
+         d="m 1112,353 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path154" />
+      <path
+         d="m 982,328 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path156" />
+      <path
+         d="m 1008,328 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path158" />
+      <path
+         d="m 982,354.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path160" />
+      <path
+         d="m 1008,354.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path162" />
+      <path
+         d="m 1034,328 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path164" />
+      <path
+         d="m 1060,328 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path166" />
+      <path
+         d="m 1034,354.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path168" />
+      <path
+         d="m 1060,354.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path170" />
+      <rect
+         x="453"
+         y="359"
+         width="417"
+         height="280"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         id="rect172" />
+      <path
+         d="M 975.685,516 573,459.495 V 430.847 L 977,369 Z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#595959"
+         fill-rule="evenodd"
+         fill-opacity="0.490196"
+         id="path174" />
+      <rect
+         x="542"
+         y="430"
+         width="31"
+         height="32"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect176" />
+      <rect
+         x="972"
+         y="366"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect178" />
+      <rect
+         x="972"
+         y="418"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect180" />
+      <rect
+         x="1024"
+         y="366"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect182" />
+      <rect
+         x="1024"
+         y="418"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect184" />
+      <rect
+         x="1076"
+         y="366"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect186" />
+      <rect
+         x="1076"
+         y="418"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect188" />
+      <rect
+         x="1024"
+         y="470"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect190" />
+      <rect
+         x="1076"
+         y="470"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect192" />
+      <rect
+         x="972"
+         y="470"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect194" />
+      <path
+         d="m 550,445.5 c 0,-4.142 3.358,-7.5 7.5,-7.5 4.142,0 7.5,3.358 7.5,7.5 0,4.142 -3.358,7.5 -7.5,7.5 -4.142,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path196" />
+      <g
+         clip-path="url(#clip1)"
+         transform="matrix(1.5748e-4,0,0,1.5748e-4,904,586)"
+         id="g202">
+        <g
+           clip-path="url(#clip3)"
+           transform="scale(2.82586,1)"
+           id="g200">
+          <use
+             width="100%"
+             height="100%"
+             xlink:href="#img2"
+             transform="scale(5108.65)"
+             id="use198"
+             x="0"
+             y="0" />
+        </g>
+      </g>
+      <path
+         d="m 1085,379.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path204" />
+      <path
+         d="m 1112,378 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path206" />
+      <path
+         d="m 1085,406 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path208" />
+      <path
+         d="m 1112,404.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path210" />
+      <path
+         d="m 982,380 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path212" />
+      <path
+         d="m 1008,380 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path214" />
+      <path
+         d="m 982,406 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path216" />
+      <path
+         d="m 1008,406 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path218" />
+      <path
+         d="m 1034,380 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path220" />
+      <path
+         d="m 1060,380 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path222" />
+      <path
+         d="m 1034,406 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path224" />
+      <path
+         d="m 1060,406 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path226" />
+      <path
+         d="m 1085,431 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path228" />
+      <path
+         d="m 1111,430 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path230" />
+      <path
+         d="m 982,431.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path232" />
+      <path
+         d="m 1007,431.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path234" />
+      <path
+         d="m 1034,431.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path236" />
+      <path
+         d="m 1059,431.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path238" />
+      <path
+         d="m 1085,483.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path240" />
+      <path
+         d="m 1111,482 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path242" />
+      <path
+         d="m 1085,510 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path244" />
+      <path
+         d="m 1111,508.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path246" />
+      <path
+         d="m 981,484 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path248" />
+      <path
+         d="m 1007,484 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path250" />
+      <path
+         d="m 981,510 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path252" />
+      <path
+         d="m 1007,510 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path254" />
+      <path
+         d="m 1033,484 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path256" />
+      <path
+         d="m 1059,484 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path258" />
+      <path
+         d="m 1033,510 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path260" />
+      <path
+         d="m 1059,510 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path262" />
+      <path
+         d="M 0.164478,-0.472172 115.619,39.7457 115.29,40.69 -0.164478,0.472172 Z M 115.539,33.8938 l 9.359,9.6136 -13.306,1.7186 z"
+         transform="matrix(-1,0,0,1,1192.4,414.5)"
+         id="path264" />
+      <path
+         d="m 960.944,285.27 77.346,149.301 -0.89,0.46 -77.344,-149.301 z m 81.306,144.995 0.19,13.415 -10.85,-7.895 z"
+         id="path266" />
+      <text
+         font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+         font-weight="400"
+         font-size="36px"
+         transform="translate(937.853,279)"
+         id="text268">𝑃</text>
+      <g
+         clip-path="url(#clip4)"
+         transform="matrix(0,-1.5748e-4,1.5748e-4,0,1214,591)"
+         id="g274">
+        <g
+           clip-path="url(#clip5)"
+           transform="scale(2.81615,1)"
+           id="g272">
+          <use
+             width="100%"
+             height="100%"
+             xlink:href="#img2"
+             transform="scale(5108.65)"
+             id="use270"
+             x="0"
+             y="0" />
+        </g>
+      </g>
+      <rect
+         x="1341"
+         y="296"
+         width="67"
+         height="296"
+         fill="#ffffff"
+         id="rect276" />
+      <rect
+         x="920"
+         y="315"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect278" />
+      <path
+         d="m 930,328 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path280" />
+      <path
+         d="m 955,328 c 0,-2.209 1.791,-4 4,-4 2.209,0 4,1.791 4,4 0,2.209 -1.791,4 -4,4 -2.209,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path282" />
+      <path
+         d="m 930,354 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path284" />
+      <path
+         d="m 956,354 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path286" />
+      <rect
+         x="920"
+         y="366"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect288" />
+      <rect
+         x="920"
+         y="418"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect290" />
+      <rect
+         x="920"
+         y="470"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect292" />
+      <path
+         d="m 930,379 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path294" />
+      <path
+         d="m 955,379 c 0,-2.209 1.791,-4 4,-4 2.209,0 4,1.791 4,4 0,2.209 -1.791,4 -4,4 -2.209,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path296" />
+      <path
+         d="m 930,405.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path298" />
+      <path
+         d="m 956,405.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path300" />
+      <path
+         d="m 929,431 c 0,-2.209 1.791,-4 4,-4 2.209,0 4,1.791 4,4 0,2.209 -1.791,4 -4,4 -2.209,0 -4,-1.791 -4,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path302" />
+      <path
+         d="m 955,431 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path304" />
+      <path
+         d="m 929,457.5 c 0,-1.933 1.791,-3.5 4,-3.5 2.209,0 4,1.567 4,3.5 0,1.933 -1.791,3.5 -4,3.5 -2.209,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path306" />
+      <path
+         d="m 929,483 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path308" />
+      <path
+         d="m 955,483 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path310" />
+      <path
+         d="m 929,509.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path312" />
+      <path
+         d="m 955,509.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path314" />
+      <path
+         d="m 949.5,346.5 h 434.07"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         id="path316" />
+      <path
+         d="m 950.5,398.5 h 434.07"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         id="path318" />
+      <path
+         d="m 950.5,449.5 433.63,0.5"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         id="path320" />
+      <path
+         d="M 0,0 434.071,0.0927559"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         transform="matrix(1,0,0,-1,950.5,500.593)"
+         id="path322" />
+      <path
+         d="m 950.5,554.5 h 434.07"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         id="path324" />
+      <path
+         d="m 1150,346.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path326" />
+      <path
+         d="m 1150,346.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path328" />
+      <path
+         d="m 1101,346.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path330" />
+      <path
+         d="m 1046,347 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path332" />
+      <path
+         d="m 995,347 c 0,-2.209 1.567,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path334" />
+      <path
+         d="m 1100,346.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path336" />
+      <path
+         d="m 1045,347 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path338" />
+      <path
+         d="m 994,347 c 0,-2.209 1.791,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.209,0 -4,-1.791 -4,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path340" />
+      <path
+         d="m 943,346.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path342" />
+      <path
+         d="m 942,346.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path344" />
+      <path
+         d="m 1150,398 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path346" />
+      <path
+         d="m 1101,398 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path348" />
+      <path
+         d="m 1046,398 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path350" />
+      <path
+         d="m 995,398.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path352" />
+      <path
+         d="m 943,398 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path354" />
+      <path
+         d="m 1137,457.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path356" />
+      <path
+         d="m 1163,457.5 c 0,-1.933 1.79,-3.5 4,-3.5 2.21,0 4,1.567 4,3.5 0,1.933 -1.79,3.5 -4,3.5 -2.21,0 -4,-1.567 -4,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path358" />
+      <path
+         d="m 1150,449 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path360" />
+      <path
+         d="m 1085,457.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path362" />
+      <path
+         d="m 1112,456 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path364" />
+      <path
+         d="m 982,458 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path366" />
+      <path
+         d="m 1008,458 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path368" />
+      <path
+         d="m 1034,458 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path370" />
+      <path
+         d="m 1060,458 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#ff0000"
+         fill-rule="evenodd"
+         id="path372" />
+      <path
+         d="m 1101,449 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path374" />
+      <path
+         d="m 1046,449.5 c 0,-1.933 1.57,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.93,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path376" />
+      <path
+         d="m 995,449.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path378" />
+      <path
+         d="m 956,457.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.933,0 3.5,1.567 3.5,3.5 0,1.933 -1.567,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#bfbfbf"
+         fill-rule="evenodd"
+         id="path380" />
+      <path
+         d="m 943,449 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path382" />
+      <path
+         d="m 1150,500 c 0,-2.209 1.79,-4 4,-4 2.21,0 4,1.791 4,4 0,2.209 -1.79,4 -4,4 -2.21,0 -4,-1.791 -4,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path384" />
+      <path
+         d="m 1101,500 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path386" />
+      <path
+         d="m 1046,500 c 0,-2.209 1.57,-4 3.5,-4 1.93,0 3.5,1.791 3.5,4 0,2.209 -1.57,4 -3.5,4 -1.93,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path388" />
+      <path
+         d="m 995,500.5 c 0,-1.933 1.567,-3.5 3.5,-3.5 1.93,0 3.5,1.567 3.5,3.5 0,1.933 -1.57,3.5 -3.5,3.5 -1.933,0 -3.5,-1.567 -3.5,-3.5 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path390" />
+      <path
+         d="m 943,500 c 0,-2.209 1.567,-4 3.5,-4 1.933,0 3.5,1.791 3.5,4 0,2.209 -1.567,4 -3.5,4 -1.933,0 -3.5,-1.791 -3.5,-4 z"
+         fill="#262626"
+         fill-rule="evenodd"
+         id="path392" />
+      <path
+         d="M 0,0 0.209764,406.475"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         transform="matrix(-1,0,0,1,1154.71,343.5)"
+         id="path394" />
+      <path
+         d="m 946.5,349.5 0.546,407.066"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         id="path396" />
+      <path
+         d="M 0,0 0.209764,406.475"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         transform="matrix(-1,0,0,1,1104.71,350.5)"
+         id="path398" />
+      <path
+         d="m 1049.5,351.5 1.22,405.975"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         id="path400" />
+      <path
+         d="m 998.5,351.5 2.34,405.358"
+         stroke="#404040"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 3"
+         fill="none"
+         fill-rule="evenodd"
+         id="path402" />
+      <rect
+         x="903"
+         y="733"
+         width="296"
+         height="65"
+         fill="#ffffff"
+         id="rect404" />
+    </g>
+  </g>
+</svg>

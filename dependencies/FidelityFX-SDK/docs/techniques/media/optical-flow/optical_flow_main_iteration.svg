@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="115mm"
+   viewBox="0 0 210 115"
+   version="1.1"
+   id="svg411"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="optical_flow_main_iteration.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview413"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.74564394"
+     inkscape:cx="396.97231"
+     inkscape:cy="347.35077"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs408" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       transform="matrix(0.19383505,0,0,0.19383505,-17.418211,-8.5906002)"
+       id="g491">
+      <path
+         d="m 451.5,100.167 c 0,-9.7572 7.91,-17.6669 17.667,-17.6669 h 329.666 c 9.757,0 17.667,7.9097 17.667,17.6669 v 70.666 c 0,9.757 -7.91,17.667 -17.667,17.667 H 469.167 c -9.757,0 -17.667,-7.91 -17.667,-17.667 z"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#deebf7"
+         fill-rule="evenodd"
+         id="path415" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(586.107,143)"
+         id="text417">Searching</text>
+      <rect
+         x="100.5"
+         y="286.5"
+         width="232"
+         height="64"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect419" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(145.334,311)"
+         id="text421">Current Frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(162.734,340)"
+         id="text423">Luminance</text>
+      <rect
+         x="933.5"
+         y="550.5"
+         width="232"
+         height="64"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect425" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(965.908,575)"
+         id="text427">Upscaled Motion</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(972.414,604)"
+         id="text429">Vector Estimate</text>
+      <rect
+         x="517.5"
+         y="215.5"
+         width="233"
+         height="65"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect431" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(539.56,241)"
+         id="text433">Raw Motion Vector</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(591.3,270)"
+         id="text435">Estimate</text>
+      <path
+         d="m 332.219,85.8542 111.736,21.4018 -0.439,2.292 -111.735,-21.4022 z m 110.96,18.3678 7.104,5.434 -8.609,2.423 z"
+         id="path437" />
+      <path
+         d="m 816.5,582.167 h 109.658 v 0.666 H 816.5 Z m 108.324,-3.667 8,4 -8,4 z"
+         id="path439" />
+      <path
+         d="m 634.833,188.5 v 20.971 h -0.666 V 188.5 Z m 3.667,19.637 -4,8 -4,-8 z"
+         id="path441" />
+      <path
+         d="m 451.5,325.167 c 0,-9.757 7.91,-17.667 17.667,-17.667 h 329.666 c 9.757,0 17.667,7.91 17.667,17.667 v 70.666 c 0,9.757 -7.91,17.667 -17.667,17.667 H 469.167 c -9.757,0 -17.667,-7.91 -17.667,-17.667 z"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#deebf7"
+         fill-rule="evenodd"
+         id="path443" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(593.727,368)"
+         id="text445">Filtering</text>
+      <rect
+         x="517.5"
+         y="440.5"
+         width="233"
+         height="65"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect447" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(557.55,466)"
+         id="text449">Filtered Motion</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(556.85,495)"
+         id="text451">Vector Estimate</text>
+      <path
+         d="m 451.5,547 c 0,-9.665 7.835,-17.5 17.5,-17.5 h 330 c 9.665,0 17.5,7.835 17.5,17.5 v 70 c 0,9.665 -7.835,17.5 -17.5,17.5 H 469 c -9.665,0 -17.5,-7.835 -17.5,-17.5 z"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#deebf7"
+         fill-rule="evenodd"
+         id="path453" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(586.673,589)"
+         id="text455">Upscaling</text>
+      <path
+         d="m 634.833,280.5 v 20.971 h -0.666 V 280.5 Z m 3.667,19.638 -4,8 -4,-8 z"
+         id="path457" />
+      <path
+         d="m 634.833,413.5 v 20.971 h -0.666 V 413.5 Z m 3.667,19.638 -4,8 -4,-8 z"
+         id="path459" />
+      <path
+         d="m 634.833,505.5 v 17.867 h -0.666 V 505.5 Z m 3.667,16.534 -4,8 -4,-8 z"
+         id="path461" />
+      <rect
+         x="100.5"
+         y="55.500099"
+         width="232"
+         height="64"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect463" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(147.92,80)"
+         id="text465">Scene Change</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(135.473,109)"
+         id="text467">Detection Result</text>
+      <rect
+         x="100.5"
+         y="209.5"
+         width="232"
+         height="64"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect469" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(140.867,234)"
+         id="text471">Previous Frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(162.734,263)"
+         id="text473">Luminance</text>
+      <rect
+         x="100.5"
+         y="132.5"
+         width="232"
+         height="64"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect475" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(132.814,157)"
+         id="text477">Upscaled Motion</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(139.32,186)"
+         id="text479">Vector Estimate</text>
+      <path
+         d="M 0.412445,-1.09133 112.46,41.2546 111.635,43.4372 -0.412445,1.09133 Z M 112.214,38.1329 l 6.069,6.5699 -8.897,0.9135 z"
+         transform="matrix(1,0,0,-1,332,163.703)"
+         id="path481" />
+      <path
+         d="M 0.777949,-0.869429 114.093,100.523 112.537,102.262 -0.777949,0.869429 Z M 114.989,97.5224 l 3.294,8.3156 -8.629,-2.354 z"
+         transform="matrix(1,0,0,-1,332,240.838)"
+         id="path483" />
+      <path
+         d="M 0.944326,-0.685098 115.313,156.958 113.424,158.329 -0.944326,0.685098 Z M 116.823,154.215 l 1.46,8.825 -7.935,-4.127 z"
+         transform="matrix(1,0,0,-1,332,318.04)"
+         id="path485" />
+      <path
+         d="m 332.798,318.351 107.484,214.998 -0.597,0.298 -107.483,-214.998 z m 110.167,212.165 -10e-4,8.944 -7.155,-5.367 z"
+         id="path487" />
+      <path
+         d="m 332.803,241.362 126.31,276.845 -0.607,0.277 -126.309,-276.846 z m 129.092,274.11 -0.318,8.938 -6.96,-5.618 z"
+         id="path489" />
+    </g>
+  </g>
+</svg>

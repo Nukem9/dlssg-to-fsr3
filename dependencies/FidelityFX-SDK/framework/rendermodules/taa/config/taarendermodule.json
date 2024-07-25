@@ -1,0 +1,20 @@
+{
+    "TAARenderModule": {
+
+        "MotionVectorGeneration": "GBufferRenderModule",
+
+        "RenderResources": {
+            "HistoryBufferTarget": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": true
+            },
+            "OutputBufferTarget": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": true
+            },
+
+            "TAAHistoryBufferTarget": "HistoryBufferTarget",
+            "TAAOutputBufferTarget": "OutputBufferTarget"
+        }
+    }
+}

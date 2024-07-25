@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="395.90704mm"
+   height="91.54583mm"
+   viewBox="0 0 395.90704 91.54583"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2">
+    <clipPath
+       id="clip0">
+      <rect
+         x="270"
+         y="119"
+         width="1513"
+         height="358"
+         id="rect9" />
+    </clipPath>
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(336.07723,-19.886877)">
+    <g
+       clip-path="url(#clip0)"
+       transform="matrix(0.26458333,0,0,0.26458333,-407.51473,-11.598539)"
+       id="g76">
+      <rect
+         x="271"
+         y="120"
+         width="409"
+         height="248"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#595959"
+         id="rect14" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="48px"
+         transform="translate(358.816,222)"
+         id="text22">Color buffer<tspan
+   font-size="16px"
+   x="39.41"
+   y="28"
+   id="tspan16">APPLICATION SPECIFIED</tspan><tspan
+   font-size="16px"
+   x="70.660004"
+   y="66"
+   id="tspan18">Current frame</tspan><tspan
+   font-size="16px"
+   x="58.16"
+   y="85"
+   id="tspan20">Render resolution</tspan></text>
+      <rect
+         x="1023"
+         y="120"
+         width="408"
+         height="248"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect24" />
+      <rect
+         x="1279"
+         y="278"
+         width="213"
+         height="128"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#595959"
+         id="rect26" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(1307.65,313)"
+         id="text34">Current Luminance<tspan
+   font-size="12px"
+   x="49.869999"
+   y="16"
+   id="tspan28">R16_FLOAT</tspan><tspan
+   font-size="12px"
+   x="43"
+   y="45"
+   id="tspan30">Current frame</tspan><tspan
+   font-size="12px"
+   x="25.870001"
+   y="59"
+   id="tspan32">Render resolution / 2</tspan></text>
+      <rect
+         x="1421"
+         y="374"
+         width="115"
+         height="64"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect36" />
+      <rect
+         x="1507"
+         y="422"
+         width="59"
+         height="31"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect38" />
+      <rect
+         x="1551"
+         y="446"
+         width="29"
+         height="15"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect40" />
+      <rect
+         x="1573"
+         y="457"
+         width="15"
+         height="7"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#595959"
+         id="rect42" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="22px"
+         transform="translate(1680.61,380)"
+         id="text50">Exposure<tspan
+   font-size="16px"
+   x="3.8800001"
+   y="20"
+   id="tspan44">R32_FLOAT</tspan><tspan
+   font-size="16px"
+   x="-5.1199999"
+   y="59"
+   id="tspan46">Current frame</tspan><tspan
+   font-size="16px"
+   x="29.5"
+   y="78"
+   id="tspan48">1x1</tspan></text>
+      <path
+         d="M 0.258096,-0.428237 57.0346,33.7906 56.5184,34.6471 -0.258096,0.428237 Z M 58.1607,28.0477 65.3413,39.3808 51.9664,38.3253 Z"
+         transform="matrix(-1,0,0,1,1660.84,411.5)"
+         id="path52" />
+      <rect
+         x="271"
+         y="440"
+         width="21"
+         height="21"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#595959"
+         id="rect54" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(302.565,458)"
+         id="text56">Memory allocated</text>
+      <rect
+         x="519"
+         y="440"
+         width="21"
+         height="21"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect58" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(548.709,458)"
+         id="text64">No<tspan
+   font-size="21px"
+   x="29.25"
+   y="0"
+   id="tspan60">memory</tspan><tspan
+   font-size="21px"
+   x="105.75"
+   y="0"
+   id="tspan62">allocate</tspan>d</text>
+      <rect
+         x="762"
+         y="199"
+         width="179"
+         height="90"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         id="rect66" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="18px"
+         transform="translate(796.991,240)"
+         id="text70">Auto-exposure <tspan
+   font-size="18px"
+   x="34.5"
+   y="21"
+   id="tspan68">(SPD</tspan>)</text>
+      <path
+         d="m 680,241 h 67.146 v 6 H 680 Z m 64.146,-6 18,9 -18,9 z"
+         id="path72" />
+      <path
+         d="m 941,241 h 67.15 v 6 H 941 Z m 64.15,-6 18,9 -18,9 z"
+         id="path74" />
+    </g>
+  </g>
+</svg>

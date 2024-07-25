@@ -1,0 +1,75 @@
+{
+    "FidelityFX Brixelizer GI": {
+        "MotionVectorGeneration": "GBufferRenderModule",
+        "Allocations": {
+            "GPUResourceViewCount": 600000,
+            "GPUSamplerViewCount": 2000
+        },
+        "RenderResources": {
+            "HistoryLitOutput": {
+                "Format": "RG11B10_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": true
+            },
+            "LitOutputCopy": {
+                "Format": "RG11B10_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": true
+            },
+            "HistoryDepth": {
+                "Format": "R32_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": true
+            },
+            "HistoryNormals": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": true
+            },
+            "DiffuseGI": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": true
+            },
+            "SpecularGI": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": true
+            },
+            "DebugVisualization": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": true
+            }
+        },
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "SkyDomeRenderModule",
+            "TranslucencyRenderModule",
+            "BrixelizerGIRenderModule",
+            "TAARenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "RenderModuleOverrides": {
+            "SkyDomeRenderModule": {
+                "Procedural": true,
+                "Luminance" : 15.0,
+                "Hour" : 7
+            }
+        },
+
+        "Content": {
+            "Scenes": [
+                "../media/Toyshop_TeddyGI/Toyshop_Teddy_animation/Toyshop_Teddy_animation.gltf",
+                "../media/Toyshop_TeddyGI/Toyshop_Teddy_static/Toyshop_Teddy_static.gltf"
+            ],
+            "Camera": "PhysCamera003",
+            "DiffuseIBL": "../media/IBL/mud_road_puresky_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/mud_road_puresky_Specular.dds",
+            "SceneExposure": 1.355,
+            "IBLFactor": 0.0
+        }
+    }
+}

@@ -1,0 +1,68 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(BRIXELIZER_GI_BASE_ARGS
+	-reflection -deps=gcc -DFFX_GPU=1)
+
+set(BRIXELIZER_GI_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/brixelizer"
+	"${FFX_GPU_PATH}/brixelizergi")
+
+set(BRIXELIZER_GI_PERMUTATION_ARGS
+	-DFFX_BRIXELIZER_GI_OPTION_DEPTH_INVERTED={0,1}
+	-DFFX_BRIXELIZER_GI_OPTION_DISABLE_SPECULAR={0,1}
+	-DFFX_BRIXELIZER_GI_OPTION_DISABLE_DENOISER={0,1})
+
+if (NOT BRIXELIZER_GI_SHADER_EXT)
+	set(BRIXELIZER_GI_SHADER_EXT *)
+endif()
+
+file(GLOB BRIXELIZER_GI_SHADERS
+	"shaders/brixelizergi/ffx_brixelizergi_blur_x.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_blur_y.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_clear_cache.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_debug_visualization.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_downsample.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_emit_irradiance_cache.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_emit_primary_ray_radiance.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_fill_screen_probes.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_generate_disocclusion_mask.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_interpolate_screen_probes.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_prepare_clear_cache.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_project_screen_probes.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_propagate_sh.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_reproject_gi.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_reproject_screen_probes.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_spawn_screen_probes.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_specular_pre_trace.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_specular_trace.${BRIXELIZER_GI_SHADER_EXT}"
+	"shaders/brixelizergi/ffx_brixelizergi_upsample.${BRIXELIZER_GI_SHADER_EXT}")
+
+# compile all the shaders	
+compile_shaders_with_depfile(
+	"${FFX_SC_EXECUTABLE}"
+	"${BRIXELIZER_GI_BASE_ARGS}" "${BRIXELIZER_GI_API_BASE_ARGS}" "${BRIXELIZER_GI_PERMUTATION_ARGS}" "${BRIXELIZER_GI_INCLUDE_ARGS}"
+	"${BRIXELIZER_GI_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" BRIXELIZER_GI_PERMUTATION_OUTPUTS)
+
+# add the header files they generate to the main list of dependencies
+add_shader_output("${BRIXELIZER_GI_PERMUTATION_OUTPUTS}")

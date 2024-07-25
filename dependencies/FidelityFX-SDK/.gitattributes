@@ -1,0 +1,28 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Declare files that use whatever default is
+*.md text
+*.txt text
+
+# Declare files that will always have CRLF line endings on checkout.
+*.sln text eol=crlf
+
+# Declare files that will always have LF line endings on checkout.
+*.c text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.hpp text eol=lf
+*.idl text eol=lf
+*.json text eol=lf
+*.hlsl text eol=lf
+
+# Denote all files that are truly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.lib binary
+*.dll binary
+*.exp binary
+*.pdb binary
+*.exe binary
+*.chm binary

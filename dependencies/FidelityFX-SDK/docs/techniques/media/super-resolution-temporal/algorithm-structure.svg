@@ -1,0 +1,1581 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="297mm"
+   height="176mm"
+   viewBox="0 0 297 176"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   sodipodi:docname="algorithm-structure.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="2.1089995"
+     inkscape:cx="614.2723"
+     inkscape:cy="317.92326"
+     inkscape:window-width="3840"
+     inkscape:window-height="2054"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g1361" />
+  <defs
+     id="defs2">
+    <clipPath
+       id="clip0">
+      <rect
+         x="43"
+         y="24"
+         width="1169"
+         height="678"
+         id="rect886" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       clip-path="url(#clip0)"
+       transform="matrix(0.24970884,0,0,0.25148495,-7.8374624,-3.3616689)"
+       id="g1361">
+      <path
+         d="m 296,232 0.971,32.64"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path891" />
+      <path
+         d="m 680,156.167 h 264.746 v 55.968 h -3.667 V 158 l 1.833,1.833 H 680 Z m 268.412,54.134 -5.5,11 -5.5,-11 z"
+         id="path893" />
+      <path
+         d="M 0,0 410.612,1.67811"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         transform="matrix(1,0,0,-1,198,189.678)"
+         id="path895" />
+      <path
+         d="m 299.164,276 v 55.566 H 297 l 2,-2 v 43.567 h -4 v -45.567 h 2.164 l -2,2 V 276 Z m 3.836,95.133 -6,12 -6,-12 z"
+         id="path897" />
+      <path
+         d="M 197,272 H 298.424"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 4"
+         fill="none"
+         fill-rule="evenodd"
+         id="path899" />
+      <rect
+         x="449.5"
+         y="249.5"
+         width="122"
+         height="22"
+         stroke="#000000"
+         stroke-linejoin="round"
+         stroke-miterlimit="10"
+         fill="#f2f2f2"
+         id="rect901" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(457.039,264)"
+         id="text903">AutoExposure</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(518.039,264)"
+         id="text905">/Exposure</text>
+      <path
+         d="M 593.5,272.5 H 693.685"
+         stroke="#7f7f7f"
+         stroke-width="3.33333"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path907" />
+      <rect
+         x="1009.5"
+         y="408.5"
+         width="142"
+         height="109"
+         stroke="#44546a"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="5.33333, 4"
+         fill="#ffffff"
+         id="rect909" />
+      <rect
+         x="1069.5"
+         y="110.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect911" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1098.41,125)"
+         id="text913">Lock status†</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1103.24,136)"
+         id="text915">R16G16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1103.66,155)"
+         id="text917">Previous frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1090.08,165)"
+         id="text919">Presentation resolution</text>
+      <rect
+         x="407.5"
+         y="463.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect921" />
+      <rect
+         x="239.5"
+         y="198.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         id="rect923" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(276.022,211)"
+         id="text925">Compute</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(250.442,226)"
+         id="text927">Luminance Pyramid</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(285.356,240)"
+         id="text929">(SPD)</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="9px"
+         transform="translate(264.356,252)"
+         id="text931">Render resolution</text>
+      <rect
+         x="80.500099"
+         y="179.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="10.6667, 4"
+         fill="#ffffff"
+         id="rect933" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(110.254,193)"
+         id="text935">Color buffer</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(100.674,204)"
+         id="text937">APPLICATION SPECIFIED</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(116.508,223)"
+         id="text939">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(110.508,233)"
+         id="text941">Render resolution</text>
+      <path
+         d="m 199,207 h 21.813 v 20.899 l -2,-2 h 9.813 v 4 H 216.813 V 209 l 2,2 H 199 Z m 27.626,14.899 12,6 -12,6 z"
+         id="path943" />
+      <rect
+         x="243"
+         y="384"
+         width="13"
+         height="20"
+         id="rect945" />
+      <rect
+         x="238.5"
+         y="384.5"
+         width="119"
+         height="58"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         id="rect947" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(247.451,402)"
+         id="text949">Reconstruct &amp; dilate</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="9px"
+         transform="translate(263.031,432)"
+         id="text951">Render resolution</text>
+      <rect
+         x="79.500099"
+         y="383.5"
+         width="120"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="10.6667, 4"
+         fill="#ffffff"
+         id="rect953" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(101.809,398)"
+         id="text955">Motion</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(140.642,398)"
+         id="text957">vectors</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(100.062,409)"
+         id="text959">APPLICATION SPECIFIED</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(121.476,418)"
+         id="text961">(2x FLOAT)</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(115.896,428)"
+         id="text963">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(109.896,438)"
+         id="text965">Render resolution</text>
+      <rect
+         x="78.500099"
+         y="315.5"
+         width="120"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="10.6667, 4"
+         fill="#ffffff"
+         id="rect967" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(106.6,331)"
+         id="text969">Depth buffer</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(99.02,342)"
+         id="text971">APPLICATION SPECIFIED</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(120.433,351)"
+         id="text973">(1x FLOAT)</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(114.853,361)"
+         id="text975">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(108.853,371)"
+         id="text977">Render</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(134.187,371)"
+         id="text979">resolution</text>
+      <path
+         d="m 198,343 h 22.257 v 48.385 l -2,-2 h 10.258 v 4 H 216.257 V 345 l 2,2 H 198 Z m 28.515,42.385 12,6 -12,6 z"
+         id="path981" />
+      <path
+         d="m 199,411 h 28.913 v 4 H 199 Z m 26.913,-4 12,6 -12,6 z"
+         id="path983" />
+      <rect
+         x="79.500099"
+         y="247.5"
+         width="120"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="10.6667, 4"
+         fill="#ffffff"
+         id="rect985" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(116.463,262)"
+         id="text987">Exposure</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(120.296,273)"
+         id="text989">R32_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(115.716,292)"
+         id="text991">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(133.13,302)"
+         id="text993">1x1</text>
+      <rect
+         x="401.5"
+         y="313.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect995" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(428.868,323)"
+         id="text997">Reconstructed</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(427.615,336)"
+         id="text999">Previous depth</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(444.115,346)"
+         id="text1001">R32</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(456.448,346)"
+         id="text1003">_UINT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(437.202,360)"
+         id="text1005">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(431.202,370)"
+         id="text1007">Render resolution</text>
+      <rect
+         x="401.5"
+         y="456.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1009" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(410.979,470)"
+         id="text1011">Dilated motion vectors</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(435.399,480)"
+         id="text1013">R16G16</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(460.732,480)"
+         id="text1015">_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(437.312,499)"
+         id="text1017">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(431.312,509)"
+         id="text1019">Render resolution</text>
+      <rect
+         x="401.5"
+         y="384.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1021" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(427.145,399)"
+         id="text1023">Dilated depth</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(441.899,410)"
+         id="text1025">R32_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(437.312,429)"
+         id="text1027">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(431.312,439)"
+         id="text1029">Render resolution</text>
+      <path
+         d="m 0,-2 h 24.6883 v 48.6001 l -2,-2 h 12.6882 v 4 H 20.6883 V 0 l 2,2 H 0 Z m 33.3765,42.6001 12,6 -12,6 z"
+         transform="matrix(1,0,0,-1,355,392.6)"
+         id="path1031" />
+      <path
+         d="m 355,434 h 24.688 v 48.266 l -2,-2 h 12.688 v 4 H 375.688 V 436 l 2,2 H 355 Z m 33.376,42.266 12,6 -12,6 z"
+         id="path1033" />
+      <path
+         d="m 355.014,412 35.604,0.252 -0.028,4 L 354.986,416 Z m 33.633,-3.762 11.957,6.085 -12.042,5.915 z"
+         id="path1035" />
+      <path
+         d="m 0,-2 h 114.136 l 0.024,95.4946 -4,9e-4 L 110.137,4.84257e-4 112.137,2 H 0 Z m 118.137,93.4272 -5.864,12.0668 -6.136,-11.931 z"
+         transform="matrix(0,1,1,0,297,442)"
+         id="path1037" />
+      <rect
+         x="403.5"
+         y="534.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1039" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(437.281,549)"
+         id="text1041">Lock Luma</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(444.281,560)"
+         id="text1043">R16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(439.695,579)"
+         id="text1045">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(433.695,589)"
+         id="text1047">Render resolution</text>
+      <rect
+         x="571.5"
+         y="387.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         id="rect1049" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(605.755,406)"
+         id="text1051">Depth clip</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="9px"
+         transform="translate(596.422,436)"
+         id="text1053">Render resolution</text>
+      <path
+         d="m 520,346 h 27.349 v 49.258 l -2,-2 h 15.348 v 4 H 543.349 V 348 l 2,2 H 520 Z m 38.697,43.258 12,6 -12,6 z"
+         id="path1055" />
+      <path
+         d="m 0,-2 h 27.4624 v 47.6072 l -2,-2 h 15.4624 v 4 H 23.4624 V 0 l 2,2 H 0 Z m 38.9248,41.6072 12,6 -12,6 z"
+         transform="matrix(1,0,0,-1,520,485.607)"
+         id="path1057" />
+      <path
+         d="m 520.013,415 40.698,0.269 -0.027,4 L 519.987,419 Z m 38.724,-3.744 11.96,6.08 -12.039,5.92 z"
+         id="path1059" />
+      <rect
+         x="79.500099"
+         y="90.500099"
+         width="120"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="10.6667, 4"
+         fill="#ffffff"
+         id="rect1061" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(104.05,106)"
+         id="text1063">Reactive mask</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(119.296,117)"
+         id="text1065">R8_UNORM</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(115.716,136)"
+         id="text1067">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(109.716,146)"
+         id="text1069">Render</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(135.05,146)"
+         id="text1071">resolution</text>
+      <rect
+         x="80.500099"
+         y="24.500099"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="10.6667, 4"
+         fill="#ffffff"
+         id="rect1073" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(115.421,39)"
+         id="text1075">T&amp;C mask</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(120.088,50)"
+         id="text1077">R8_UNORM</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(116.508,69)"
+         id="text1079">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(110.508,79)"
+         id="text1081">Render</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(135.841,79)"
+         id="text1083">resolution</text>
+      <rect
+         x="573.5"
+         y="534.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         id="rect1085" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(602.563,551)"
+         id="text1087">Create locks</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="9px"
+         transform="translate(597.976,586)"
+         id="text1089">Render resolution</text>
+      <path
+         d="m 522.013,562 40.698,0.269 -0.027,4 L 521.987,566 Z m 38.724,-3.744 11.96,6.08 -12.039,5.92 z"
+         id="path1091" />
+      <rect
+         x="741.5"
+         y="524.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1093" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(762.929,538)"
+         id="text1095">New Lock Mask</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(781.095,549)"
+         id="text1097">R8_UNORM</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(777.509,568)"
+         id="text1099">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         id="text1101"
+         x="760.95856"
+         y="578">Presentation resolution</text>
+      <path
+         d="m 693.015,561 35.932,0.263 -0.029,3.999 L 692.985,565 Z m 33.961,-3.752 11.956,6.088 -12.043,5.912 z"
+         id="path1103" />
+      <rect
+         x="883.5"
+         y="221.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         id="rect1105" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(919.138,233)"
+         id="text1107">Reproject</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(908.385,248)"
+         id="text1109">&amp; Accumulate</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="9px"
+         transform="translate(897.805,277)"
+         id="text1111">Presentation resolution</text>
+      <rect
+         x="741.5"
+         y="317.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1113" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(749.74,331)"
+         id="text1115">Prepared Input</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(825.907,331)"
+         id="text1117">Color</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(763.24,342)"
+         id="text1119">R16G16B16A16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(777.654,361)"
+         id="text1121">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(771.654,371)"
+         id="text1123">Render resolution</text>
+      <rect
+         x="741.5"
+         y="388.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1125" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(750.877,403)"
+         id="text1127">Dilated Reactive</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(823.71,403)"
+         id="text1129">masks</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(776.624,413)"
+         id="text1131">R8G8_</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(797.957,413)"
+         id="text1133">UNORM</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(777.544,432)"
+         id="text1135">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(771.544,442)"
+         id="text1137">Render</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(796.877,442)"
+         id="text1139">resolution</text>
+      <path
+         d="m 690.013,414 40.698,0.269 -0.027,4 L 689.987,418 Z m 38.724,-3.744 11.96,6.08 -12.039,5.92 z"
+         id="path1141" />
+      <path
+         d="m 0,-2 h 27.4624 v 47.6072 l -2,-2 h 15.4624 v 4 H 23.4624 V 0 l 2,2 H 0 Z m 38.9248,41.6072 12,6 -12,6 z"
+         transform="matrix(1,0,0,-1,690,393.607)"
+         id="path1143" />
+      <rect
+         x="745.5"
+         y="173.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1145" />
+      <rect
+         x="738.5"
+         y="167.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1147" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(751.99,182)"
+         id="text1149">Internal Upscaled</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(837.49,182)"
+         id="text1151">*</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(760.157,193)"
+         id="text1153">R16G16B16A16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(773.077,212)"
+         id="text1155">Previous frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(759.49,222)"
+         id="text1157">Presentation resolution</text>
+      <path
+         d="m 864,201 h 57.304 l -0.013,9.91 -4,-0.005 0.01,-7.908 2,2.003 H 864 Z m 61.301,7.938 -6.061,11.97 -5.939,-12.031 z"
+         id="path1159" />
+      <path
+         d="m 0,-2 h 424.687 v 196.606 h -4 V 0 l 2,2 H 0 Z m 428.687,194.606 -6,12 -6,-12 z"
+         transform="matrix(1,0,0,-1,520,485.606)"
+         id="path1161" />
+      <path
+         d="m 863,348.509 v 0.245 l -2,-2 h 41.801 l -2,2 V 291 h 4 v 59.754 H 859 v -2.245 z M 896.801,293 l 6,-12 6,12 z"
+         id="path1163" />
+      <path
+         d="m 0,-2 h 60.1997 v 128.908 h -4 V 0 l 2,2 H 0 Z m 64.1997,126.908 -6,12 -6,-12 z"
+         transform="matrix(1,0,0,-1,860,417.908)"
+         id="path1165" />
+      <rect
+         x="1070.5"
+         y="182.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1167" />
+      <rect
+         x="1064.5"
+         y="176.5"
+         width="120"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1169" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1087.83,190)"
+         id="text1171">Luma History</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1152.16,190)"
+         id="text1173">Ω</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1091.41,201)"
+         id="text1175">R8G8B8A8_UNORM</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1100.83,220)"
+         id="text1177">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         id="text1179"
+         x="1085.2843"
+         y="229.50114">Presentation resolution</text>
+      <path
+         d="m 0,-2 h 33.1991 v 31.77 l -2,-2 h 21.1991 v 4 H 29.1991 V 0 l 2,2 H 0 Z m 50.3982,25.77 12,6 -12,6 z"
+         transform="matrix(1,0,0,-1,1002,235.77)"
+         id="path1181" />
+      <path
+         d="M 990,647.976 V 462.488 h 2.032 l -2,2 V 291 h 4 V 466.488 H 992 l 2,-2 V 647.976 Z M 986.032,293 l 6,-12 6,12 z"
+         id="path1183" />
+      <path
+         d="m 860,563.162 v -3.081 h 97.311 l -2,2 V 291 h 4 V 564.081 H 862 l 2,-2 v 1.081 z M 951.311,293 l 6,-12 6,12 z"
+         id="path1185" />
+      <rect
+         x="1049.5"
+         y="305.5"
+         width="118"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1187" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1071.16,320)"
+         id="text1189">Output buffer*</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1068.66,331)"
+         id="text1191">R16G16B16A16_SFLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1084.9,350)"
+         id="text1193">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1069.82,360)"
+         id="text1195">Presentation resolution</text>
+      <rect
+         x="1043.5"
+         y="300.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1197" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1057.07,314)"
+         id="text1199">Internal Upscaled*</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1065.24,325)"
+         id="text1201">R16G16B16A16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1079.65,344)"
+         id="text1203">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1064.57,354)"
+         id="text1205">Presentation resolution</text>
+      <rect
+         x="1064.5"
+         y="105.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1207" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1093.66,119)"
+         id="text1209">Lock status†</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1098.49,130)"
+         id="text1211">R16G16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1100.41,149)"
+         id="text1213">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1085.32,159)"
+         id="text1215">Presentation resolution</text>
+      <rect
+         x="214.5"
+         y="632.5"
+         width="66"
+         height="35"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         id="rect1217" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="13px"
+         transform="translate(235.41,654)"
+         id="text1219">Pass</text>
+      <rect
+         x="289.5"
+         y="632.5"
+         width="66"
+         height="35"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1221" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(308.137,654)"
+         id="text1223">Buffer</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="16px"
+         transform="translate(52.6616,625)"
+         id="text1225">Key</text>
+      <rect
+         x="364.5"
+         y="633.5"
+         width="65"
+         height="35"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="5.33333, 4"
+         fill="#ffffff"
+         id="rect1227" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(374.796,648)"
+         id="text1229">Input/Output</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(386.376,658)"
+         id="text1231">Buffer</text>
+      <rect
+         x="747.5"
+         y="596.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1233" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(776.513,611)"
+         id="text1235">Lock status†</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(781.346,622)"
+         id="text1237">R16G16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(781.759,641)"
+         id="text1239">Previous frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(768.179,651)"
+         id="text1241">Presentation resolution</text>
+      <rect
+         x="740.5"
+         y="590.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1243" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(769.762,604)"
+         id="text1245">Lock status†</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(774.595,615)"
+         id="text1247">R16G16_FLOAT</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(775.009,634)"
+         id="text1249">Previous frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(761.429,644)"
+         id="text1251">Presentation resolution</text>
+      <path
+         d="m 0,-2 h 118.546 v 330.888 h -4 V 0 l 2,2 H 0 Z m 122.546,328.888 -6,12 -6,-12 z"
+         transform="matrix(1,0,0,-1,859,619.888)"
+         id="path1253" />
+      <path
+         d="M 991,241.325 V 133 h 63.35 v 4 H 993 l 2,-2 V 241.325 Z M 1052.35,129 l 12,6 -12,6 z"
+         id="path1255" />
+      <rect
+         x="894.5"
+         y="641.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1257" />
+      <rect
+         x="888.5"
+         y="634.5"
+         width="119"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect1259" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(911.757,649)"
+         id="text1261">Luma History</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(976.091,649)"
+         id="text1263">Ω</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(915.344,660)"
+         id="text1265">R8G8B8A8_UNORM</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(923.257,679)"
+         id="text1267">Previous frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         id="text1269"
+         x="912.22577"
+         y="689">Presentation resolution</text>
+      <path
+         d="m 921,265 h 101.32 v 64.155 l -2,-2 h 12.63 v 4 h -14.63 V 267 l 2,2 H 921 Z m 109.95,58.155 12,6 -12,6 z"
+         id="path1271" />
+      <rect
+         x="1019.5"
+         y="444.5"
+         width="120"
+         height="60"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#404040"
+         id="rect1273" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1066.37,461)"
+         id="text1275">RCAS</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="9px"
+         transform="translate(1034.12,496)"
+         id="text1277">Presentation</text>
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="9px"
+         transform="translate(1085.12,496)"
+         id="text1279">resolution</text>
+      <path
+         d="m 1104.78,359 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 3.462 h -4.54 v -4 h 2.54 l -2,2 V 391 Z m -8.54,3.462 h -4 v -4 h 4 z m -8,0 h -4 v -4 h 4 z m -8,0 H 1079 l 2,-2 v 2.759 h -4 v -4.759 h 3.24 z m 0.76,4.759 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 2.601 h -4 v -2.601 z m 4,0.601 -6,12 -6,-12 z"
+         id="path1281" />
+      <rect
+         x="1092.5"
+         y="549.5"
+         width="119"
+         height="59"
+         stroke="#000000"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         stroke-dasharray="5.33333, 4"
+         fill="#ffffff"
+         id="rect1283" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1117.54,563)"
+         id="text1285">Output</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="12px"
+         transform="translate(1155.21,563)"
+         id="text1287">buffer</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1112.46,574)"
+         id="text1289">APPLICATION SPECIFIED</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1128.29,593)"
+         id="text1291">Current frame</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1113.21,603)"
+         id="text1293">Presentation resolution</text>
+      <path
+         d="M 0,-2 H 4 V 2 H 0 Z m 8,0 h 4 V 2 H 8 Z m 8,0 h 4 v 4 h -4 z m 8.5964,3.40357 v 4 h -4 v -4 z m 0,8 v 4.00003 h -4 V 9.40357 Z m 0,8.00003 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m -1.0116,5.0116 h 4 v 4 h -4 z m 8,0 h 3.6081 v 4 h -3.6081 z m 1.6081,-4 12,6 -12,6 z"
+         transform="matrix(0,1,1,0,1079,504)"
+         id="path1295" />
+      <path
+         d="m 692.013,270 179.07,1.13 -0.026,4 -179.07,-1.13 z m 177.095,-2.882 11.962,6.075 -12.038,5.925 z"
+         id="path1297" />
+      <path
+         d="m 584,278 v 99.35 h -4 V 278 Z m 4,97.35 -6,12 -6,-12 z"
+         id="path1299" />
+      <path
+         d="m 292,271 306.032,0.862"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1301" />
+      <path
+         d="m 1184,251.988 1.74,286.526 -4,0.024 -1.74,-286.526 z m 5.73,284.502 -5.93,12.036 -6.07,-11.963 z"
+         id="path1303" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(1013.78,422)"
+         id="text1305">Sharpening</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(1013.78,435)"
+         id="text1307">Enabled</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="rotate(-90,845.9,-354.9)"
+         id="text1309">Sharpening Disabled</text>
+      <path
+         d="m 577,272 c 0,-3.314 2.462,-6 5.5,-6 3.038,0 5.5,2.686 5.5,6 0,3.314 -2.462,6 -5.5,6 -3.038,0 -5.5,-2.686 -5.5,-6 z"
+         fill-rule="evenodd"
+         id="path1311" />
+      <path
+         d="m 540,485.5 c 0,-3.038 2.462,-5.5 5.5,-5.5 3.038,0 5.5,2.462 5.5,5.5 0,3.038 -2.462,5.5 -5.5,5.5 -3.038,0 -5.5,-2.462 -5.5,-5.5 z"
+         fill-rule="evenodd"
+         id="path1313" />
+      <path
+         d="m 634,159.5 c 0,-3.038 2.462,-5.5 5.5,-5.5 3.038,0 5.5,2.462 5.5,5.5 0,3.038 -2.462,5.5 -5.5,5.5 -3.038,0 -5.5,-2.462 -5.5,-5.5 z"
+         fill-rule="evenodd"
+         id="path1315" />
+      <path
+         d="m 292,270.5 c 0,-3.038 2.462,-5.5 5.5,-5.5 3.038,0 5.5,2.462 5.5,5.5 0,3.038 -2.462,5.5 -5.5,5.5 -3.038,0 -5.5,-2.462 -5.5,-5.5 z"
+         fill-rule="evenodd"
+         id="path1317" />
+      <path
+         d="m 609,188 v 189.033 h -4 V 188 Z m 4,187.033 -6,12 -6,-12 z"
+         id="path1319" />
+      <path
+         d="m 626,171 v 205.493 h -4 V 171 Z m 4,203.493 -6,12 -6,-12 z"
+         id="path1321" />
+      <path
+         d="M 54,171 H 623.178"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1323" />
+      <path
+         d="M 54,345 H 78.2099"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1325" />
+      <path
+         d="m 55,170 0.903,174.798"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1327" />
+      <path
+         d="M 44,413 H 79.693"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1329" />
+      <path
+         d="m 45,158 1e-4,255.589"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1331" />
+      <path
+         d="M 44,158 H 640.041"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1333" />
+      <path
+         d="m 642,157.999 0.06,219.454 -4,0.001 L 638,158.001 Z m 4.06,217.453 -5.997,12.001 -6.003,-11.998 z"
+         id="path1335" />
+      <path
+         d="M 658.305,99.6654 199,99"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 4"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1337" />
+      <path
+         d="M 0,0 475.254,1.04987e-4"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 4"
+         fill="none"
+         fill-rule="evenodd"
+         transform="matrix(-1,0,0,1,674.254,72)"
+         id="path1339" />
+      <path
+         d="m 650.5,158.5 h 30.359"
+         stroke="#7f7f7f"
+         stroke-width="3.33333"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1341" />
+      <path
+         d="M 2,9.99989 V 13.9999 H -2 V 9.99989 Z m 1e-5,8.00001 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -10e-6,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 V 102 h -4 V 97.9999 Z M 2.00004,106 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -10e-6,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 0.905 H -1.99989 L -1.9999,314 Z M -6,12 0,0 6,12 Z"
+         transform="matrix(1,0,0,-1,673,386.905)"
+         id="path1343" />
+      <path
+         d="m 2,10.0001 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 10e-6,8 V 102 h -4 v -3.9999 z m 0,7.9999 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 1e-5,4 h -4 l -1e-5,-4 z m 1e-5,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z m 0,8 v 4 h -4 v -4 z M -6,12 0,0 6,12 Z"
+         transform="matrix(1,0,0,-1,656,386.985)"
+         id="path1345" />
+      <path
+         d="M 0,0 39.1643,1.04987e-4"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 4"
+         fill="none"
+         fill-rule="evenodd"
+         transform="matrix(-1,0,0,1,89.1643,641)"
+         id="path1347" />
+      <path
+         d="M 54,664 H 88.6146"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1349" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="13px"
+         transform="translate(92.1939,668)"
+         id="text1351">: Dataflow</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="13px"
+         transform="translate(92.1938,643)"
+         id="text1353">: Optional Dataflow</text>
+      <path
+         d="m 631,158 h 19.749"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1355" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="13px"
+         transform="translate(52.5376,689)"
+         id="text1357">Buffer names with symbols indicate temporal data.</text>
+      <path
+         d="m 984,252 200.44,0.565"
+         stroke="#000000"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path1359" />
+    </g>
+  </g>
+</svg>
