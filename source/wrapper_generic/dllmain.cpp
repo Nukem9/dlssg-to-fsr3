@@ -120,11 +120,12 @@ bool PatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 	if (!isMatch || !ModuleRequiresPatching(ModuleHandle))
 		return false;
 
-#if 0
-	OutputDebugStringW(L"Patching imports for a new module: ");
-	OutputDebugStringW(Path);
-	OutputDebugStringW(L"...\n");
-#endif
+	if constexpr (false)
+	{
+		OutputDebugStringW(L"Patching imports for a new module: ");
+		OutputDebugStringW(Path);
+		OutputDebugStringW(L"...\n");
+	}
 
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryW", &HookedLoadLibraryW, nullptr);
 	Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "LoadLibraryExW", &HookedLoadLibraryExW, nullptr);

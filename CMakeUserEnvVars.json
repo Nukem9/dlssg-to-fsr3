@@ -5,8 +5,8 @@
       "name": "config-envvars",
       "hidden": true,
       "environment": {
-        "___GAME_ROOT_DIRECTORY": "C:/Program Files (x86)/Steam/steamapps/common/Horizon Forbidden West Complete Edition",
-        "GAME_DEBUGGER_CMDLINE": "$env{GAME_ROOT_DIRECTORY}/HorizonForbiddenWest.exe"
+        "___GAME_ROOT_DIRECTORY": "C:/Program Files (x86)/Steam/steamapps/common/No Man's Sky/Binaries",
+        "GAME_DEBUGGER_CMDLINE": "$env{GAME_ROOT_DIRECTORY}/NMS.exe"
       }
     }
   ]
