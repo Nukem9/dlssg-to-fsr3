@@ -101,15 +101,18 @@ void FFFrameInterpolatorVK::CopyTexture(FfxCommandList CommandList, const FfxRes
 {
 	const auto cmdListVk = reinterpret_cast<VkCommandBuffer>(CommandList);
 
-	std::array<VkImageMemoryBarrier, 2> barriers = {
+	const uint32_t srcStageMask = MakeVulkanStageFlags(Source->state) | MakeVulkanStageFlags(Destination->state);
+	const uint32_t destStageMask = MakeVulkanStageFlags(FFX_RESOURCE_STATE_COPY_SRC) | MakeVulkanStageFlags(FFX_RESOURCE_STATE_COPY_DEST);
+
+	std::array barriers = {
 		MakeVulkanBarrier(static_cast<VkImage>(Source->resource), Source->state, FFX_RESOURCE_STATE_COPY_SRC, false),
 		MakeVulkanBarrier(static_cast<VkImage>(Destination->resource), Destination->state, FFX_RESOURCE_STATE_COPY_DEST, false),
 	};
 
 	vkCmdPipelineBarrier(
 		cmdListVk,
-		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-		VK_PIPELINE_STAGE_TRANSFER_BIT,
+		srcStageMask,
+		destStageMask,
 		0,
 		0,
 		nullptr,
@@ -137,8 +140,8 @@ void FFFrameInterpolatorVK::CopyTexture(FfxCommandList CommandList, const FfxRes
 
 	vkCmdPipelineBarrier(
 		cmdListVk,
-		VK_PIPELINE_STAGE_TRANSFER_BIT,
-		VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+		destStageMask,
+		srcStageMask,
 		0,
 		0,
 		nullptr,
@@ -219,7 +222,28 @@ VkImageMemoryBarrier FFFrameInterpolatorVK::MakeVulkanBarrier(
 			.baseMipLevel = 0,
 			.levelCount = VK_REMAINING_MIP_LEVELS,
 			.baseArrayLayer = 0,
-			.layerCount = VK_REMAINING_ARRAY_LAYERS,
+			.layerCount = 1,
 		},
 	};
+}
+
+VkPipelineStageFlags FFFrameInterpolatorVK::MakeVulkanStageFlags(FfxResourceStates State)
+{
+	switch (State)
+	{
+	case FFX_RESOURCE_STATE_INDIRECT_ARGUMENT:
+		return VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
+
+	case FFX_RESOURCE_STATE_COPY_SRC:
+	case FFX_RESOURCE_STATE_COPY_DEST:
+		return VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+	case FFX_RESOURCE_STATE_PRESENT:
+		return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+
+	case FFX_RESOURCE_STATE_RENDER_TARGET:
+		return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	}
+
+	return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 }

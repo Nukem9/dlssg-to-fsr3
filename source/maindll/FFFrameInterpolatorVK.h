@@ -47,4 +47,6 @@ private:
 		FfxResourceStates SourceState,
 		FfxResourceStates DestinationState,
 		bool IsDepthAspect);
+
+	static VkPipelineStageFlags MakeVulkanStageFlags(FfxResourceStates State);
 };
