@@ -111,7 +111,11 @@ void ReconstructAndDilate(FfxInt32x2 iPxLrPos)
     FfxInt32x2 iMotionVectorPos = ComputeHrPosFromLrPos(iNearestDepthCoord);
 #endif
 
-    FfxFloat32x2 fDilatedMotionVector = LoadInputMotionVector(iMotionVectorPos);
+#if FFX_FRAMEINTERPOLATION_OPTION_PREDILATED_MOTION_VECTORS
+    FfxFloat32x2 fDilatedMotionVector = LoadInputMotionVector(iSamplePos); // Passthrough (copy)
+#else
+    FfxFloat32x2 fDilatedMotionVector = LoadInputMotionVector(iMotionVectorPos); // Adjusted sample position
+#endif
 
     StoreDilatedDepth(iPxLrPos, fDilatedDepth);
     StoreDilatedMotionVectors(iPxLrPos, fDilatedMotionVector);

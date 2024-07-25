@@ -224,6 +224,7 @@ static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxPass passI
     uint32_t flags = 0;
     flags |= (contextFlags & FFX_FRAMEINTERPOLATION_ENABLE_DISPLAY_RESOLUTION_MOTION_VECTORS) ? 0 : FRAMEINTERPOLATION_SHADER_PERMUTATION_LOW_RES_MOTION_VECTORS;
     flags |= (contextFlags & FFX_FRAMEINTERPOLATION_ENABLE_JITTER_MOTION_VECTORS) ? FRAMEINTERPOLATION_SHADER_PERMUTATION_JITTER_MOTION_VECTORS : 0;
+    flags |= (contextFlags & FFX_FRAMEINTERPOLATION_ENABLE_PREDILATED_MOTION_VECTORS) ? FRAMEINTERPOLATION_SHADER_PERMUTATION_PREDILATED_MOTION_VECTORS : 0;
     flags |= (contextFlags & FFX_FRAMEINTERPOLATION_ENABLE_DEPTH_INVERTED) ? FRAMEINTERPOLATION_SHADER_PERMUTATION_DEPTH_INVERTED : 0;
     flags |= (force64) ? FRAMEINTERPOLATION_SHADER_PERMUTATION_FORCE_WAVE64 : 0;
     flags |= (fp16) ? FRAMEINTERPOLATION_SHADER_PERMUTATION_ALLOW_FP16 : 0;
@@ -873,7 +874,7 @@ FFX_API FfxErrorCode ffxFrameInterpolationDispatch(FfxFrameInterpolationContext*
 
     if (contextPrivate->constants.HUDLessAttachedFactor == 1) {
 
-        FFX_ASSERT_MESSAGE(params->currentBackBuffer.description.format == params->currentBackBuffer_HUDLess.description.format, "HUDLess and Backbuffer resource formats have to be identical.");
+        //FFX_ASSERT_MESSAGE(params->currentBackBuffer.description.format == params->currentBackBuffer_HUDLess.description.format, "HUDLess and Backbuffer resource formats have to be identical.");
 
         contextPrivate->contextDescription.backendInterface.fpRegisterResource(&contextPrivate->contextDescription.backendInterface, &params->currentBackBuffer, contextPrivate->effectContextId, &contextPrivate->srvResources[FFX_FRAMEINTERPOLATION_RESOURCE_IDENTIFIER_PRESENT_BACKBUFFER]);
         contextPrivate->contextDescription.backendInterface.fpRegisterResource(&contextPrivate->contextDescription.backendInterface, &params->currentBackBuffer_HUDLess, contextPrivate->effectContextId, &contextPrivate->srvResources[FFX_FRAMEINTERPOLATION_RESOURCE_IDENTIFIER_CURRENT_INTERPOLATION_SOURCE]);

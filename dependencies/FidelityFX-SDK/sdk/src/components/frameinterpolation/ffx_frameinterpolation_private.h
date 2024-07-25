@@ -39,6 +39,7 @@ typedef enum FrameInterpolationShaderPermutationOptions
     FRAMEINTERPOLATION_SHADER_PERMUTATION_DEPTH_INVERTED         = (1 << 2),  ///< Indicates input resources were generated with inverted depth
     FRAMEINTERPOLATION_SHADER_PERMUTATION_FORCE_WAVE64           = (1 << 3),  ///< doesn't map to a define, selects different table
     FRAMEINTERPOLATION_SHADER_PERMUTATION_ALLOW_FP16             = (1 << 4),  ///< Enables fast math computations where possible
+    FRAMEINTERPOLATION_SHADER_PERMUTATION_PREDILATED_MOTION_VECTORS = (1 << 5),
 } FrameInterpolationShaderPermutationOptions;
 
 typedef struct FrameInterpolationConstants

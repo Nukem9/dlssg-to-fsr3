@@ -107,6 +107,7 @@ typedef enum FfxFrameInterpolationInitializationFlagBits {
     FFX_FRAMEINTERPOLATION_ENABLE_DISPLAY_RESOLUTION_MOTION_VECTORS = (1<<4), ///< A bit indicating if the motion vectors are rendered at display resolution.
     FFX_FRAMEINTERPOLATION_ENABLE_JITTER_MOTION_VECTORS             = (1<<5),
     FFX_FRAMEINTERPOLATION_ENABLE_ASYNC_SUPPORT                     = (1<<6),
+    FFX_FRAMEINTERPOLATION_ENABLE_PREDILATED_MOTION_VECTORS         = (1<<7),
 } FfxFrameInterpolationInitializationFlagBits;
 
 /// A structure encapsulating the parameters required to initialize
