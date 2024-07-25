@@ -1,11 +1,15 @@
+#include <Windows.h>
 #include "NvNGX.h"
 #include "FFFrameInterpolatorVK.h"
+
+typedef LONG NTSTATUS;
+#include <d3dkmthk.h>
 
 static std::shared_mutex FeatureInstanceHandleLock;
 static std::unordered_map<uint32_t, std::shared_ptr<FFFrameInterpolatorVK>> FeatureInstanceHandles;
 
-VkDevice g_LogicalDevice = VK_NULL_HANDLE;
-VkPhysicalDevice g_PhysicalDevice = VK_NULL_HANDLE;
+static VkDevice g_LogicalDevice = VK_NULL_HANDLE;
+static VkPhysicalDevice g_PhysicalDevice = VK_NULL_HANDLE;
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature1(
 	VkDevice LogicalDevice,
@@ -143,45 +147,6 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_GetScratchBufferSize(void *Unknown1, voi
 	return NGX_SUCCESS;
 }
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init(
-	void *Unknown1,
-	void *Unknown2,
-	VkInstance VulkanInstance,
-	VkPhysicalDevice PhysicalDevice,
-	VkDevice LogicalDevice,
-	uint32_t Unknown3)
-{
-	spdlog::info(__FUNCTION__);
-
-	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
-		return NGX_INVALID_PARAMETER;
-
-	g_LogicalDevice = LogicalDevice;
-	g_PhysicalDevice = PhysicalDevice;
-
-	return NGX_SUCCESS;
-}
-
-NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext(
-	void *Unknown1,
-	void *Unknown2,
-	VkInstance VulkanInstance,
-	VkPhysicalDevice PhysicalDevice,
-	VkDevice LogicalDevice,
-	uint32_t Unknown3,
-	void *Unknown4)
-{
-	spdlog::info(__FUNCTION__);
-
-	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
-		return NGX_INVALID_PARAMETER;
-
-	g_LogicalDevice = LogicalDevice;
-	g_PhysicalDevice = PhysicalDevice;
-
-	return NGX_SUCCESS;
-}
-
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 	void *Unknown1,
 	void *Unknown2,
@@ -200,7 +165,87 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 	g_LogicalDevice = LogicalDevice;
 	g_PhysicalDevice = PhysicalDevice;
 
+	auto isHAGSEnabled = [&]()
+	{
+		VkPhysicalDeviceIDProperties idProperties = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES,
+		};
+
+		VkPhysicalDeviceProperties2 properties = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+			.pNext = &idProperties,
+		};
+
+		vkGetPhysicalDeviceProperties2(PhysicalDevice, &properties);
+
+		if (!idProperties.deviceLUIDValid)
+			return false;
+
+		D3DKMT_OPENADAPTERFROMLUID openAdapter = {};
+		memcpy(&openAdapter.AdapterLuid, &idProperties.deviceLUID, sizeof(openAdapter.AdapterLuid));
+
+		if (D3DKMTOpenAdapterFromLuid(&openAdapter) == 0)
+		{
+			D3DKMT_WDDM_2_7_CAPS caps = {};
+			D3DKMT_QUERYADAPTERINFO info = {
+				.hAdapter = openAdapter.hAdapter,
+				.Type = KMTQAITYPE_WDDM_2_7_CAPS,
+				.pPrivateDriverData = &caps,
+				.PrivateDriverDataSize = sizeof(caps),
+			};
+
+			D3DKMTQueryAdapterInfo(&info);
+
+			D3DKMT_CLOSEADAPTER closeAdapter = {
+				.hAdapter = openAdapter.hAdapter,
+			};
+
+			D3DKMTCloseAdapter(&closeAdapter);
+			return caps.HwSchEnabled != 0;
+		}
+
+		return false;
+	};
+
+	if (isHAGSEnabled())
+		spdlog::info("Hardware accelerated GPU scheduling is enabled on this adapter.");
+	else
+		spdlog::warn("Hardware accelerated GPU scheduling is disabled on this adapter.");
+
 	return NGX_SUCCESS;
+}
+
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext(
+	void *Unknown1,
+	void *Unknown2,
+	VkInstance VulkanInstance,
+	VkPhysicalDevice PhysicalDevice,
+	VkDevice LogicalDevice,
+	uint32_t Unknown3,
+	void *Unknown4)
+{
+	spdlog::info(__FUNCTION__);
+
+	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
+		return NGX_INVALID_PARAMETER;
+
+	return NVSDK_NGX_VULKAN_Init_Ext2(Unknown1, Unknown2, VulkanInstance, PhysicalDevice, LogicalDevice, nullptr, 0, nullptr);
+}
+
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init(
+	void *Unknown1,
+	void *Unknown2,
+	VkInstance VulkanInstance,
+	VkPhysicalDevice PhysicalDevice,
+	VkDevice LogicalDevice,
+	uint32_t Unknown3)
+{
+	spdlog::info(__FUNCTION__);
+
+	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice)
+		return NGX_INVALID_PARAMETER;
+
+	return NVSDK_NGX_VULKAN_Init_Ext(Unknown1, Unknown2, VulkanInstance, PhysicalDevice, LogicalDevice, Unknown3, nullptr);
 }
 
 static NGXResult GetCurrentSettingsCallback(NGXHandle *InstanceHandle, NGXInstanceParameters *Parameters)

@@ -39,29 +39,6 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_GetScratchBufferSize(void *Unknown1, voi
 	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_GetScratchBufferSize)(Unknown1, Unknown2, OutBufferSize);
 }
 
-NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init(
-	void *Unknown1,
-	void *Unknown2,
-	VkInstance VulkanInstance,
-	VkPhysicalDevice PhysicalDevice,
-	VkDevice LogicalDevice,
-	uint32_t Unknown3)
-{
-	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_Init)(Unknown1, Unknown2, VulkanInstance, PhysicalDevice, LogicalDevice, Unknown3);
-}
-
-NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext(
-	void *Unknown1,
-	void *Unknown2,
-	VkInstance VulkanInstance,
-	VkPhysicalDevice PhysicalDevice,
-	VkDevice LogicalDevice,
-	uint32_t Unknown3,
-	void *Unknown4)
-{
-	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_Init_Ext)(Unknown1, Unknown2, VulkanInstance, PhysicalDevice, LogicalDevice, Unknown3, Unknown4);
-}
-
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 	void *Unknown1,
 	void *Unknown2,
@@ -81,6 +58,29 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 		Unknown3,
 		Unknown4,
 		Parameters);
+}
+
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext(
+	void *Unknown1,
+	void *Unknown2,
+	VkInstance VulkanInstance,
+	VkPhysicalDevice PhysicalDevice,
+	VkDevice LogicalDevice,
+	uint32_t Unknown3,
+	void *Unknown4)
+{
+	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_Init_Ext)(Unknown1, Unknown2, VulkanInstance, PhysicalDevice, LogicalDevice, Unknown3, Unknown4);
+}
+
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init(
+	void *Unknown1,
+	void *Unknown2,
+	VkInstance VulkanInstance,
+	VkPhysicalDevice PhysicalDevice,
+	VkDevice LogicalDevice,
+	uint32_t Unknown3)
+{
+	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_Init)(Unknown1, Unknown2, VulkanInstance, PhysicalDevice, LogicalDevice, Unknown3);
 }
 
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_PopulateParameters_Impl(NGXInstanceParameters *Parameters)

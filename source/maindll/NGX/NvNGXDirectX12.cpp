@@ -138,7 +138,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *Unknown1, const wchar_t *P
 	if (!D3DDevice)
 		return NGX_INVALID_PARAMETER;
 
-	const bool isHAGSEnabled = [&]()
+	auto isHAGSEnabled = [&]()
 	{
 		D3DKMT_OPENADAPTERFROMLUID openAdapter = {
 			.AdapterLuid = D3DDevice->GetAdapterLuid(),
@@ -165,12 +165,13 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *Unknown1, const wchar_t *P
 		}
 
 		return false;
-	}();
+	};
 
-	spdlog::info("Hardware accelerated GPU scheduling is {} on this adapter.", isHAGSEnabled ? "enabled" : "disabled");
+	if (isHAGSEnabled())
+		spdlog::info("Hardware accelerated GPU scheduling is enabled on this adapter.");
+	else
+		spdlog::warn("Hardware accelerated GPU scheduling is disabled on this adapter.");
 
-	// DLSS-G creates the base cudabin instance but does nothing with the parameters other than
-	// setting up logging
 	return NGX_SUCCESS;
 }
 
