@@ -1,4 +1,0 @@
-[submodule "dependencies/FidelityFX-SDK"]
-	path = dependencies/FidelityFX-SDK
-	url = https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK.git
-	branch = release-FSR3-3.0.3
