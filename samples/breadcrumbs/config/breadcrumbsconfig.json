@@ -1,0 +1,8 @@
+{
+    "FidelityFX Breadcrumbs": {
+        "RenderModules": [
+            "BreadcrumbsRenderModule",
+            "ToneMappingRenderModule"
+        ]
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "FidelityFX VRS": {
+
+        "MotionVectorGeneration": "VRSRenderModule",
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "VRSRenderModule",
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "TranslucencyRenderModule",
+            "TAARenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "RenderModuleOverrides": {
+            "GBufferRenderModule": {
+                "VariableShading": true
+            },
+            "TranslucencyRenderModule": {
+                "VariableShading": true
+            }
+        },
+
+        "FeatureSupport": {
+            "VRSTier1": true
+        },
+
+        "Content": {
+            "Scenes": [
+                "../media/Hangar/Hangar_1105.gltf"
+            ],
+            "Camera": "Hangar_Camera_000",
+            "DiffuseIBL": "../media/IBL/sunflowers_puresky_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/sunflowers_puresky_Specular.dds",
+            "SceneExposure": 1.355
+        }
+    }
+}

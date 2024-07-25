@@ -1,0 +1,50 @@
+{
+    "FidelityFX Hybrid Reflections": {
+        "MotionVectorGeneration": "GBufferRenderModule",
+        "FeatureSupport": {
+            "RT1.1": true,
+            "ShaderModel": "SM6_5"
+        },
+        "BuildRayTracingAccelerationStructure": true,
+        "Allocations": {
+            "GPUResourceViewCount": 600000,
+            "GPUSamplerViewCount": 2000
+        },
+        "RenderResources": {
+            "HybridReflectionOutput": {
+                "Format": "RGBA16_FLOAT",
+                "AllowUAV": false,
+                "RenderResolution": true
+            }
+        },
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "HybridReflectionsRenderModule",
+            "TranslucencyRenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "RenderModuleOverrides": {
+            "SkyDomeRenderModule": {
+                "Procedural": true,
+                "Hour": 5,
+                "Minute": 0
+            },
+            "RasterShadowRenderModule": {
+                "NumCascades": 3
+            }
+        },
+
+        "Content": {
+            "Scenes": [
+                "../media/HybridReflections/scene.gltf"
+            ],
+            "Camera": "Camera",
+            "SceneExposure": 2.0
+        }
+    }
+}

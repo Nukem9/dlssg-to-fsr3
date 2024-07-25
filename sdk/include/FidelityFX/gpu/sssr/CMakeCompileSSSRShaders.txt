@@ -1,0 +1,49 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(SSSR_BASE_ARGS
+    -reflection -deps=gcc -DFFX_GPU=1)
+
+set(SSSR_PERMUTATION_ARGS
+    -DFFX_SSSR_OPTION_INVERTED_DEPTH={0,1})
+
+set(SSSR_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/sssr")
+
+if (NOT SSSR_SHADER_EXT)
+    set(SSSR_SHADER_EXT *)
+endif()
+
+file(GLOB SSSR_SHADERS
+    "shaders/sssr/ffx_sssr_classify_tiles_pass.${SSSR_SHADER_EXT}"
+    "shaders/sssr/ffx_sssr_depth_downsample_pass.${SSSR_SHADER_EXT}"
+    "shaders/sssr/ffx_sssr_intersect_pass.${SSSR_SHADER_EXT}"
+    "shaders/sssr/ffx_sssr_prepare_blue_noise_texture_pass.${SSSR_SHADER_EXT}"
+    "shaders/sssr/ffx_sssr_prepare_indirect_args_pass.${SSSR_SHADER_EXT}")
+
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${SSSR_BASE_ARGS}" "${SSSR_API_BASE_ARGS}" "${SSSR_PERMUTATION_ARGS}" "${SSSR_INCLUDE_ARGS}"
+    "${SSSR_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" SSSR_PERMUTATION_OUTPUTS)
+
+add_shader_output("${SSSR_PERMUTATION_OUTPUTS}")

@@ -1,0 +1,77 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(CACAO_BASE_ARGS
+    -reflection -deps=gcc -DFFX_GPU=1)
+
+set(CACAO_PERMUTATION_ARGS
+    -DFFX_CACAO_OPTION_APPLY_SMART={0,1}
+)
+
+set(CACAO_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/cacao")
+
+if (NOT CACAO_SHADER_EXT)
+    set(CACAO_SHADER_EXT *)
+endif()
+
+file(GLOB CACAO_SHADERS
+    "shaders/cacao/ffx_cacao_apply_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_apply_non_smart_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_apply_non_smart_half_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_clear_load_counter_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_1_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_2_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_3_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_4_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_5_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_6_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_7_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_edge_sensitive_blur_8_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_importance_map_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_importance_map_a_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_importance_map_b_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_q0_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_q1_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_q2_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_q3_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_generate_q3_base_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_downsampled_depths_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_downsampled_depths_and_mips_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_downsampled_depths_half_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_downsampled_normals_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_downsampled_normals_from_input_normals_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_native_depths_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_native_depths_and_mips_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_native_depths_half_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_native_normals_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_prepare_native_normals_from_input_normals_pass.${CACAO_SHADER_EXT}"
+    "shaders/cacao/ffx_cacao_upscale_bilateral_5x5_pass.${CACAO_SHADER_EXT}")
+
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${CACAO_BASE_ARGS}" "${CACAO_API_BASE_ARGS}"
+    "${CACAO_PERMUTATION_ARGS}" "${CACAO_INCLUDE_ARGS}"
+    "${CACAO_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" CACAO_PERMUTATION_OUTPUTS)
+
+add_shader_output("${CACAO_PERMUTATION_OUTPUTS}")

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="212.72499mm"
+   height="112.44791mm"
+   viewBox="0 0 212.72499 112.44791"
+   version="1.1"
+   id="svg157"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs154">
+    <clipPath
+       id="clip0">
+      <rect
+         x="291"
+         y="116"
+         width="804"
+         height="425"
+         id="rect161" />
+    </clipPath>
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(94.795491,-94.827588)">
+    <g
+       clip-path="url(#clip0)"
+       transform="matrix(0.26458333,0,0,0.26458333,-171.78924,64.135922)"
+       id="g208">
+      <rect
+         x="584"
+         y="117"
+         width="221"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect166" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(648.646,175)"
+         id="text168">Application</text>
+      <rect
+         x="584"
+         y="271"
+         width="221"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         id="rect170" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(655.141,305)"
+         id="text176">FidelityFX <tspan
+   font-size="20px"
+   x="-44.619999"
+   y="24"
+   id="tspan172">Super Resolution 2</tspan><tspan
+   font-size="20px"
+   x="26"
+   y="48"
+   id="tspan174">API</tspan></text>
+      <path
+         d="m 698,220 v 36.266 h -6 V 220 Z m 6,33.266 -9,18 -9,-18 z"
+         id="path178" />
+      <rect
+         x="292"
+         y="437"
+         width="223"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         id="rect180" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(364.453,471)"
+         id="text186">FidelityFX <tspan
+   font-size="20px"
+   x="-29.629999"
+   y="24"
+   id="tspan182">Super Resolution</tspan><tspan
+   font-size="20px"
+   x="-42.5"
+   y="48"
+   id="tspan184">DirectX®12 Backend</tspan></text>
+      <rect
+         x="582"
+         y="437"
+         width="223"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         id="rect188" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(653.951,471)"
+         id="text194">FidelityFX <tspan
+   font-size="20px"
+   x="-29.629999"
+   y="24"
+   id="tspan190">Super Resolution</tspan><tspan
+   font-size="20px"
+   x="-30.129999"
+   y="48"
+   id="tspan192">Vulkan® Backend</tspan></text>
+      <rect
+         x="871"
+         y="437"
+         width="223"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect196" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(910.689,483)"
+         id="text200">Application’s own <tspan
+   font-size="20px"
+   x="37.869999"
+   y="24"
+   id="tspan198">backend</tspan></text>
+      <path
+         d="m 697.693,374 v 34.293 H 404 l 3,-3 v 16.293 h -6 v -19.293 h 293.693 l -3,3 V 374 Z M 413,418.586 l -9,18 -9,-18 z"
+         id="path202" />
+      <path
+         d="m 0,-3 h 34.2932 v 291.293 l -3,-3 h 16.2929 v 6 H 28.2932 V 0 l 3,3 H 0 Z m 44.5861,282.293 18,9 -18,9 z"
+         transform="matrix(0,1,1,0,695,374)"
+         id="path204" />
+      <path
+         d="M 2.99945,-0.0575102 3.9119,47.5314 -2.087,47.6464 -2.99945,0.0575102 Z M 9.85328,44.4169 1.2,62.5861 -8.14341,44.762 Z"
+         transform="matrix(-1,0,0,1,694.2,374)"
+         id="path206" />
+    </g>
+  </g>
+</svg>

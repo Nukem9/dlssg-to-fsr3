@@ -1,0 +1,14 @@
+{
+    "FidelityFX LPM": {
+
+        "AGSEnabled": true,
+
+        "RenderModules": [
+            "LPMRenderModule"
+        ],
+
+        "Content": {
+            "SceneExposure": 10.0
+        }
+    }
+}

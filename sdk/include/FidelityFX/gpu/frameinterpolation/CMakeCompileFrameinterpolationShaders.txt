@@ -1,0 +1,55 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(FRAMEINTERPOLATION_BASE_ARGS
+    -DFFX_FRAMEINTERPOLATION_OPTION_UPSAMPLE_SAMPLERS_USE_DATA_HALF=0
+    -DFFX_FRAMEINTERPOLATION_OPTION_ACCUMULATE_SAMPLERS_USE_DATA_HALF=0
+    -DFFX_FRAMEINTERPOLATION_OPTION_REPROJECT_SAMPLERS_USE_DATA_HALF=1
+    -DFFX_FRAMEINTERPOLATION_OPTION_POSTPROCESSLOCKSTATUS_SAMPLERS_USE_DATA_HALF=0
+    # Upsample uses lanczos approximation
+    -DFFX_FRAMEINTERPOLATION_OPTION_UPSAMPLE_USE_LANCZOS_TYPE=2
+    -reflection -deps=gcc -DFFX_GPU=1)
+
+set(FRAMEINTERPOLATION_PERMUTATION_ARGS
+    -DFFX_FRAMEINTERPOLATION_OPTION_LOW_RES_MOTION_VECTORS={0,1}
+    -DFFX_FRAMEINTERPOLATION_OPTION_JITTER_MOTION_VECTORS={0,1}
+    -DFFX_FRAMEINTERPOLATION_OPTION_INVERTED_DEPTH={0,1})
+	
+set(FRAMEINTERPOLATION_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/frameinterpolation")
+
+if (NOT FRAMEINTERPOLATION_SHADER_EXT)
+    set(FRAMEINTERPOLATION_SHADER_EXT *)
+endif()
+
+file(GLOB FRAMEINTERPOLATION_SHADERS
+    "shaders/frameinterpolation/*.${FRAMEINTERPOLATION_SHADER_EXT}")
+
+# compile all the shaders	
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${FRAMEINTERPOLATION_BASE_ARGS}" "${FRAMEINTERPOLATION_API_BASE_ARGS}" "${FRAMEINTERPOLATION_PERMUTATION_ARGS}" "${FRAMEINTERPOLATION_INCLUDE_ARGS}"
+    "${FRAMEINTERPOLATION_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" FRAMEINTERPOLATION_PERMUTATION_OUTPUTS)
+
+# add the header files they generate to the main list of dependencies
+add_shader_output("${FRAMEINTERPOLATION_PERMUTATION_OUTPUTS}")

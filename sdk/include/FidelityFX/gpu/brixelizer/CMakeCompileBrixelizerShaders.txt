@@ -1,0 +1,74 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(BRIXELIZER_BASE_ARGS
+	-reflection -deps=gcc -DFFX_GPU=1)
+
+set(BRIXELIZER_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/brixelizer")
+
+if (NOT BRIXELIZER_SHADER_EXT)
+	set(BRIXELIZER_SHADER_EXT *)
+endif()
+
+file(GLOB BRIXELIZER_SHADERS
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_build_tree_aabb_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_clear_brick_storage_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_clear_build_counters_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_clear_job_counter_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_clear_ref_counters_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_coarse_culling_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_compact_references_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_compress_brick_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_emit_sdf_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_free_cascade_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_initialize_cascade_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_invalidate_job_areas_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_mark_cascade_uninitialized_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_reset_cascade_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_scan_jobs_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_scan_references_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_scroll_cascade_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_cascade_ops_voxelize_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_clear_brick_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_clear_counters_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_collect_clear_bricks_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_collect_dirty_bricks_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_eikonal_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_merge_bricks_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_merge_cascades_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_prepare_clear_bricks_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_prepare_eikonal_args_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_context_ops_prepare_merge_bricks_args_pass.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_debug_draw_aabb_tree.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_debug_draw_instance_aabbs.${BRIXELIZER_SHADER_EXT}"
+	"shaders/brixelizer/ffx_brixelizer_debug_visualization_pass.${BRIXELIZER_SHADER_EXT}")
+
+# compile all the shaders	
+compile_shaders_with_depfile(
+	"${FFX_SC_EXECUTABLE}"
+	"${BRIXELIZER_BASE_ARGS}" "${BRIXELIZER_API_BASE_ARGS}" "" "${BRIXELIZER_INCLUDE_ARGS}"
+	"${BRIXELIZER_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" BRIXELIZER_PERMUTATION_OUTPUTS)
+
+# add the header files they generate to the main list of dependencies
+add_shader_output("${BRIXELIZER_PERMUTATION_OUTPUTS}")

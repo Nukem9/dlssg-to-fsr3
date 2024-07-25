@@ -1,0 +1,46 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(VRS_BASE_ARGS
+    -reflection -deps=gcc -DFFX_GPU=1)
+
+set(VRS_PERMUTATION_ARGS
+	-DFFX_VRS_OPTION_ADDITIONALSHADINGRATES={0,1}
+	-DFFX_VARIABLESHADING_TILESIZE={8,16,32})
+
+set(VRS_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/vrs")
+
+if (NOT VRS_SHADER_EXT)
+    set(VRS_SHADER_EXT *)
+endif()
+
+file(GLOB VRS_SHADERS
+    "shaders/vrs/ffx_vrs_imagegen_pass.${VRS_SHADER_EXT}")
+
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${VRS_BASE_ARGS}" "${VRS_API_BASE_ARGS}" "${VRS_PERMUTATION_ARGS}" "${VRS_INCLUDE_ARGS}"
+    "${VRS_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" VRS_PERMUTATION_OUTPUTS)
+
+add_shader_output("${VRS_PERMUTATION_OUTPUTS}")

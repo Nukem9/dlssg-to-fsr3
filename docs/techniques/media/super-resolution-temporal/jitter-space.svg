@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="229.12453mm"
+   height="122.14461mm"
+   viewBox="0 0 229.12453 122.14461"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="jitter-space.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="2071.4539"
+     inkscape:cy="867.92759"
+     inkscape:window-width="3699"
+     inkscape:window-height="2126"
+     inkscape:window-x="130"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <clipPath
+       id="clip0">
+      <rect
+         x="232"
+         y="262"
+         width="931"
+         height="465"
+         id="rect9" />
+    </clipPath>
+    <clipPath
+       id="clip0-5">
+      <rect
+         x="232"
+         y="251"
+         width="897"
+         height="476"
+         id="rect132" />
+    </clipPath>
+    <clipPath
+       id="clip0-0">
+      <rect
+         x="232"
+         y="251"
+         width="897"
+         height="476"
+         id="rect313" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(442.89752,81.176205)">
+    <g
+       clip-path="url(#clip0-0)"
+       transform="matrix(0.26458333,0,0,0.26458333,-508.39182,-148.60245)"
+       id="g376">
+      <rect
+         x="301"
+         y="309"
+         width="304"
+         height="285"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         id="rect318" />
+      <path
+         d="M 454,310.491 V 592.85 h -1 V 310.491 Z m -7.932,11.747 7.432,-12.74 7.432,12.74 c 0.139,0.239 0.058,0.545 -0.18,0.684 -0.239,0.139 -0.545,0.058 -0.684,-0.18 l -7,-12 h 0.864 l -7,12 c -0.139,0.238 -0.445,0.319 -0.684,0.18 -0.238,-0.139 -0.319,-0.445 -0.18,-0.684 z m 14.864,258.865 -7.432,12.741 -7.432,-12.741 c -0.139,-0.238 -0.058,-0.545 0.18,-0.684 0.239,-0.139 0.545,-0.058 0.684,0.18 l 7,12 h -0.864 l 7,-12 c 0.139,-0.238 0.446,-0.319 0.684,-0.18 0.239,0.139 0.319,0.446 0.18,0.684 z"
+         id="path320" />
+      <path
+         d="M 0.984252,-0.499999 302.49,-0.499843 v 1 L 0.984252,0.500001 Z M 12.7381,7.4319 -0.00231745,0 12.7381,-7.43188 c 0.2385,-0.13914 0.5447,-0.05857 0.6838,0.17995 0.1391,0.23853 0.0586,0.54469 -0.18,0.68383 L 1.24194,0.43189 V -0.431889 L 13.2419,6.56812 c 0.2386,0.13914 0.3191,0.4453 0.18,0.68382 -0.1392,0.23853 -0.4453,0.3191 -0.6838,0.17996 z M 290.742,-7.43174 303.483,1.57377e-4 290.742,7.43204 c -0.238,0.13914 -0.544,0.05857 -0.683,-0.17995 -0.14,-0.23853 -0.059,-0.54469 0.18,-0.68383 l 12,-6.999993 v 0.863779 l -12,-7.000006 c -0.239,-0.13914 -0.32,-0.4453 -0.18,-0.68383 0.139,-0.23852 0.445,-0.31909 0.683,-0.17995 z"
+         transform="matrix(-1,0,0,1,604.98,452.5)"
+         id="path322" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(379.835,665)"
+         id="text332">Unit pixel offset*<tspan
+   font-size="21px"
+   x="56.375099"
+   y="-376"
+   id="tspan324">-</tspan>0.5<tspan
+   font-size="21px"
+   x="62.906799"
+   y="-40"
+   id="tspan326">0.5</tspan><tspan
+   font-size="21px"
+   x="233.916"
+   y="-206"
+   id="tspan328">0.5</tspan><tspan
+   font-size="21px"
+   x="-133.005"
+   y="-206"
+   id="tspan330">-</tspan>0.5</text>
+      <rect
+         x="779"
+         y="309"
+         width="304"
+         height="285"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         id="rect334" />
+      <path
+         d="M 0.500001,0.984252 0.500157,283.003 h -1 L -0.499999,0.984252 Z M -7.43188,12.7381 0,-0.00231745 7.4319,12.7381 c 0.13914,0.2385 0.05857,0.5446 -0.17996,0.6838 -0.23852,0.1391 -0.54468,0.0586 -0.68382,-0.18 L -0.431889,1.24194 H 0.43189 L -6.5681,13.2419 c -0.13914,0.2386 -0.4453,0.3191 -0.68383,0.18 -0.23852,-0.1391 -0.31909,-0.4453 -0.17995,-0.6838 z M 7.43204,271.255 1.57342e-4,283.996 -7.43174,271.255 c -0.13914,-0.238 -0.05857,-0.544 0.17995,-0.683 0.23853,-0.139 0.54469,-0.059 0.68383,0.18 l 7.000006,12 h -0.863779 l 6.999993,-12 c 0.13914,-0.239 0.4453,-0.319 0.68383,-0.18 0.23852,0.139 0.31909,0.445 0.17995,0.683 z"
+         transform="matrix(1,0,0,-1,931.5,594.494)"
+         id="path336" />
+      <path
+         d="m 780.498,451.002 301.492,0.477 v 1 l -301.493,-0.477 z m 11.728,7.95 -12.728,-7.452 12.752,-7.412 c 0.239,-0.138 0.545,-0.057 0.683,0.181 0.139,0.239 0.058,0.545 -0.181,0.684 l -12.011,6.981 0.002,-0.864 11.989,7.019 c 0.238,0.14 0.318,0.446 0.178,0.684 -0.139,0.238 -0.445,0.319 -0.684,0.179 z m 278.024,-14.424 12.73,7.452 -12.75,7.412 c -0.24,0.139 -0.54,0.058 -0.68,-0.181 -0.14,-0.239 -0.06,-0.545 0.18,-0.684 l 12.01,-6.981 v 0.864 l -11.99,-7.019 c -0.24,-0.139 -0.32,-0.446 -0.18,-0.684 0.14,-0.238 0.45,-0.318 0.68,-0.179 z"
+         id="path338" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(859.831,665)"
+         id="text352">Projection offset<tspan
+   font-size="14px"
+   x="-559.68903"
+   y="49"
+   id="tspan340">*</tspan><tspan
+   font-size="14px"
+   x="-549.43903"
+   y="49"
+   id="tspan342">-</tspan><tspan
+   font-size="14px"
+   x="-541.93903"
+   y="49"
+   id="tspan344">Y component is inverted to match UV space</tspan><tspan
+   font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+   font-size="21px"
+   x="-132.918"
+   y="-205"
+   id="tspan346">−</tspan><tspan
+   font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+   font-size="21px"
+   x="-111.488"
+   y="-220"
+   id="tspan348">1</tspan><tspan
+   font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+   font-size="21px"
+   x="-113.668"
+   y="-191"
+   id="tspan350">𝑤</tspan></text>
+      <path
+         d="m 746.604,453.415 h 8 8 v 1 h -8 -8 z"
+         fill-rule="evenodd"
+         id="path354" />
+      <text
+         font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(910.115,630)"
+         id="text360">−<tspan
+   font-size="21px"
+   x="19.43"
+   y="-15"
+   id="tspan356">1</tspan><tspan
+   font-size="21px"
+   x="19.25"
+   y="14"
+   id="tspan358">ℎ</tspan></text>
+      <path
+         d="m 929.795,623.439 h 6 6 v 1 h -6 -6 z"
+         fill-rule="evenodd"
+         id="path362" />
+      <text
+         font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(924.727,269)"
+         id="text366">1<tspan
+   font-size="21px"
+   x="-0.179993"
+   y="30"
+   id="tspan364">ℎ</tspan></text>
+      <path
+         d="m 924.607,277.953 h 6 6 v 1 h -6 -6 z"
+         fill-rule="evenodd"
+         id="path368" />
+      <text
+         font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+         font-weight="400"
+         font-size="21px"
+         transform="translate(1099.64,445)"
+         id="text372">1<tspan
+   font-size="21px"
+   x="-2.17993"
+   y="30"
+   id="tspan370">𝑤</tspan></text>
+      <path
+         d="m 1097.52,453.587 h 8 8 v 1 h -8 -8 z"
+         fill-rule="evenodd"
+         id="path374" />
+    </g>
+  </g>
+</svg>

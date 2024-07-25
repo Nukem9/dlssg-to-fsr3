@@ -1,0 +1,30 @@
+{
+    "GBufferRenderModule": {
+
+        "RenderResources": {
+            "MotionVectorTarget": {
+                "Format": "RG16_FLOAT"
+            },
+            "GBufferAlbedoTarget": {
+                "Format": "RGBA8_UNORM"
+            },
+            "GBufferNormalTarget": {
+                "Format": "RGBA16_FLOAT"
+            },
+            "GBufferAoRoughnessMetallicTarget": {
+                "Format": "RGBA8_UNORM",
+                "AllowUAV": true
+            },
+
+            "GBufferAlbedoRT": "GBufferAlbedoTarget",
+            "GBufferNormalRT": "GBufferNormalTarget",
+            "GBufferAoRoughnessMetallicRT": "GBufferAoRoughnessMetallicTarget",
+            "GBufferDepth": "DepthTarget",
+            "GBufferMotionVectorRT": "MotionVectorTarget"
+        },
+
+        "RenderModuleOptions": {
+            "VariableShading":  false
+        }
+    }
+}

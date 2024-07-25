@@ -1,0 +1,25 @@
+{
+    "FidelityFX CAS": {
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "TranslucencyRenderModule",
+            "TAARenderModule",
+            "ToneMappingRenderModule",
+            "CASRenderModule"
+        ],
+
+        "Content": {
+            "Scenes": [
+                "../media/SpaceShipPlatform/Ship.gltf"
+            ],
+            "Camera": "Camera_003",
+            "DiffuseIBL": "../media/IBL/mud_road_puresky_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/mud_road_puresky_Specular.dds",
+            "SceneExposure": 2.0
+        }
+    }
+}

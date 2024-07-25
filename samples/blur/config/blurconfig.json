@@ -1,0 +1,25 @@
+{
+    "FidelityFX Blur": {
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "TranslucencyRenderModule",
+            "BlurRenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "Content": {
+            "Scenes": [
+                "../media/Locomotive/Locomotive.gltf"
+            ],
+            "Camera": "Camera_4",
+            "DiffuseIBL": "../media/IBL/hansaplatz_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/hansaplatz_Specular.dds",
+            "SkyMap": "../media/IBL/hansaplatz_Specular.dds",
+            "SceneExposure": 0.85
+        }
+    }
+}

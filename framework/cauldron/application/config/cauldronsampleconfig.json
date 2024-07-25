@@ -1,0 +1,30 @@
+{
+    "CauldronSample": {
+
+        "Validation": {
+            "CpuValidationLayerEnabled": true
+        },
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "TranslucencyRenderModule",
+            "TAARenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "RenderModuleOverrides": {
+            "GBufferRenderModule": {
+                "ZPrepass" : false
+            }
+        },
+
+
+        "DebugOptions": {
+            "DevelopmentMode": true,
+            "DebugShaders": true
+        }
+    }
+}

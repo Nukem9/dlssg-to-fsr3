@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="161.14555mm"
+   height="118.31009mm"
+   viewBox="0 0 161.14555 118.31009"
+   version="1.1"
+   id="svg772"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="disocclusion.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview774"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="1031.2266"
+     inkscape:cy="322.74048"
+     inkscape:window-width="3699"
+     inkscape:window-height="2126"
+     inkscape:window-x="130"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs769">
+    <clipPath
+       id="clip0">
+      <rect
+         x="240"
+         y="194"
+         width="629"
+         height="454"
+         id="rect776" />
+    </clipPath>
+    <image
+       width="64"
+       height="64"
+       xlink:href="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAkACQAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCABAAEADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD8qq/qoor+VegAr+qiiv5V6ACv6qKK/lXoAK/qoor+VegAr+qiiv5V6ACv6qKK/lXoAK/qooooA/lXr+qiiv5V6ACv6qKK/lXoAK/qoor+VegAr+qiiv5V6ACv6qKK/lXoAK/qooooA/lXr+qiiv5V6ACv6qKK/lXoAK/qoor+VegD/9k="
+       preserveAspectRatio="none"
+       id="img1" />
+    <pattern
+       width="64"
+       height="64"
+       patternUnits="userSpaceOnUse"
+       id="pattern2"
+       overflow="hidden"
+       patternTransform="matrix(0.1875 9.31323e-10 -9.31323e-10 0.1875 600 360)">
+      <use
+         width="100%"
+         height="100%"
+         xlink:href="#img1"
+         id="use780" />
+    </pattern>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(167.66556,-62.978976)">
+    <g
+       clip-path="url(#clip0)"
+       transform="matrix(0.26458333,0,0,0.26458333,-231.41076,11.64981)"
+       id="g817">
+      <path
+         d="M 775,195 509.313,529 h -0.626 L 243,195 Z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         fill-rule="evenodd"
+         fill-opacity="0.321569"
+         id="path785" />
+      <path
+         d="M 845,195 579.764,529 h -2.528 L 312,195 Z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#f2f2f2"
+         fill-rule="evenodd"
+         fill-opacity="0.321569"
+         id="path787" />
+      <path
+         d="M 613.761,196.079 530.057,529.795 508.651,529.789 423.616,195.567 Z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#0d0d0d"
+         fill-rule="evenodd"
+         fill-opacity="0.25098"
+         id="path789" />
+      <path
+         d="m 548.253,196.058 48.14,333.75 -26.424,-0.008 -224.12,-334.049 z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#0d0d0d"
+         fill-rule="evenodd"
+         fill-opacity="0.25098"
+         id="path791" />
+      <path
+         d="M 613.853,195.785 571.389,359.67 549.14,196.23 Z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="url(#pattern2)"
+         fill-rule="evenodd"
+         id="path793" />
+      <path
+         d="m 467.401,359.12 c -0.535,-30.66 22.029,-55.916 50.398,-56.411 28.369,-0.495 51.801,23.958 52.336,54.618 0.535,30.66 -22.029,55.916 -50.398,56.411 -28.369,0.495 -51.801,-23.958 -52.336,-54.618 z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#404040"
+         fill-rule="evenodd"
+         id="path795" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(760.019,555)"
+         id="text797">Near plane</text>
+      <path
+         d="m 532,546 -20,23 -20,-23 z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill-rule="evenodd"
+         id="path799" />
+      <rect
+         x="492"
+         y="560"
+         width="40"
+         height="49"
+         id="rect801" />
+      <path
+         d="M 599,546 579.5,569 560,546 Z"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill-rule="evenodd"
+         id="path803" />
+      <rect
+         x="560"
+         y="560"
+         width="39"
+         height="49"
+         id="rect805" />
+      <path
+         d="m 269,528 580.96,4.393"
+         stroke="#000000"
+         stroke-width="5.5"
+         stroke-miterlimit="8"
+         fill="none"
+         fill-rule="evenodd"
+         id="path807" />
+      <text
+         font-family="'Cambria Math', 'Cambria Math_MSFontService', sans-serif"
+         font-weight="400"
+         font-size="28px"
+         transform="translate(505.891,635)"
+         id="text815">𝐏<tspan
+   font-size="20px"
+   x="15.45"
+   y="6"
+   id="tspan809">0</tspan><tspan
+   font-size="28px"
+   x="68.396202"
+   y="0"
+   id="tspan811">𝐏</tspan><tspan
+   font-size="20px"
+   x="83.196198"
+   y="5"
+   id="tspan813">1</tspan></text>
+    </g>
+  </g>
+</svg>

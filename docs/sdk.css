@@ -1,0 +1,25 @@
+@media (min-width: 768px) {
+    #user-created-resources + table tr td:nth-child(5) .codesnippet {
+        word-wrap: anywhere;
+    }
+    
+    #user-created-resources + table tr td:nth-child(5) {
+        min-width:100%;
+    }
+    
+    #internal-frame-persistent-resources + p + table tr td:nth-child(1) .codesnippet {
+        word-wrap: anywhere;
+    }
+
+    #internal-frame-persistent-resources + p + table tr td:nth-child(1) {
+        min-width: 20%;
+    }
+    
+    section#shader-passes tr td:nth-child(1) .codesnippet {
+        word-wrap: anywhere;   
+    }
+    
+    div#shader-passes tr td:nth-child(1) {
+        min-width: 20%
+    }
+}

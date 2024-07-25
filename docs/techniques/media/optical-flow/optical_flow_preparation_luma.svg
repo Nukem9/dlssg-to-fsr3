@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="80mm"
+   viewBox="0 0 210 80"
+   version="1.1"
+   id="svg254"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="optical_flow_preparation.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview256"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.74564394"
+     inkscape:cx="396.97231"
+     inkscape:cy="272.2479"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs251" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       transform="matrix(0.1949254,0,0,0.1949254,-34.003418,-53.160612)"
+       id="g314">
+      <path
+         d="m 600.5,545 c 0,-9.665 7.835,-17.5 17.5,-17.5 h 181 c 9.665,0 17.5,7.835 17.5,17.5 v 70 c 0,9.665 -7.835,17.5 -17.5,17.5 H 618 c -9.665,0 -17.5,-7.835 -17.5,-17.5 z"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#deebf7"
+         fill-rule="evenodd"
+         id="path258" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(655.211,572)"
+         id="text260">Luminance</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(654.711,601)"
+         id="text262">Computing</text>
+      <rect
+         x="894.5"
+         y="483.5"
+         width="345"
+         height="192"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect264" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(979.29,587)"
+         id="text266">Luminance Level0</text>
+      <path
+         d="m 529.5,579.167 h 64.449 v 0.666 H 529.5 Z m 63.116,-3.667 8,4 -8,4 z"
+         id="path268" />
+      <path
+         d="m 816.5,579.167 h 70.548 v 0.666 H 816.5 Z m 69.214,-3.667 8,4 -8,4 z"
+         id="path270" />
+      <path
+         d="m 711.5,343.167 c 0,-9.757 7.91,-17.667 17.667,-17.667 h 158.666 c 9.757,0 17.667,7.91 17.667,17.667 v 70.666 c 0,9.757 -7.91,17.667 -17.667,17.667 H 729.167 c -9.757,0 -17.667,-7.91 -17.667,-17.667 z"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#deebf7"
+         fill-rule="evenodd"
+         id="path272" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(755.326,371)"
+         id="text274">Single Pass</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(740.199,400)"
+         id="text276">Downsampler</text>
+      <rect
+         x="184.5"
+         y="483.5"
+         width="345"
+         height="192"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect278" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(330.574,587)"
+         id="text280">Color</text>
+      <path
+         d="m 893.788,580.283 -82.25,-142.839 0.578,-0.333 82.25,142.84 z M 809.026,440.429 808.5,431.5 l 7.458,4.937 z"
+         id="path282" />
+      <path
+         d="M 0.0414371,-0.330748 111.287,13.6064 111.204,14.2679 -0.0414371,0.330748 Z M 110.419,9.80241 l 7.441,4.96349 -8.435,2.9745 z"
+         transform="matrix(1,0,0,-1,905.5,378.266)"
+         id="path284" />
+      <path
+         d="M 0.17559,-0.283336 145.969,90.0679 145.618,90.6346 -0.17559,0.283336 Z M 146.767,86.2489 l 4.693,7.6142 -8.907,-0.8141 z"
+         transform="matrix(1,0,0,-1,905.5,378.363)"
+         id="path286" />
+      <path
+         d="M 0.11402,-0.313226 133.31,48.1723 133.082,48.7987 -0.11402,0.313226 Z M 133.311,44.2707 l 6.149,6.4952 -8.886,1.0222 z"
+         transform="matrix(1,0,0,-1,905.5,378.266)"
+         id="path288" />
+      <path
+         d="m 905.71,378.241 65.569,53.041 -0.419,0.518 -65.57,-53.041 z m 66.838,49.352 3.705,8.141 -8.736,-1.921 z"
+         id="path290" />
+      <rect
+         x="976.5"
+         y="387.5"
+         width="173"
+         height="96"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect292" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(1009.29,428)"
+         id="text294">Luminance</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="24px"
+         transform="translate(1031.38,457)"
+         id="text296">Level1</text>
+      <rect
+         x="1023.5"
+         y="339.5"
+         width="86.999901"
+         height="48"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect298" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="15px"
+         transform="translate(1034.11,360)"
+         id="text300">Luminance</text>
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="15px"
+         transform="translate(1047.28,377)"
+         id="text302">Level2</text>
+      <rect
+         x="1045.5"
+         y="315.5"
+         width="43"
+         height="24"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect304" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="8px"
+         transform="translate(1056.03,329)"
+         id="text306">Level3</text>
+      <rect
+         x="1057.5"
+         y="279.5"
+         width="19"
+         height="10"
+         stroke="#172c51"
+         stroke-width="1.33333"
+         stroke-miterlimit="8"
+         fill="#e7e6e6"
+         id="rect308" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="11px"
+         transform="translate(1063.78,288)"
+         id="text310">6</text>
+      <path
+         d="M 0,0 1.04987e-4,15.4386"
+         stroke="#d0cece"
+         stroke-width="4"
+         stroke-miterlimit="8"
+         stroke-dasharray="4, 4"
+         fill="none"
+         fill-rule="evenodd"
+         transform="matrix(1,0,0,-1,1066,310.439)"
+         id="path312" />
+    </g>
+  </g>
+</svg>

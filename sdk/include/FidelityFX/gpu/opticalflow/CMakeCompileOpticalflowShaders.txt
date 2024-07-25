@@ -1,0 +1,55 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(OPTICALFLOW_BASE_ARGS
+    -reflection -deps=gcc -DFFX_GPU=1)
+
+set(OPTICALFLOW_PERMUTATION_ARGS
+	-DFFX_OPTICALFLOW_OPTION_HDR_COLOR_INPUT={0,1}
+	)
+
+set(OPTICALFLOW_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/opticalflow")
+
+if (NOT OPTICALFLOW_SHADER_EXT)
+    set(OPTICALFLOW_SHADER_EXT *)
+endif()
+
+file(GLOB OPTICALFLOW_SHADERS
+    "shaders/opticalflow/ffx_opticalflow_prepare_luma_pass.${OPTICALFLOW_SHADER_EXT}"
+    "shaders/opticalflow/ffx_opticalflow_compute_luminance_pyramid_pass.${OPTICALFLOW_SHADER_EXT}"
+    "shaders/opticalflow/ffx_opticalflow_generate_scd_histogram_pass.${OPTICALFLOW_SHADER_EXT}"
+    "shaders/opticalflow/ffx_opticalflow_compute_scd_divergence_pass.${OPTICALFLOW_SHADER_EXT}"
+    "shaders/opticalflow/ffx_opticalflow_compute_optical_flow_advanced_pass_v5.${OPTICALFLOW_SHADER_EXT}"
+    "shaders/opticalflow/ffx_opticalflow_filter_optical_flow_pass_v5.${OPTICALFLOW_SHADER_EXT}"
+    "shaders/opticalflow/ffx_opticalflow_scale_optical_flow_advanced_pass_v5.${OPTICALFLOW_SHADER_EXT}"
+)
+
+# compile all the shaders
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${OPTICALFLOW_BASE_ARGS}" "${OPTICALFLOW_API_BASE_ARGS}" "${OPTICALFLOW_PERMUTATION_ARGS}" "${OPTICALFLOW_INCLUDE_ARGS}"
+    "${OPTICALFLOW_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" OPTICALFLOW_PERMUTATION_OUTPUTS)
+
+# add the header files they generate to the main list of dependencies
+add_shader_output("${OPTICALFLOW_PERMUTATION_OUTPUTS}")

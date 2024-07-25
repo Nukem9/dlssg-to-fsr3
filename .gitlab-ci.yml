@@ -1,0 +1,238 @@
+variables:
+  PARALLEL_BUILDS: 4
+  MAX_LOGICAL_PROCESSORS: 8
+  CMAKE_BUILD_DRIVER: "--parallel %PARALLEL_BUILDS% -- /p:CL_MPcount=%MAX_LOGICAL_PROCESSORS%"
+  GIT_SUBMODULE_STRATEGY: normal
+  FF_USE_FASTZIP: "true"
+  ARTIFACT_COMPRESSION_LEVEL: "fast"
+
+default:
+  tags:
+  - windows
+  - amd64
+
+stages:
+  - format-check
+  - build
+  - package
+
+format_check:
+  stage: format-check
+  needs: []
+  script:
+  - echo Coming soon!
+  
+build_release_cauldron:
+  stage: build
+  needs: []
+  script:
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DBUILD_TYPE=CAULDRON'
+  - 'cmake --build . --config ReleaseDX12 %CMAKE_BUILD_DRIVER%'
+  - 'cmake --build . --config ReleaseVK %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./bin
+
+build_debug_cauldron:
+  stage: build
+  needs: []
+  script:
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DBUILD_TYPE=CAULDRON'
+  - 'cmake --build . --config DebugDX12 %CMAKE_BUILD_DRIVER%'
+  - 'cmake --build . --config DebugVK %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./bin
+    
+build_release_sdk_dx12:
+  stage: build
+  needs: []
+  script:
+  - 'cd sdk/'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake .. -DFFX_API_BACKEND=DX12_X64 -DFFX_ALL=ON -DFFX_AUTO_COMPILE_SHADERS=1'
+  - 'cmake --build ./ --config Release %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./sdk/bin
+
+build_debug_sdk_dx12:
+  stage: build
+  needs: []
+  script:
+  - 'cd sdk/'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake .. -DFFX_API_BACKEND=DX12_X64 -DFFX_ALL=ON -DFFX_AUTO_COMPILE_SHADERS=1'
+  - 'cmake --build ./ --config Debug %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./sdk/bin
+    
+build_release_sdk_vk:
+  stage: build
+  needs: []
+  script:
+  - 'cd sdk/'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake .. -DFFX_API_BACKEND=VK_X64 -DFFX_ALL=ON -DFFX_AUTO_COMPILE_SHADERS=1'
+  - 'cmake --build ./ --config Release %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./sdk/bin
+
+build_debug_sdk_vk:
+  stage: build
+  needs: []
+  script:
+  - 'cd sdk/'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake .. -DFFX_API_BACKEND=VK_X64 -DFFX_ALL=ON -DFFX_AUTO_COMPILE_SHADERS=1'
+  - 'cmake --build ./ --config Debug %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./sdk/bin
+
+build_debug_api_dll_dx12:
+  stage: build
+  needs: []
+  script:
+  - 'cd ffx-api'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DFFX_API_BACKEND=DX12_X64'
+  - 'cmake --build ./ --config Debug %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./ffx-api/bin
+
+build_release_api_dll_dx12:
+  stage: build
+  needs: []
+  script:
+  - 'cd ffx-api'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DFFX_API_BACKEND=DX12_X64'
+  - 'cmake --build ./ --config Release %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./ffx-api/bin/amd_fidelityfx_dx12.dll
+    - ./ffx-api/bin/amd_fidelityfx_dx12.lib
+    
+build_debug_api_dll_vk:
+  stage: build
+  needs: []
+  script:
+  - 'cd ffx-api'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DFFX_API_BACKEND=VK_X64'
+  - 'cmake --build ./ --config Debug %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./ffx-api/bin
+
+build_release_api_dll_vk:
+  stage: build
+  needs: []
+  script:
+  - 'cd ffx-api'
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DFFX_API_BACKEND=VK_X64'
+  - 'cmake --build ./ --config Release %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./ffx-api/bin/amd_fidelityfx_vk.dll
+    - ./ffx-api/bin/amd_fidelityfx_vk.lib
+
+build_release_samples_dx12:
+  stage: build
+  needs:
+  - job: build_release_sdk_dx12
+  - job: build_release_api_dll_dx12
+  script:
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DBUILD_TYPE=SAMPLES_DX12 -DFFX_ALL=ON'
+  - 'cmake --build . --config ReleaseDX12 %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./bin
+
+build_release_samples_vk:
+  stage: build
+  needs:
+  - job: build_release_sdk_vk
+  - job: build_release_api_dll_vk
+  script:
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DBUILD_TYPE=SAMPLES_VK -DFFX_ALL=ON'
+  - 'cmake --build . --config ReleaseVK %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./bin
+
+build_debug_samples_dx12:
+  stage: build
+  needs:
+  - job: build_debug_sdk_dx12
+  - job: build_debug_api_dll_dx12
+  script:
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DBUILD_TYPE=SAMPLES_DX12 -DFFX_ALL=ON'
+  - 'cmake --build . --config DebugDX12 %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./bin
+
+build_debug_samples_vk:
+  stage: build
+  needs:
+  - job: build_debug_sdk_vk
+  - job: build_debug_api_dll_vk
+  script:
+  - 'mkdir build'
+  - 'cd build'
+  - 'cmake -A x64 .. -DBUILD_TYPE=SAMPLES_VK -DFFX_ALL=ON'
+  - 'cmake --build . --config DebugVK %CMAKE_BUILD_DRIVER%'
+  artifacts:
+    paths:
+    - ./bin
+
+package_release_samples_pc:
+  stage: package
+  needs:
+  - job: build_release_api_dll_dx12
+  - job: build_release_api_dll_vk
+  - job: build_release_samples_dx12
+  - job: build_release_samples_vk
+  script:
+  - echo "Packaging FidelityFX SDK Samples"
+  - 'copy %VULKAN_SDK%\Bin\glslc.exe .\bin'
+  artifacts:
+    name: "FIDELITYFX-SDK-SAMPLES-%CI_COMMIT_TAG%-%CI_COMMIT_REF_NAME%-%CI_COMMIT_SHORT_SHA%"
+    paths:
+    - ./bin
+    - ./docs
+    - ./ffx-api
+    - ./framework
+    - ./PrebuiltSignedDLL
+    - ./samples
+    - ./sdk
+    - ./*.bat
+    - ./CMakeLists.txt
+    - ./common.cmake
+    - ./LICENSE.txt
+    - ./readme.md
+    - ./sample.cmake

@@ -1,0 +1,62 @@
+# This file is part of the FidelityFX SDK.
+# 
+# Copyright (C) 2024 Advanced Micro Devices, Inc.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files(the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions :
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+set(FSR3UPSCALER_BASE_ARGS
+    -reflection -deps=gcc -DFFX_GPU=1
+	
+    # Only reprojection is to do half for now
+    -DFFX_FSR3UPSCALER_OPTION_UPSAMPLE_SAMPLERS_USE_DATA_HALF=0
+    -DFFX_FSR3UPSCALER_OPTION_ACCUMULATE_SAMPLERS_USE_DATA_HALF=0
+    -DFFX_FSR3UPSCALER_OPTION_REPROJECT_SAMPLERS_USE_DATA_HALF=1
+    -DFFX_FSR3UPSCALER_OPTION_POSTPROCESSLOCKSTATUS_SAMPLERS_USE_DATA_HALF=0
+	
+    # Upsample uses lanczos approximation
+    -DFFX_FSR3UPSCALER_OPTION_UPSAMPLE_USE_LANCZOS_TYPE=2)
+
+set(FSR3UPSCALER_PERMUTATION_ARGS
+    # Reproject can use either reference lanczos or LUT
+    -DFFX_FSR3UPSCALER_OPTION_REPROJECT_USE_LANCZOS_TYPE={0,1}
+    -DFFX_FSR3UPSCALER_OPTION_HDR_COLOR_INPUT={0,1}
+    -DFFX_FSR3UPSCALER_OPTION_LOW_RESOLUTION_MOTION_VECTORS={0,1}
+    -DFFX_FSR3UPSCALER_OPTION_JITTERED_MOTION_VECTORS={0,1}
+    -DFFX_FSR3UPSCALER_OPTION_INVERTED_DEPTH={0,1}
+    -DFFX_FSR3UPSCALER_OPTION_APPLY_SHARPENING={0,1})
+	
+set(FSR3UPSCALER_INCLUDE_ARGS
+	"${FFX_GPU_PATH}"
+	"${FFX_GPU_PATH}/fsr3upscaler")
+
+if (NOT FSR3UPSCALER_SHADER_EXT)
+    set(FSR3UPSCALER_SHADER_EXT *)
+endif()
+
+file(GLOB FSR3UPSCALER_SHADERS
+    "shaders/fsr3upscaler/*.${FSR3UPSCALER_SHADER_EXT}")
+
+# compile all the shaders	
+compile_shaders_with_depfile(
+    "${FFX_SC_EXECUTABLE}"
+    "${FSR3UPSCALER_BASE_ARGS}" "${FSR3UPSCALER_API_BASE_ARGS}" "${FSR3UPSCALER_PERMUTATION_ARGS}" "${FSR3UPSCALER_INCLUDE_ARGS}"
+    "${FSR3UPSCALER_SHADERS}" "${FFX_PASS_SHADER_OUTPUT_PATH}" FSR3UPSCALER_PERMUTATION_OUTPUTS)
+
+# add the header files they generate to the main list of dependencies
+add_shader_output("${FSR3UPSCALER_PERMUTATION_OUTPUTS}")

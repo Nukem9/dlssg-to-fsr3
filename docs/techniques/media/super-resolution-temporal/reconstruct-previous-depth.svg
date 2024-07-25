@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="124.88333mm"
+   height="55.033333mm"
+   viewBox="0 0 124.88333 55.033333"
+   version="1.1"
+   id="svg3815"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="reconstruct-previous-depth.png.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview3817"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="1333.3939"
+     inkscape:cy="348.45686"
+     inkscape:window-width="3699"
+     inkscape:window-height="2126"
+     inkscape:window-x="130"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs3812">
+    <clipPath
+       id="clip0">
+      <rect
+         x="1002"
+         y="95"
+         width="472"
+         height="208"
+         id="rect3819" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(247.51383,-56.174055)">
+    <g
+       clip-path="url(#clip0)"
+       transform="matrix(0.26458333,0,0,0.26458333,-512.62633,31.038639)"
+       id="g3956">
+      <rect
+         x="1057"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3824" />
+      <rect
+         x="1005"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3826" />
+      <rect
+         x="1005"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3828" />
+      <rect
+         x="1057"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3830" />
+      <rect
+         x="1005"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3832" />
+      <path
+         d="m 1023,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3834" />
+      <path
+         d="m 1075,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3836" />
+      <path
+         d="m 1075,222.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3838" />
+      <path
+         d="m 1022,223 c 0,-4.418 3.58,-8 8,-8 4.42,0 8,3.582 8,8 0,4.418 -3.58,8 -8,8 -4.42,0 -8,-3.582 -8,-8 z"
+         fill-rule="evenodd"
+         id="path3840" />
+      <rect
+         x="1109"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3842" />
+      <rect
+         x="1109"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3844" />
+      <rect
+         x="1109"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3846" />
+      <path
+         d="m 1127,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3848" />
+      <path
+         d="m 1127,172 c 0,-4.418 3.58,-8 8,-8 4.42,0 8,3.582 8,8 0,4.418 -3.58,8 -8,8 -4.42,0 -8,-3.582 -8,-8 z"
+         fill-rule="evenodd"
+         id="path3850" />
+      <path
+         d="m 1127,222.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3852" />
+      <rect
+         x="1161"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3854" />
+      <rect
+         x="1161"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3856" />
+      <rect
+         x="1161"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3858" />
+      <path
+         d="m 1179,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3860" />
+      <path
+         d="m 1179,172 c 0,-4.418 3.58,-8 8,-8 4.42,0 8,3.582 8,8 0,4.418 -3.58,8 -8,8 -4.42,0 -8,-3.582 -8,-8 z"
+         fill-rule="evenodd"
+         id="path3862" />
+      <path
+         d="m 1179,222.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3864" />
+      <rect
+         x="1057"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3866" />
+      <path
+         d="m 1075,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3868" />
+      <rect
+         x="1109"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3870" />
+      <path
+         d="m 1127,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3872" />
+      <rect
+         x="1161"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3874" />
+      <path
+         d="m 1179,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3876" />
+      <rect
+         x="1317"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3878" />
+      <rect
+         x="1265"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3880" />
+      <rect
+         x="1317"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3882" />
+      <rect
+         x="1265"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3884" />
+      <rect
+         x="1317"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3886" />
+      <rect
+         x="1265"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3888" />
+      <path
+         d="m 1283,171 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3890" />
+      <path
+         d="m 1283,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3892" />
+      <path
+         d="m 1335,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3894" />
+      <path
+         d="m 1335,172 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3896" />
+      <path
+         d="m 1335,222.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3898" />
+      <path
+         d="m 1282,223 c 0,-4.418 3.58,-8 8,-8 4.42,0 8,3.582 8,8 0,4.418 -3.58,8 -8,8 -4.42,0 -8,-3.582 -8,-8 z"
+         fill-rule="evenodd"
+         id="path3900" />
+      <rect
+         x="1369"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3902" />
+      <rect
+         x="1369"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3904" />
+      <rect
+         x="1369"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3906" />
+      <path
+         d="m 1387,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3908" />
+      <path
+         d="m 1387,172 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3910" />
+      <path
+         d="m 1387,222.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3912" />
+      <rect
+         x="1421"
+         y="96"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3914" />
+      <rect
+         x="1421"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3916" />
+      <rect
+         x="1421"
+         y="196"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3918" />
+      <path
+         d="m 1439,120 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3920" />
+      <path
+         d="m 1439,172 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3922" />
+      <path
+         d="m 1439,222.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3924" />
+      <rect
+         x="1265"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3926" />
+      <path
+         d="m 1283,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3928" />
+      <rect
+         x="1369"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3930" />
+      <path
+         d="m 1387,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3932" />
+      <rect
+         x="1421"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#d9d9d9"
+         id="rect3934" />
+      <path
+         d="m 1439,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3936" />
+      <rect
+         x="1057"
+         y="145"
+         width="52"
+         height="51"
+         stroke="#000000"
+         stroke-width="6"
+         stroke-miterlimit="8"
+         fill="#7f7f7f"
+         id="rect3938" />
+      <rect
+         x="1005"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="6"
+         stroke-miterlimit="8"
+         fill="#7f7f7f"
+         id="rect3940" />
+      <path
+         d="m 1023,171 c 0,-4.418 3.36,-8 7.5,-8 4.14,0 7.5,3.582 7.5,8 0,4.418 -3.36,8 -7.5,8 -4.14,0 -7.5,-3.582 -7.5,-8 z"
+         fill-rule="evenodd"
+         id="path3942" />
+      <path
+         d="m 1075,172 c 0,-4.418 3.58,-8 8,-8 4.42,0 8,3.582 8,8 0,4.418 -3.58,8 -8,8 -4.42,0 -8,-3.582 -8,-8 z"
+         fill-rule="evenodd"
+         id="path3944" />
+      <path
+         d="m 1023,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3946" />
+      <rect
+         x="1317"
+         y="248"
+         width="52"
+         height="52"
+         stroke="#000000"
+         stroke-width="6"
+         stroke-miterlimit="8"
+         fill="#7f7f7f"
+         id="rect3948" />
+      <path
+         d="m 1335,272.5 c 0,-4.142 3.36,-7.5 7.5,-7.5 4.14,0 7.5,3.358 7.5,7.5 0,4.142 -3.36,7.5 -7.5,7.5 -4.14,0 -7.5,-3.358 -7.5,-7.5 z"
+         fill-rule="evenodd"
+         id="path3950" />
+      <path
+         d="m 1076.01,171.09 256.5,93.074 -1.02,2.82 -256.5,-93.074 z m 256.15,88.162 5.48,8.369 -9.57,2.911 z"
+         id="path3952" />
+      <path
+         d="m 1023.5,272 h 305.94 v 3 H 1023.5 Z m 303.94,-4.5 8,6 -8,6 z"
+         id="path3954" />
+    </g>
+  </g>
+</svg>

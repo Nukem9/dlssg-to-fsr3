@@ -1,0 +1,97 @@
+This library is inspired by the one found at http://256.com/sources/md5/ by Gray Watson. It was written as the aforementioned library is under the GPL license and has the annoying RSA preamble; this has been written from reading the specification document, and does NOT use the provided code, and is distributed under the MIT licence. This notice serves as indication of the program's origins.
+
+This SHOULD be cross-compatible, but is untested on anything other than windows under msys2/mingw.
+
+* Introduction
+
+This is a C++ class that implements the Message Digest Algorithm MD5.  The purpose of the algorithm is to calculate a hash of given bit string. MD5 produces a 16 byte (128 bit) hash.
+The MD5 hash has been proven to be cryptographically vulnerable to various attacks (google them), and as such should not be used for security purposes. The intended purpose of this library is for file verification.
+
+* Building The Library
+
+The provided makefile will produce a static lib to link against.
+To build it follow these steps:
+	1) autoreconf
+	2) configure
+	3) make
+	4) make install
+	
+You can then 'make check' to run the library's self checks
+
+By default the library will compile with the CXXFLAGS '-g -O2'. For a production library without the debugging symbols, call
+make CXXFLAGS=<your_flags_here>
+
+Additionally, the test program can be used as a simple hashing application.
+Calling 'md5_t -r -' will generate a signature on the data read from standard in.
+Calling 'md5_t -r filename' will generate a signature from the contents of a file.
+
+* Class Usage
+
+All functions and constants live in the md5 namespace, or are prefaced by MD5_ if they are in the public namespace.
+
+The class is called md5_t.  The API consists of five methods:
+
+md5::md5_t() is the class constructor.
+
+void md5_t::process(const void* input, const unsigned int input_length)
+  Processes bytes into the hash.
+  - input is a pointer to the first byte to be added. The bytes are not modified.
+  - input_length is the number of bytes to process. The value is not modified.
+
+void md5_t::finish(void* signature_ = NULL)
+  Completes the hashing process and (optionally) returns the final hash.  The md5 instance cannot be used to calculate a new hash after this call.
+  - signature_ is a pointer to a (minimum) 20-byte char array.
+
+if you have all the data available to process at initialisation time, the c=object can be constructed as
+void md5_t::md5(const void* input, const unsigned int input_length, void* signature = NULL)
+  - input is a pointer to the first byte to be added. The bytes are not modified.
+  - input_length is the number of bytes to process. The value is not modified.
+
+There are two functions to retrieve the stored signature and string from the object:
+
+void md5_t::get_sig(void* signature_)
+  Returns the previously calculated signature. can only be used after calling finish().
+  - signature_ is a pointer to a (minimum) 16-byte char array.
+  
+void md5_t::get_string(void* str_)
+  Returns the previously calculated signature in readable hex format.
+  - str_ is a pointer to a (minimum) 33-byte char array.
+  
+We also provide two auxiliary functions for converting hashes to strings and strings to hashes, for example if the object has expired. These are not class functions, and can be used without ever creating an object if you already have a signature or string.
+
+void md5::sig_to_string(const void* signature_, char* str_)
+  Is a utility method that turns a digest into a human-readable string
+  - signature_ is a pointer to the char array containing the signature. The bytes are not modified.
+  - str_ is a pointer to the char array for the string to be placed into. it must have room for at least 33 bytes; this is the caller's responsibility.
+
+void md5::sig_from_string(void* signature_, const char* str_)
+  Is a utility method that turns a digest into a human-readable string
+  - signature_ is a pointer to the char array to place the signature in. it must behave room for at least 16 bytes; this is the caller's responsibility.
+  - str_ is a pointer to the char array containing the string. The bytes are not modified.
+
+
+* Example
+
+The following program will print one line to stdout:
+900150983cd24fb0d6963f7d28e17f72
+
+#include <string.h>
+#include <cstdlib>
+#include <iostream>
+
+#include <md5.h>
+
+int main(int argc, char** argv) {
+	const char* BYTES = "abc";
+
+	md5::md5_t md5;
+	md5.process(BYTES, strlen(BYTES));
+	md5.finish();
+
+	char str[MD5_STRING_SIZE];
+
+	md5.get_string(str);
+
+	for (unsigned int i = 0; i < MD5_STRING_SIZE; i++)
+		std::cout << str[i];
+}

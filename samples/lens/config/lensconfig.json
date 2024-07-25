@@ -1,0 +1,22 @@
+{
+    "FidelityFX Lens": {
+
+        "RenderModules": [
+            "GBufferRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "LensRenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "Content": {
+            "Scenes": [
+                "../media/BistroInterior/BistroInrterior.gltf"
+            ],
+            "Camera": "Camera_7",
+            "DiffuseIBL": "../media/IBL/BistroInterior_pano_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/BistroInterior_pano_Specular.dds",
+            "SceneExposure": 5.0
+        }
+    }
+}

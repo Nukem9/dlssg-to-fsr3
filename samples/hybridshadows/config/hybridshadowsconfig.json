@@ -1,0 +1,34 @@
+{
+    "FidelityFX Hybrid Shadows": {
+
+        "MotionVectorGeneration": "GBufferRenderModule",
+
+        "RenderModules": [
+            "RasterShadowRenderModule",
+            "GBufferRenderModule",
+            "HybridShadowsRenderModule",
+            "LightingRenderModule",
+            "SkyDomeRenderModule",
+            "TranslucencyRenderModule",
+            "ToneMappingRenderModule"
+        ],
+
+        "FeatureSupport": {
+            "RT1.1": true,
+            "FP16": true,
+            "ShaderModel": "SM6_5"
+        },
+
+        "BuildRayTracingAccelerationStructure": true,
+
+        "Content": {
+            "Scenes": [
+                "../media/Brutalism/BrutalistHall.gltf"
+            ],
+            "Camera": "persp6_Orientation",
+            "DiffuseIBL": "../media/IBL/mud_road_puresky_Diffuse.dds",
+            "SpecularIBL": "../media/IBL/mud_road_puresky_Specular.dds",
+            "SceneExposure": 2.0
+        }
+    }
+}

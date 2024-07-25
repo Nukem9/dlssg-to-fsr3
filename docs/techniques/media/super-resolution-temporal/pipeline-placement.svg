@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="306.12292mm"
+   height="47.95702mm"
+   viewBox="0 0 306.12292 47.95702"
+   version="1.1"
+   id="svg2384"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2381">
+    <clipPath
+       id="clip0">
+      <rect
+         x="97"
+         y="180"
+         width="1157"
+         height="195"
+         id="rect2388" />
+    </clipPath>
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(323.50476,-98.835922)">
+    <g
+       clip-path="url(#clip0)"
+       transform="matrix(0.26458333,0,0,0.26458333,-349.16934,47.574194)"
+       id="g2437">
+      <rect
+         x="341"
+         y="271"
+         width="182"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect2393" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(369.29,317)"
+         id="text2397">Post Processing<tspan
+   font-size="20px"
+   x="57.25"
+   y="24"
+   id="tspan2395">A</tspan></text>
+      <rect
+         x="98"
+         y="271"
+         width="182"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect2399" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(147.588,329)"
+         id="text2401">Rendering</text>
+      <rect
+         x="584"
+         y="271"
+         width="182"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         id="rect2403" />
+      <text
+         fill="#ffffff"
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(635.986,305)"
+         id="text2409">FidelityFX <tspan
+   font-size="20px"
+   x="-29.620001"
+   y="24"
+   id="tspan2405">Super Resolution</tspan><tspan
+   font-size="20px"
+   x="-5.5"
+   y="48"
+   id="tspan2407">(Temporal)</tspan></text>
+      <path
+         d="m 766.019,319 46.042,0.291 -0.038,5.999 -46.042,-0.29 z m 43.08,-5.728 17.943,9.113 -18.057,8.886 z"
+         id="path2411" />
+      <path
+         d="m 523,319 h 46.042 v 6 H 523 Z m 43.042,-6 18,9 -18,9 z"
+         id="path2413" />
+      <rect
+         x="1071"
+         y="271"
+         width="182"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect2415" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(1142.77,329)"
+         id="text2417">HUD</text>
+      <path
+         d="M 0.0189386,-2.99994 46.0608,-2.70928 46.0229,3.2906 -0.0189386,2.99994 Z M 43.0988,-8.7281 61.0416,0.385354 42.9851,9.27154 Z"
+         transform="matrix(1,0,0,-1,1009,322.385)"
+         id="path2419" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="22px"
+         transform="translate(440.437,208)"
+         id="text2421">Linear</text>
+      <path
+         d="m 468.82,221.116 84.672,70.715 -0.641,0.768 -84.671,-70.715 z m 86.663,65.212 5.364,12.297 -13.056,-3.087 z"
+         id="path2423" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="22px"
+         transform="translate(768.995,208)"
+         id="text2425">Linear</text>
+      <path
+         d="M 0.498061,-0.0439896 6.43008,67.1199 5.43396,67.2078 -0.498061,0.0439896 Z M 11.7328,64.6437 6.81181,77.125 -0.220673,65.6994 Z"
+         transform="matrix(-1,0,0,1,797.312,221.5)"
+         id="path2427" />
+      <path
+         d="M 7.73966e-6,-3 46.0416,-2.99988 v 6 L -7.73966e-6,3 Z M 43.0416,-8.99989 61.0416,1.5748e-4 43.0415,9.00011 Z"
+         transform="matrix(1,0,0,-1,280,322)"
+         id="path2429" />
+      <rect
+         x="827"
+         y="271"
+         width="182"
+         height="103"
+         stroke="#000000"
+         stroke-width="2"
+         stroke-miterlimit="8"
+         fill="#ffffff"
+         id="rect2431" />
+      <text
+         font-family="Calibri, Calibri_MSFontService, sans-serif"
+         font-weight="400"
+         font-size="20px"
+         transform="translate(855.442,317)"
+         id="text2435">Post Processing<tspan
+   font-size="20px"
+   x="57.5"
+   y="24"
+   id="tspan2433">B</tspan></text>
+    </g>
+  </g>
+</svg>
