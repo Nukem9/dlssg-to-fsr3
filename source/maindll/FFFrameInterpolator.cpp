@@ -1,7 +1,6 @@
 #include <dxgi1_6.h>
 #include <numbers>
 #include "NGX/NvNGX.h"
-#include "FFExt.h"
 #include "FFFrameInterpolator.h"
 #include "Util.h"
 
@@ -53,11 +52,11 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
 
 		// Record commands
-		auto status = ffxOpticalflowContextDispatch(&m_OpticalFlowContext.value(), &fsrOfDispatchDesc);
-		FFX_RETURN_ON_FAIL(status);
+		if (auto status = ffxOpticalflowContextDispatch(&m_OpticalFlowContext.value(), &fsrOfDispatchDesc); status != FFX_OK)
+			return status;
 
-		status = m_FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc);
-		FFX_RETURN_ON_FAIL(status);
+		if (auto status = m_FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc); status != FFX_OK)
+			return status;
 
 		if (fsrFiDispatchDesc.DebugView || doInterpolatedOnly)
 			gameBackBufferResource = fsrFiDispatchDesc.OutputInterpolatedColorBuffer;
@@ -328,10 +327,18 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 FfxErrorCode FFFrameInterpolator::CreateBackend(NGXInstanceParameters *NGXParameters)
 {
 	const uint32_t maxContexts = 3; // Assume 3 contexts per interface
-	FFX_RETURN_ON_FAIL(InitializeBackendInterface(&m_SharedBackendInterface, maxContexts, NGXParameters));
-	FFX_RETURN_ON_FAIL(InitializeBackendInterface(&m_FrameInterpolationBackendInterface, maxContexts, NGXParameters));
 
-	const auto status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, nullptr, &m_SharedEffectContextId.emplace());
+	auto status = InitializeBackendInterface(&m_SharedBackendInterface, maxContexts, NGXParameters);
+
+	if (status != FFX_OK)
+		return status;
+
+	status = InitializeBackendInterface(&m_FrameInterpolationBackendInterface, maxContexts, NGXParameters);
+
+	if (status != FFX_OK)
+		return status;
+
+	status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, nullptr, &m_SharedEffectContextId.emplace());
 
 	if (status != FFX_OK)
 	{
@@ -351,10 +358,12 @@ void FFFrameInterpolator::DestroyBackend()
 FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 {
 	// Set up configuration for optical flow
-	FfxOpticalflowContextDescription fsrOfDescription = {};
-	fsrOfDescription.backendInterface = m_FrameInterpolationBackendInterface;
-	fsrOfDescription.flags = 0;
-	fsrOfDescription.resolution = { m_SwapchainWidth, m_SwapchainHeight };
+	FfxOpticalflowContextDescription fsrOfDescription = {
+		.backendInterface = m_FrameInterpolationBackendInterface,
+		.flags = 0,
+		.resolution = { m_SwapchainWidth, m_SwapchainHeight },
+	};
+
 	auto status = ffxOpticalflowContextCreate(&m_OpticalFlowContext.emplace(), &fsrOfDescription);
 
 	if (status != FFX_OK)
@@ -364,7 +373,10 @@ FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 	}
 
 	FfxOpticalflowSharedResourceDescriptions fsrOfSharedDescriptions = {};
-	FFX_RETURN_ON_FAIL(ffxOpticalflowGetSharedResourceDescriptions(&m_OpticalFlowContext.value(), &fsrOfSharedDescriptions));
+	status = ffxOpticalflowGetSharedResourceDescriptions(&m_OpticalFlowContext.value(), &fsrOfSharedDescriptions);
+
+	if (status != FFX_OK)
+		return status;
 
 	status = m_SharedBackendInterface.fpCreateResource(
 		&m_SharedBackendInterface,

@@ -1,6 +1,5 @@
 #include <FidelityFX/host/ffx_frameinterpolation.h>
 #include <frameinterpolation/ffx_frameinterpolation_private.h>
-#include "FFExt.h"
 #include "FFInterpolator.h"
 
 FFInterpolator::FFInterpolator(const FfxInterface& BackendInterface, uint32_t MaxRenderWidth, uint32_t MaxRenderHeight)
@@ -34,7 +33,8 @@ FFInterpolator::~FFInterpolator()
 
 FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Parameters)
 {
-	FFX_RETURN_ON_FAIL(InternalDeferredSetupContext(Parameters)); // Massive frame hitch on first call
+	if (auto status = InternalDeferredSetupContext(Parameters); status != FFX_OK) // Massive frame hitch on first call
+		return status;
 
 	FfxFrameInterpolationDispatchDescription dispatchDesc = {};
 	{
@@ -99,8 +99,8 @@ FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Pa
 		prepareDesc.frameID = dispatchDesc.frameID;
 	}
 
-	if (auto result = ffxFrameInterpolationPrepare(&m_FSRContext.value(), &prepareDesc) != FFX_OK)
-		return result;
+	if (auto status = ffxFrameInterpolationPrepare(&m_FSRContext.value(), &prepareDesc); status != FFX_OK)
+		return status;
 
 	return ffxFrameInterpolationDispatch(&m_FSRContext.value(), &dispatchDesc);
 }
