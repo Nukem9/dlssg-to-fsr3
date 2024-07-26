@@ -46,9 +46,6 @@ target_include_directories(
 	${CURRENT_PROJECT}
 	PRIVATE
 		"${SOURCE_DIR}"
-		"${FIDELITYFX_SDK_DIR}/include"
-		"${FIDELITYFX_SDK_DIR}/src/components"
-		"$ENV{VULKAN_SDK}/include"
 )
 
 set_target_properties(
@@ -111,18 +108,18 @@ target_compile_definitions(
 # Dependencies
 #
 # Windows SDK
-target_link_options(
-	${CURRENT_PROJECT}
-	PRIVATE
-		"/DELAYLOAD:gdi32.dll"
-		"/DELAYLOAD:dxgi.dll"
-)
-
 target_link_libraries(
 	${CURRENT_PROJECT}
 	PRIVATE
 		delayimp
 		dxgi
+)
+
+target_link_options(
+	${CURRENT_PROJECT}
+	PRIVATE
+		"/DELAYLOAD:gdi32.dll"
+		"/DELAYLOAD:dxgi.dll"
 )
 
 # Spdlog
@@ -131,16 +128,23 @@ target_link_libraries(${CURRENT_PROJECT} PRIVATE spdlog::spdlog)
 
 # Vulkan
 find_package(Vulkan REQUIRED)
-target_link_options(${CURRENT_PROJECT} PRIVATE "/DELAYLOAD:vulkan-1.dll")
+target_include_directories(${CURRENT_PROJECT} PRIVATE "$ENV{VULKAN_SDK}/include")
 target_link_libraries(${CURRENT_PROJECT} PRIVATE Vulkan::Vulkan)
+target_link_options(${CURRENT_PROJECT} PRIVATE "/DELAYLOAD:vulkan-1.dll")
 
 # FidelityFX
+target_include_directories(
+	${CURRENT_PROJECT}
+	PRIVATE
+		"${FIDELITYFX_SDK_DIR}/include"
+		"${FIDELITYFX_SDK_DIR}/src/components"
+)
+
 target_link_libraries(
 	${CURRENT_PROJECT}
 	PRIVATE
 		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_backend_dx12_x64$<$<CONFIG:Debug>:d>.lib"
 		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_backend_vk_x64$<$<CONFIG:Debug>:d>.lib"
-		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_fsr3_x64$<$<CONFIG:Debug>:d>.lib"
 		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_frameinterpolation_x64$<$<CONFIG:Debug>:d>.lib"
 		"${FIDELITYFX_SDK_DIR}/bin/ffx_sdk/ffx_opticalflow_x64$<$<CONFIG:Debug>:d>.lib"
 )
