@@ -30,6 +30,7 @@ endif()
 # Clean a bit before
 unset(FFX_GDK CACHE)
 
+include("CMakeWorkaroundPatches.cmake") # Separate file to minimize git changes
 message(STATUS "FFX_API_BACKEND is ${FFX_API_BACKEND}")
 
 if(FFX_API_BACKEND STREQUAL VK_X64 OR 
