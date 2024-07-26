@@ -160,13 +160,8 @@ bool FFFrameInterpolatorVK::LoadTextureFromNGXParameters(
 	NGXVulkanResourceHandle *resourceHandle = nullptr;
 	NGXParameters->GetVoidPointer(Name, reinterpret_cast<void **>(&resourceHandle));
 
-	if (!resourceHandle)
-	{
-		*OutFfxResource = {};
-		return false;
-	}
-
-	if (resourceHandle->Type != 0) // TODO: Figure out where this is defined
+	// Null handles and buffer resources aren't supported
+	if (!resourceHandle || resourceHandle->Type != 0)
 	{
 		*OutFfxResource = {};
 		return false;
@@ -184,14 +179,28 @@ bool FFFrameInterpolatorVK::LoadTextureFromNGXParameters(
 		.tiling = VK_IMAGE_TILING_OPTIMAL,
 		.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.initialLayout = VK_IMAGE_LAYOUT_GENERAL,
 	};
 
-	if (imageInfo.format == VK_FORMAT_D32_SFLOAT_S8_UINT)
+	// Fool the FFX SDK into thinking this is a depth-stencil resource, regardless of whether a stencil is actually
+	// present.
+	switch (imageInfo.format)
 	{
-		imageInfo.format = VK_FORMAT_D32_SFLOAT;
+	case VK_FORMAT_D16_UNORM:
+	case VK_FORMAT_X8_D24_UNORM_PACK32:
+	case VK_FORMAT_D24_UNORM_S8_UINT:
+	case VK_FORMAT_D32_SFLOAT:
+	case VK_FORMAT_D32_SFLOAT_S8_UINT:
 		imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		break;
 	}
+
+	// TODO: Initial layout is ignored by the FFX SDK. VK validation layers generate an error when switching between
+	// VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL and VK_IMAGE_LAYOUT_GENERAL. Though I only see it occuring in the first
+	// couple frames. Game issue?
+
+	// TODO: RTX Remix games don't seem to VK_IMAGE_USAGE_STORAGE_BIT? Otherwise they're incorrectly setting usage flags
+	// in NGX calls.
 
 	*OutFfxResource = ffxGetResourceVK(
 		resourceHandle->ImageMetadata.Image,

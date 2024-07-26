@@ -310,6 +310,7 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	desc.Reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
 	// Games require a deg2rad fixup because...reasons
+	// TODO: RTX Remix games pass in a FOV of 0. FSR FG doesn't care.
 	desc.CameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0);
 
 	if (desc.CameraFovAngleVertical > 10.0f)
@@ -317,7 +318,7 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 
 	desc.CameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0);
 	desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0);
-	desc.ViewSpaceToMetersFactor = 1.0f; // TODO: Defaults to 1.0f. Need a way to query from games?
+	desc.ViewSpaceToMetersFactor = 1.0f;
 
 	desc.MinMaxLuminance = m_HDRLuminanceRange;
 
