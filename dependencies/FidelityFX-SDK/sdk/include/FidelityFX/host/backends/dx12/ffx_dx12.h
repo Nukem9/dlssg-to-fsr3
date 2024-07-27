@@ -40,6 +40,96 @@
 extern "C" {
 #endif // #if defined(__cplusplus)
 
+typedef struct BackendContext_DX12 {
+
+    // store for resources and resourceViews
+    typedef struct Resource
+    {
+#ifdef _DEBUG
+        wchar_t                 resourceName[64] = {};
+#endif
+        ID3D12Resource*         resourcePtr;
+        FfxResourceDescription  resourceDescription;
+        FfxResourceStates       initialState;
+        FfxResourceStates       currentState;
+        uint32_t                srvDescIndex;
+        uint32_t                uavDescIndex;
+        uint32_t                uavDescCount;
+    } Resource;
+
+    uint32_t refCount;
+    uint32_t maxEffectContexts;
+
+    ID3D12Device*           device = nullptr;
+
+    FfxGpuJobDescription*   pGpuJobs;
+    uint32_t                gpuJobCount;
+
+    uint32_t                nextRtvDescriptor;
+    ID3D12DescriptorHeap*   descHeapRtvCpu;
+
+    ID3D12DescriptorHeap*   descHeapSrvCpu;
+    ID3D12DescriptorHeap*   descHeapUavCpu;
+    ID3D12DescriptorHeap*   descHeapUavGpu;
+
+    uint32_t                descRingBufferSize;
+    uint32_t                descRingBufferBase;
+    ID3D12DescriptorHeap*   descRingBuffer;
+    uint32_t                descBindlessBase;
+
+    uint8_t*                pStagingRingBuffer;
+    uint32_t                stagingRingBufferBase = 0;
+
+    D3D12_RESOURCE_BARRIER  barriers[FFX_MAX_BARRIERS];
+    uint32_t                barrierCount;
+
+    IDXGIFactory*           dxgiFactory = nullptr;
+
+    typedef struct alignas(32) EffectContext {
+
+        // Resource allocation
+        uint32_t            nextStaticResource;
+        uint32_t            nextDynamicResource;
+
+        // UAV offsets
+        uint32_t            nextStaticUavDescriptor;
+        uint32_t            nextDynamicUavDescriptor;
+
+        // Bindless heap
+        uint32_t            bindlessTextureSrvHeapStart;
+        uint32_t            bindlessTextureSrvHeapSize;
+        uint32_t            bindlessBufferSrvHeapStart;
+        uint32_t            bindlessBufferSrvHeapSize;
+        uint32_t            bindlessTextureUavHeapStart;
+        uint32_t            bindlessTextureUavHeapSize;
+        uint32_t            bindlessBufferUavHeapStart;
+        uint32_t            bindlessBufferUavHeapSize;
+
+        uint32_t bindlessBufferHeapStart;
+        uint32_t bindlessBufferHeapEnd;
+
+        // Usage
+        bool                active;
+
+        // VRAM usage
+        FfxEffectMemoryUsage vramUsage;
+
+    } EffectContext;
+
+    // Resource holder
+    Resource*                   pResources;
+    EffectContext*              pEffectContexts;
+
+    // Allocation defaults
+    FfxConstantAllocation       FallbackConstantAllocator(void* data, FfxUInt64 dataSize);
+    void*                       constantBufferMem;
+    ID3D12Resource*             constantBufferResource;
+    uint32_t                    constantBufferSize;
+    uint32_t                    constantBufferOffset;
+    std::mutex                  constantBufferMutex;
+
+} BackendContext_DX12;
+
 /// Query how much memory is required for the DirectX 12 backend's scratch buffer.
 /// 
 /// @param [in] maxContexts                 The maximum number of simultaneous effect contexts that will share the backend.
