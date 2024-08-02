@@ -2,7 +2,7 @@ name: 'Build and publish artifacts'
 
 on:
   push:
-    branches: ['master']
+    branches: ['master', 'ci-test']
   workflow_dispatch:
 
 permissions:
@@ -15,10 +15,17 @@ env:
 
 jobs:
   build-and-package:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up GitHub Actions cache environment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       # https://github.com/actions/runner-images/issues/6376
       - name: Set up Vcpkg environment
@@ -26,12 +33,17 @@ jobs:
         run: |
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
-      - name: Build and set up Vulkan SDK
-        uses: humbletim/setup-vulkan-sdk@v1.2.0
+      # Custom step is required because vcvarsall doesn't persist otherwise. VS2022 is the only option on windows-2022 runners.
+      - name: Set up VS2022 toolset
+        uses: ilammy/msvc-dev-cmd@v1
         with:
-          vulkan-query-version: latest
-          vulkan-components: Vulkan-Headers, Vulkan-Loader, Glslang
-          vulkan-use-cache: true
+          arch: x64
+
+      - name: Install and set up Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.1.1
+        with:
+          version: latest
+          cache: false
 
       - name: Build and set up FidelityFX SDK
         shell: cmd
