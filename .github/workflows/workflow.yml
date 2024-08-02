@@ -1,0 +1,53 @@
+name: 'Build and publish artifacts'
+
+on:
+  push:
+    branches: ['master']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  VCPKG_FEATURE_FLAGS: dependencygraph
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+jobs:
+  build-and-package:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # https://github.com/actions/runner-images/issues/6376
+      - name: Set up Vcpkg environment
+        shell: bash
+        run: |
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+
+      - name: Build and set up Vulkan SDK
+        uses: humbletim/setup-vulkan-sdk@v1.2.0
+        with:
+          vulkan-query-version: latest
+          vulkan-components: Vulkan-Headers, Vulkan-Loader, Glslang
+          vulkan-use-cache: true
+
+      - name: Build and set up FidelityFX SDK
+        shell: cmd
+        run: |
+          ${{ github.workspace }}/dependencies/Build-FFX-SDK.bat
+
+      # All variants get built here since I don't want to burn my action minutes on the Vulkan and FFX SDKs
+      - name: Build dlssg-to-fsr3
+        shell: pwsh
+        run: |
+          ${{ github.workspace }}/Make-Release.ps1
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'dlssg-to-fsr3-ci-test'
+          path: |
+            ${{ github.workspace }}/bin/built-packages/*.zip
+          if-no-files-found: error
