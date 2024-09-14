@@ -37,10 +37,12 @@
 
 ## Installation (User)
 
-1. Double click on `DisableNvidiaSignatureChecks.reg` and select **Run**. Click **Yes** on the next few dialogs.
-2. Find your game's installation folder. For Cyberpunk 2077, this is the directory containing `Cyberpunk2077.exe`. An example path is `C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\bin\x64\`.
-3. Copy `dlssg_to_fsr3_amd_is_better.dll` and the new `nvngx.dll` to your game's installation folder.
-4. A log file named `dlssg_to_fsr3.log` will be created after you launch the game.
+1. Make sure [Hardware Accelerated GPU Scheduling](https://devblogs.microsoft.com/directx/hardware-accelerated-gpu-scheduling/) is enabled on Windows
+2. Double click on `DisableNvidiaSignatureChecks.reg` and select **Run**. Click **Yes** on the next few dialogs.
+3. Find your game's installation folder. For Cyberpunk 2077, this is the directory containing `Cyberpunk2077.exe`. An example path is `C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\bin\x64\`.
+4. Copy `dlssg_to_fsr3_amd_is_better.dll` and the new `nvngx.dll` to your game's installation folder.
+5. A log file named `dlssg_to_fsr3.log` will be created after you launch the game.
+6. _Additional steps for Epic based games_ - if frame generation is disabled for Epic games, [delete the contents (but keep an empty folder!) of `C:\Program Files (x86)\Epic Games\Launcher\Portal\Extras\Overlay`](https://github.com/Nukem9/dlssg-to-fsr3/issues/152#issue-2049862583)
 
 ## Installation (Developer)
 
