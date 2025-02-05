@@ -1,4 +1,5 @@
 #include "Hooking/Hooks.h"
+#include "Hooking/Memory.h"
 #include "Util.h"
 
 //
@@ -67,10 +68,74 @@ BOOL WINAPI HookedFreeLibrary(HMODULE hLibModule)
 	return result;
 }
 
+void *InterceptedDlssgRenderCommandInstance = nullptr;
+
+void *(*OriginalslSetTagV1)(void *TagData, uint32_t TagType, void *a2, void *a3);
+void *HookedslSetTagV1(void *TagData, uint32_t TagType, void *a2, void *a3)
+{
+	// Type 2 is the HUD-less color buffer
+	if (TagData && TagType == 2 && InterceptedDlssgRenderCommandInstance)
+	{
+		auto renderCommand = std::exchange(InterceptedDlssgRenderCommandInstance, nullptr);
+		auto handle = ***(uintptr_t ***)((uintptr_t)renderCommand + 0x68);
+
+		if ((*(uint32_t *)(handle + 0x10) & 0x10) != 0)
+			handle = *(uintptr_t *)(handle + 0x30);
+
+		*reinterpret_cast<void **>(reinterpret_cast<uintptr_t>(TagData) + 0x8) = *(void **)(*(uintptr_t *)handle + 0x30);
+		*reinterpret_cast<uint32_t *>(reinterpret_cast<uintptr_t>(TagData) + 0x20) = 8;
+	}
+
+	return OriginalslSetTagV1(TagData, TagType, a2, a3);
+}
+
+FARPROC WINAPI HookedGetProcAddress(HMODULE hModule, LPCSTR lpProcName);
+
+bool TryInterceptGameFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer)
+{
+	if (!FunctionName || !*FunctionPointer || reinterpret_cast<uintptr_t>(FunctionName) < 0x10000)
+		return false;
+
+	if (_stricmp(static_cast<const char *>(FunctionName), "CreateRenderer") == 0)
+	{
+		const auto address = Memory::FindPattern(
+			reinterpret_cast<uintptr_t>(GetModuleHandleW(L"engine_x64_rwdi.dll")),
+			0x10000000,
+			"48 8B 02 48 8B 08 48 89 4C 24 ? 48 8B 02 48 8B 08 48 89 4C 24");
+
+		if (address)
+		{
+#pragma pack(push, 1)
+			struct
+			{
+				uint8_t MovRax[2] = { 0x48, 0xB8 };				// mov rax, imm64
+				void *AbsAddress = nullptr;						// imm64
+				uint8_t MovRaxPtrRsi[3] = { 0x48, 0x89, 0x30 }; // mov [rax], rsi
+				uint8_t Nops[2] = { 0x90, 0x90 };				// nop; nop
+				uint8_t XorEaxEax[2] = { 0x31, 0xC0 };			// xor eax, eax
+			} const newOpcodes = { .AbsAddress = &InterceptedDlssgRenderCommandInstance };
+#pragma pack(pop)
+
+			Memory::Patch(address + 0x4D, reinterpret_cast<const uint8_t *>(&newOpcodes), sizeof(newOpcodes));
+			Hooks::RedirectImport(ModuleHandle, "KERNEL32.dll", "GetProcAddress", &HookedGetProcAddress, nullptr);
+		}
+	}
+	else if (_stricmp(static_cast<const char *>(FunctionName), "slSetTag") == 0)
+	{
+		OriginalslSetTagV1 = static_cast<decltype(&HookedslSetTagV1)>(*FunctionPointer);
+		*FunctionPointer = &HookedslSetTagV1;
+
+		return true;
+	}
+
+	return false;
+}
+
 FARPROC WINAPI HookedGetProcAddress(HMODULE hModule, LPCSTR lpProcName)
 {
 	auto proc = GetProcAddress(hModule, lpProcName);
 	TryInterceptNvAPIFunction(hModule, lpProcName, reinterpret_cast<void **>(&proc));
+	TryInterceptGameFunction(hModule, lpProcName, reinterpret_cast<void **>(&proc));
 
 	return proc;
 }
