@@ -3,7 +3,7 @@
 namespace Util
 {
 	template<size_t Size>
-	const wchar_t *GetModulePath(wchar_t (&Buffer)[Size], bool DirectoryOnly, HMODULE ModuleHandle)
+	const wchar_t *GetModulePath(_Out_writes_z_(Size) wchar_t (&Buffer)[Size], bool DirectoryOnly, HMODULE ModuleHandle)
 	{
 		memset(Buffer, 0, Size * sizeof(wchar_t));
 
