@@ -83,6 +83,21 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init(
 	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_Init)(Unknown1, Unknown2, VulkanInstance, PhysicalDevice, LogicalDevice, Unknown3);
 }
 
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_PopulateDeviceParameters_Impl(
+	VkInstance VulkanInstance,
+	VkPhysicalDevice PhysicalDevice,
+	VkDevice LogicalDevice,
+	void *Unknown1,
+	NGXInstanceParameters *Parameters)
+{
+	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_PopulateDeviceParameters_Impl)(
+		VulkanInstance,
+		PhysicalDevice,
+		LogicalDevice,
+		Unknown1,
+		Parameters);
+}
+
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_PopulateParameters_Impl(NGXInstanceParameters *Parameters)
 {
 	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_VULKAN_PopulateParameters_Impl)(Parameters);

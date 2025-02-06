@@ -50,6 +50,11 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init(void *Unknown1, const wchar_t *Path,
 	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_D3D12_Init)(Unknown1, Path, D3DDevice, Unknown2);
 }
 
+NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateDeviceParameters_Impl(ID3D12Device *D3DDevice, NGXInstanceParameters *Parameters)
+{
+	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_D3D12_PopulateDeviceParameters_Impl)(D3DDevice, Parameters);
+}
+
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateParameters_Impl(NGXInstanceParameters *Parameters)
 {
 	CALL_NGX_EXPORT_IMPL(NVSDK_NGX_D3D12_PopulateParameters_Impl)(Parameters);
