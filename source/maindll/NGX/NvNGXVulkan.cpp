@@ -278,6 +278,26 @@ static NGXResult EstimateVRAMCallback(
 	return NGX_SUCCESS;
 }
 
+NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_PopulateDeviceParameters_Impl(
+	VkInstance VulkanInstance,
+	VkPhysicalDevice PhysicalDevice,
+	VkDevice LogicalDevice,
+	void *Unknown1,
+	NGXInstanceParameters *Parameters)
+{
+	spdlog::info(__FUNCTION__);
+
+	if (!VulkanInstance || !PhysicalDevice || !LogicalDevice || !Parameters)
+		return NGX_INVALID_PARAMETER;
+
+	Parameters->SetVoidPointer("DLSSG.GetCurrentSettingsCallback", &GetCurrentSettingsCallback);
+	Parameters->SetVoidPointer("DLSSG.EstimateVRAMCallback", &EstimateVRAMCallback);
+	Parameters->Set5("DLSSG.MultiFrameCountMax", 1);
+	Parameters->Set4("DLSSG.ReflexWarp.Available", 0);
+
+	return NGX_SUCCESS;
+}
+
 NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_PopulateParameters_Impl(NGXInstanceParameters *Parameters)
 {
 	spdlog::info(__FUNCTION__);
@@ -287,6 +307,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_PopulateParameters_Impl(NGXInstanceParam
 
 	Parameters->SetVoidPointer("DLSSG.GetCurrentSettingsCallback", &GetCurrentSettingsCallback);
 	Parameters->SetVoidPointer("DLSSG.EstimateVRAMCallback", &EstimateVRAMCallback);
+	Parameters->Set5("DLSSG.MultiFrameCountMax", 1);
+	Parameters->Set4("DLSSG.ReflexWarp.Available", 0);
 
 	return NGX_SUCCESS;
 }

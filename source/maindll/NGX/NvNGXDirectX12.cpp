@@ -212,6 +212,21 @@ static NGXResult EstimateVRAMCallback(
 	return NGX_SUCCESS;
 }
 
+NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateDeviceParameters_Impl(ID3D12Device *D3DDevice, NGXInstanceParameters *Parameters)
+{
+	spdlog::info(__FUNCTION__);
+
+	if (!D3DDevice || !Parameters)
+		return NGX_INVALID_PARAMETER;
+
+	Parameters->SetVoidPointer("DLSSG.GetCurrentSettingsCallback", &GetCurrentSettingsCallback);
+	Parameters->SetVoidPointer("DLSSG.EstimateVRAMCallback", &EstimateVRAMCallback);
+	Parameters->Set5("DLSSG.MultiFrameCountMax", 1);
+	Parameters->Set4("DLSSG.ReflexWarp.Available", 0);
+
+	return NGX_SUCCESS;
+}
+
 NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateParameters_Impl(NGXInstanceParameters *Parameters)
 {
 	spdlog::info(__FUNCTION__);
@@ -221,6 +236,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_PopulateParameters_Impl(NGXInstanceParame
 
 	Parameters->SetVoidPointer("DLSSG.GetCurrentSettingsCallback", &GetCurrentSettingsCallback);
 	Parameters->SetVoidPointer("DLSSG.EstimateVRAMCallback", &EstimateVRAMCallback);
+	Parameters->Set5("DLSSG.MultiFrameCountMax", 1);
+	Parameters->Set4("DLSSG.ReflexWarp.Available", 0);
 
 	return NGX_SUCCESS;
 }
