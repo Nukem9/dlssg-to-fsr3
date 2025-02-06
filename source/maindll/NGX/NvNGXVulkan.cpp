@@ -212,6 +212,8 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 	else
 		spdlog::warn("Hardware accelerated GPU scheduling is disabled on this adapter.");
 
+	spdlog::info("Present metering interface status is unknown.");
+
 	return NGX_SUCCESS;
 }
 

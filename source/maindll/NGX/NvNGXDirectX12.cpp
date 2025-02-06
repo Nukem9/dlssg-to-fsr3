@@ -172,6 +172,25 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_Init_Ext(void *Unknown1, const wchar_t *P
 	else
 		spdlog::warn("Hardware accelerated GPU scheduling is disabled on this adapter.");
 
+	auto hasPresentMeteringAPI = [&]()
+	{
+		const auto handle = LoadLibraryExW(L"nvapi64.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+
+		if (!handle)
+			return false;
+
+		const auto queryInterface = reinterpret_cast<void *(__stdcall *)(uint32_t)>(GetProcAddress(handle, "nvapi_QueryInterface"));
+		const auto setFlipConfig = queryInterface ? queryInterface(0xF3148C42) : nullptr;
+
+		FreeLibrary(handle);
+		return setFlipConfig != nullptr;
+	};
+
+	if (hasPresentMeteringAPI())
+		spdlog::info("Present metering interface is available.");
+	else
+		spdlog::info("Present metering interface is unimplemented.");
+
 	return NGX_SUCCESS;
 }
 
