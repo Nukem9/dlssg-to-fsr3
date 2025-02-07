@@ -115,6 +115,9 @@ FfxErrorCode FFInterpolator::InternalDeferredSetupContext(const FFInterpolatorDi
 		if (Parameters.DepthInverted)
 			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_DEPTH_INVERTED;
 
+		if (Parameters.DepthPlaneInfinite)
+			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_DEPTH_INFINITE;
+
 		if (Parameters.HDR)
 			desc.flags |= FFX_FRAMEINTERPOLATION_ENABLE_HDR_COLOR_INPUT;
 

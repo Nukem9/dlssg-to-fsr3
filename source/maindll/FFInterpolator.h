@@ -30,6 +30,7 @@ struct FFInterpolatorDispatchParameters
 
 	bool HDR;
 	bool DepthInverted;
+	bool DepthPlaneInfinite;
 	bool Reset;
 	bool DebugTearLines;
 	bool DebugView;
