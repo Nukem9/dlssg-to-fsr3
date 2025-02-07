@@ -24,7 +24,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_CreateFeature1(
 		return NGX_INVALID_PARAMETER;
 
 	// Grab NGX parameters from sl.dlss_g.dll
-	// https://forums.developer.nvidia.com/t/using-dlssg-without-idxgiswapchain-present/247260/8?u=user81906
+	// https://forums.developer.nvidia.com/t/using-dlssg-without-idxgiswapchain-present/247260/8
 	Parameters->Set4("DLSSG.MustCallEval", 1);
 
 	uint32_t swapchainWidth = 0;
@@ -212,7 +212,7 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_Init_Ext2(
 	else
 		spdlog::warn("Hardware accelerated GPU scheduling is disabled on this adapter.");
 
-	spdlog::info("Present metering interface status is unknown.");
+	spdlog::info("Present metering interface status is unknown. This is not an error.");
 
 	return NGX_SUCCESS;
 }
