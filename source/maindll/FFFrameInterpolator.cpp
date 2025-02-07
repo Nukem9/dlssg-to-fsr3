@@ -4,10 +4,22 @@
 #include "FFFrameInterpolator.h"
 #include "Util.h"
 
+bool g_EnableDebugOverlay = false;
+bool g_EnableDebugTearLines = false;
+bool g_EnableInterpolatedFramesOnly = false;
+
+extern "C" void __declspec(dllexport) RefreshGlobalConfiguration()
+{
+	g_EnableDebugOverlay = Util::GetSetting(L"EnableDebugOverlay", false);
+	g_EnableDebugTearLines = Util::GetSetting(L"EnableDebugTearLines", false);
+	g_EnableInterpolatedFramesOnly = Util::GetSetting(L"EnableInterpolatedFramesOnly", false);
+}
+
 FFFrameInterpolator::FFFrameInterpolator(uint32_t OutputWidth, uint32_t OutputHeight)
 	: m_SwapchainWidth(OutputWidth),
 	  m_SwapchainHeight(OutputHeight)
 {
+	RefreshGlobalConfiguration();
 }
 
 FFFrameInterpolator::~FFFrameInterpolator()
@@ -44,12 +56,8 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		if (!BuildFrameInterpolationParameters(&fsrFiDispatchDesc, NGXParameters))
 			return FFX_ERROR_INVALID_ARGUMENT;
 
-		const static bool doDebugOverlay = Util::GetSetting(L"Debug", L"EnableDebugOverlay", false);
-		const static bool doDebugTearLines = Util::GetSetting(L"Debug", L"EnableDebugTearLines", false);
-		const static bool doInterpolatedOnly = Util::GetSetting(L"Debug", L"EnableInterpolatedFramesOnly", false);
-
-		fsrFiDispatchDesc.DebugView = doDebugOverlay;
-		fsrFiDispatchDesc.DebugTearLines = doDebugTearLines;
+		fsrFiDispatchDesc.DebugView = g_EnableDebugOverlay;
+		fsrFiDispatchDesc.DebugTearLines = g_EnableDebugTearLines;
 
 		// Record commands
 		if (auto status = ffxOpticalflowContextDispatch(&m_OpticalFlowContext.value(), &fsrOfDispatchDesc); status != FFX_OK)
@@ -58,7 +66,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		if (auto status = m_FrameInterpolatorContext->Dispatch(fsrFiDispatchDesc); status != FFX_OK)
 			return status;
 
-		if (fsrFiDispatchDesc.DebugView || doInterpolatedOnly)
+		if (fsrFiDispatchDesc.DebugView || g_EnableInterpolatedFramesOnly)
 			gameBackBufferResource = fsrFiDispatchDesc.OutputInterpolatedColorBuffer;
 
 		return FFX_OK;
