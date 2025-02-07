@@ -1,13 +1,22 @@
 #include <directx/d3dx12.h>
+#pragma warning(push)
+#pragma warning(disable : 4005)
+#define FfxFrameInterpolationSwapchainConfigureKey FfxFrameInterpolationSwapchainConfigureKeyDX12
+#define FFX_FI_SWAPCHAIN_CONFIGURE_KEY_WAITCALLBACK FFX_FI_SWAPCHAIN_CONFIGURE_KEY_WAITCALLBACK_DX12
+#define FFX_FI_SWAPCHAIN_CONFIGURE_KEY_FRAMEPACINGTUNING FFX_FI_SWAPCHAIN_CONFIGURE_KEY_FRAMEPACINGTUNING_DX12
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
+#define FfxFrameInterpolationSwapchainConfigureKey FfxFrameInterpolationSwapchainConfigureKeyVK
+#define FFX_FI_SWAPCHAIN_CONFIGURE_KEY_WAITCALLBACK FFX_FI_SWAPCHAIN_CONFIGURE_KEY_WAITCALLBACK_VK
+#define FFX_FI_SWAPCHAIN_CONFIGURE_KEY_FRAMEPACINGTUNING FFX_FI_SWAPCHAIN_CONFIGURE_KEY_FRAMEPACINGTUNING_VK
 #include <FidelityFX/host/backends/vk/ffx_vk.h>
+#pragma warning(pop)
 #include "NGX/NvNGX.h"
 #include "FFInterfaceWrapper.h"
 
 D3D12_RESOURCE_FLAGS ffxGetDX12ResourceFlags(FfxResourceUsage flags);
 D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
 ID3D12Resource *getDX12ResourcePtr(struct BackendContext_DX12 *backendContext, int32_t resourceIndex);
-uint64_t GetCurrentGpuMemoryUsageDX12(FfxInterface *backendInterface);
+uint64_t GetResourceGpuMemorySizeDX12(ID3D12Resource *resource);
 static DXGI_FORMAT convertFormatUav(DXGI_FORMAT format);
 static DXGI_FORMAT convertFormatSrv(DXGI_FORMAT format);
 
@@ -108,8 +117,7 @@ FfxErrorCode FFInterfaceWrapper::CustomCreateResourceDX12(
 	BackendContext_DX12::EffectContext& effectContext = backendContext->pEffectContexts[effectContextId];
 	ID3D12Device *dx12Device = backendContext->device;
 
-	uint64_t vramBefore = GetCurrentGpuMemoryUsageDX12(backendInterface);
-
+	uint64_t resourceSize = 0;
 	FFX_ASSERT(NULL != dx12Device);
 
 	D3D12_HEAP_PROPERTIES dx12HeapProperties = {};
@@ -234,6 +242,7 @@ FfxErrorCode FFInterfaceWrapper::CustomCreateResourceDX12(
 		if (!dx12Resource)
 			return FFX_ERROR_OUT_OF_MEMORY;
 #endif // DLSSG-TO-FSR3 END REPLACED
+		resourceSize = GetResourceGpuMemorySizeDX12(dx12Resource);
 
 		backendResource->initialState = FFX_RESOURCE_STATE_GENERIC_READ;
 		backendResource->currentState = FFX_RESOURCE_STATE_GENERIC_READ;
@@ -304,7 +313,7 @@ FfxErrorCode FFInterfaceWrapper::CustomCreateResourceDX12(
 		if (!dx12Resource)
 			return FFX_ERROR_OUT_OF_MEMORY;
 #endif // DLSSG-TO-FSR3 END REPLACED
-
+		resourceSize = GetResourceGpuMemorySizeDX12(dx12Resource);
 		backendResource->initialState = resourceStates;
 		backendResource->currentState = resourceStates;
 
@@ -513,12 +522,10 @@ FfxErrorCode FFInterfaceWrapper::CustomCreateResourceDX12(
 		}
 	}
 
-	uint64_t vramAfter = GetCurrentGpuMemoryUsageDX12(backendInterface);
-	uint64_t vramDelta = vramAfter - vramBefore;
-	effectContext.vramUsage.totalUsageInBytes += vramDelta;
+	effectContext.vramUsage.totalUsageInBytes += resourceSize;
 	if ((createResourceDescription->resourceDescription.flags & FFX_RESOURCE_FLAGS_ALIASABLE) == FFX_RESOURCE_FLAGS_ALIASABLE)
 	{
-		effectContext.vramUsage.aliasableUsageInBytes += vramDelta;
+		effectContext.vramUsage.aliasableUsageInBytes += resourceSize;
 	}
 
 	return FFX_OK;
@@ -541,7 +548,7 @@ FfxErrorCode FFInterfaceWrapper::CustomDestroyResourceDX12(
 		if (dx12Resource)
 		{
 
-			uint64_t vramBefore = GetCurrentGpuMemoryUsageDX12(backendInterface);
+			uint64_t resourceSize = GetResourceGpuMemorySizeDX12(dx12Resource);
 
 #if 0 // DLSSG-TO-FSR3 REPLACED
 			dx12Resource->Release();
@@ -550,13 +557,11 @@ FfxErrorCode FFInterfaceWrapper::CustomDestroyResourceDX12(
 #endif // DLSSG-TO-FSR3 END REPLACED
 
 			// update effect memory usage
-			uint64_t vramAfter = GetCurrentGpuMemoryUsageDX12(backendInterface);
-			uint64_t vramDelta = vramBefore - vramAfter;
-			effectContext.vramUsage.totalUsageInBytes -= vramDelta;
+			effectContext.vramUsage.totalUsageInBytes -= resourceSize;
 			if ((backendContext->pResources[resource.internalIndex].resourceDescription.flags & FFX_RESOURCE_FLAGS_ALIASABLE) ==
 				FFX_RESOURCE_FLAGS_ALIASABLE)
 			{
-				effectContext.vramUsage.aliasableUsageInBytes -= vramDelta;
+				effectContext.vramUsage.aliasableUsageInBytes -= resourceSize;
 			}
 
 			backendContext->pResources[resource.internalIndex].resourcePtr = nullptr;
@@ -623,7 +628,7 @@ static DXGI_FORMAT convertFormatSrv(DXGI_FORMAT format)
 {
 	switch (format)
 	{
-		// Handle Depth
+	// Handle Depth
 	case DXGI_FORMAT_R32G8X24_TYPELESS:
 	case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
 		return DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
@@ -636,13 +641,33 @@ static DXGI_FORMAT convertFormatSrv(DXGI_FORMAT format)
 	case DXGI_FORMAT_D16_UNORM:
 		return DXGI_FORMAT_R16_UNORM;
 
-		// Handle Color
-	case DXGI_FORMAT_B8G8R8A8_TYPELESS:
-		return DXGI_FORMAT_B8G8R8A8_UNORM;
+	// Handle color: assume FLOAT for 16 and 32 bit channels, else UNORM
+	case DXGI_FORMAT_R32G32B32A32_TYPELESS:
+		return DXGI_FORMAT_R32G32B32A32_FLOAT;
+	case DXGI_FORMAT_R32G32B32_TYPELESS:
+		return DXGI_FORMAT_R32G32B32_FLOAT;
+	case DXGI_FORMAT_R16G16B16A16_TYPELESS:
+		return DXGI_FORMAT_R16G16B16A16_FLOAT;
 	case DXGI_FORMAT_R8G8B8A8_TYPELESS:
 		return DXGI_FORMAT_R8G8B8A8_UNORM;
-
-		// Others can map as is
+	case DXGI_FORMAT_R32G32_TYPELESS:
+		return DXGI_FORMAT_R32G32_FLOAT;
+	case DXGI_FORMAT_R16G16_TYPELESS:
+		return DXGI_FORMAT_R16G16_FLOAT;
+	case DXGI_FORMAT_R10G10B10A2_TYPELESS:
+		return DXGI_FORMAT_R10G10B10A2_UNORM;
+	case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+		return DXGI_FORMAT_B8G8R8A8_UNORM;
+	case DXGI_FORMAT_B8G8R8X8_TYPELESS:
+		return DXGI_FORMAT_B8G8R8X8_UNORM_SRGB;
+	case DXGI_FORMAT_R32_TYPELESS:
+		return DXGI_FORMAT_R32_FLOAT;
+	case DXGI_FORMAT_R8G8_TYPELESS:
+		return DXGI_FORMAT_R8G8_UNORM;
+	case DXGI_FORMAT_R16_TYPELESS:
+		return DXGI_FORMAT_R16_FLOAT;
+	case DXGI_FORMAT_R8_TYPELESS:
+		return DXGI_FORMAT_R8_UNORM;
 	default:
 		return format;
 	}
