@@ -332,6 +332,21 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 		float projMatrix[4][4];
 		memcpy(projMatrix, cameraViewToClip, sizeof(projMatrix));
 
+		// BUG: Various RTX Remix-based games pass in an identity matrix which is completely useless. No
+		// idea why.
+		const bool isEmptyOrIdentityMatrix = [&]()
+		{
+			float m[4][4] = {};
+			if (memcmp(projMatrix, m, sizeof(m)) == 0)
+				return true;
+
+			m[0][0] = m[1][1] = m[2][2] = m[3][3] = 1.0f;
+			return memcmp(projMatrix, m, sizeof(m)) == 0;
+		}();
+
+		if (isEmptyOrIdentityMatrix)
+			return false;
+
 		// a 0 0 0
 		// 0 b 0 0
 		// 0 0 c e
@@ -365,6 +380,10 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 		// Some games pass in CameraFOV as degrees. Some games pass in CameraFOV as radians. Which is
 		// correct? Who knows. I sure as hell don't.
 		desc.CameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0.0f);
+
+		// BUG: RTX Remix-based games pass in a FOV of 0. This is a kludge.
+		if (desc.CameraFovAngleVertical == 0.0f)
+			desc.CameraFovAngleVertical = 90.0f;
 
 		if (desc.CameraFovAngleVertical > 10.0f)
 			desc.CameraFovAngleVertical *= std::numbers::pi_v<float> / 180.0f;
