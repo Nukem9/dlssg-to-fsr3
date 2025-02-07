@@ -148,17 +148,16 @@ bool FFFrameInterpolator::CalculateResourceDimensions(NGXInstanceParameters *NGX
 	if (m_PostUpscaleRenderWidth <= 32 || m_PostUpscaleRenderHeight <= 32)
 		return false;
 
-	// I've no better place to put this. Dying Light 2 is beyond screwed up.
 	//
-	// 1. They take a D24 depth buffer and explicitly convert it to RGBA8. The GBA channels are unused. This
-	//    is passed to Streamline as the "depth" buffer.
+	// At some point in time a Dying Light 2 patch fixed its depth resource issue. The game now passes
+	// the correct resource to Streamline. Prior to this, depth was being converted to RGBA8.
 	//
-	// 2. They take the same RGBA8 "depth" buffer above and pass it to Streamline as the "HUD-less" color
-	//    buffer.
+	// On the other hand DL2's HUD-less resource is still screwed up. There appears to be two separate
+	// typos (copy-paste?) resulting in depth being bound as HUD-less. Manually patching game code
+	// (x86 instructions) is an effective workaround but comes with a catch: DL2's actual "HUDLESS"
+	// resource is untonemapped and therefore unusable in FSR FG.
 	//
-	// How's it possible to be this incompetent? Have these people used a debugger? The debug visualizer? For
-	// all I know the native DLSS-G implementation doesn't even work. It could just be duplicating frames.
-	const static auto isDyingLight2 = GetModuleHandleW(L"DyingLightGame_x64_rwdi.exe") != nullptr;
+	const static bool isDyingLight2 = GetModuleHandleW(L"DyingLightGame_x64_rwdi.exe") != nullptr;
 
 	if (isDyingLight2)
 	{
