@@ -75,7 +75,7 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 	if (dispatchStatus == FFX_OK && gameRealOutputResource.resource && gameBackBufferResource.resource)
 		CopyTexture(GetActiveCommandList(), &gameRealOutputResource, &gameBackBufferResource);
 
-	return dispatchStatus;
+ 	return dispatchStatus;
 }
 
 void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
@@ -86,7 +86,12 @@ void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
 	if (CreateOpticalFlowContext() != FFX_OK)
 		throw std::runtime_error("Failed to create optical flow context.");
 
-	m_FrameInterpolatorContext.emplace(m_FrameInterpolationBackendInterface, m_SwapchainWidth, m_SwapchainHeight);
+	m_FrameInterpolatorContext.emplace(
+		m_FrameInterpolationBackendInterface,
+		m_SharedBackendInterface,
+		*m_SharedEffectContextId,
+		m_SwapchainWidth,
+		m_SwapchainHeight);
 }
 
 void FFFrameInterpolator::Destroy()
@@ -431,7 +436,11 @@ FfxErrorCode FFFrameInterpolator::CreateBackend(NGXInstanceParameters *NGXParame
 	if (status != FFX_OK)
 		return status;
 
-	status = m_SharedBackendInterface.fpCreateBackendContext(&m_SharedBackendInterface, nullptr, &m_SharedEffectContextId.emplace());
+	status = m_SharedBackendInterface.fpCreateBackendContext(
+		&m_SharedBackendInterface,
+		FFX_EFFECT_FRAMEINTERPOLATION,
+		nullptr,
+		&m_SharedEffectContextId.emplace());
 
 	if (status != FFX_OK)
 	{
