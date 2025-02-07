@@ -40,7 +40,7 @@
 /// FidelityFX OpticalFlow patch version.
 ///
 /// @ingroup ffxOpticalflow
-#define FFX_OPTICALFLOW_VERSION_PATCH (1)
+#define FFX_OPTICALFLOW_VERSION_PATCH (2)
 
 /// FidelityFX Optical Flow context count
 ///

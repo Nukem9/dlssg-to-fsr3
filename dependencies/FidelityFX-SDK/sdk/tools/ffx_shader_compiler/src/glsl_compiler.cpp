@@ -265,17 +265,17 @@ bool GLSLCompiler::GLSLCompiler::Compile(Permutation& permutation, const std::ve
     {
         writeMutex.lock();
 
-        printf("%s[%lu]\n", m_ShaderFileName.c_str(), permutation.key);
+        fprintf(stderr, "%s[%lu]\n", m_ShaderFileName.c_str(), permutation.key);
 
         for (size_t i = 1; i < errors.size(); i++)
         {
             if (errors[i].lineNumber > -1)
             {
-                printf("%s(%d) : glslangValidator error : %s\n", m_ShaderPath.c_str(), errors[i].lineNumber, errors[i].error.c_str());
+                fprintf(stderr, "%s(%d) : glslangValidator error : %s\n", m_ShaderPath.c_str(), errors[i].lineNumber, errors[i].error.c_str());
             }
             else
             {
-                printf("%s\n", errors[i].error.c_str());
+                fprintf(stderr, "%s\n", errors[i].error.c_str());
             }
         }
 

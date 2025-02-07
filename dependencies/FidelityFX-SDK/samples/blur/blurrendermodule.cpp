@@ -291,8 +291,8 @@ void BlurRenderModule::InitFfxBackend()
     CAULDRON_ASSERT(errorCode == FFX_OK);
 
     // valid effect library and backend versions
-    CauldronAssert(ASSERT_CRITICAL, m_BackendInterface.fpGetSDKVersion(&m_BackendInterface) == FFX_SDK_MAKE_VERSION(1, 1, 0),
-                        L"FidelityFX Blur 1.1 sample requires linking with a 1.1 version SDK backend");
+    CauldronAssert(ASSERT_CRITICAL, m_BackendInterface.fpGetSDKVersion(&m_BackendInterface) == FFX_SDK_MAKE_VERSION(1, 1, 2),
+                        L"FidelityFX Blur 1.1 sample requires linking with a 1.1.2 version SDK backend");
 
 
     CauldronAssert(ASSERT_CRITICAL, ffxBlurGetEffectVersion() == FFX_SDK_MAKE_VERSION(1, 1, 0),

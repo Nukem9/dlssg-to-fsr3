@@ -54,6 +54,11 @@ namespace cauldron
                 SetShadingRate(this, pVrsInfo->BaseShadingRate, pVrsInfo->Combiners);
             }
         }
+        else
+        {
+            ShadingRateCombiner combiner[] = {ShadingRateCombiner::ShadingRateCombiner_Passthrough, ShadingRateCombiner::ShadingRateCombiner_Passthrough};
+            SetShadingRate(this, ShadingRate::ShadingRate_1X1, combiner);
+        }
     }
 
     void CommandList::EndVRSRendering(const VariableShadingRateInfo* pVrsInfo)

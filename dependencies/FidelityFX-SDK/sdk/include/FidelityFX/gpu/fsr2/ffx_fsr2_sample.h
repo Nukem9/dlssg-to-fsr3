@@ -139,14 +139,6 @@ FfxFloat32 Lanczos2(FfxFloat32 x)
 
 #if FFX_HALF
 
-#if 0
-FFX_MIN16_F Lanczos2NoClamp(FFX_MIN16_F x)
-{
-    const FFX_MIN16_F PI = FFX_MIN16_F(3.141592653589793f); // TODO: share SDK constants
-    return abs(x) < FFX_MIN16_F(FSR2_EPSILON) ? FFX_MIN16_F(1.f) : (sin(PI * x) / (PI * x)) * (sin(FFX_MIN16_F(0.5f) * PI * x) / (FFX_MIN16_F(0.5f) * PI * x));
-}
-#endif
-
 FFX_MIN16_F Lanczos2(FFX_MIN16_F x)
 {
     x = ffxMin(abs(x), FFX_MIN16_F(2.0f));
@@ -169,6 +161,26 @@ FFX_MIN16_F Lanczos2ApproxSqNoClamp(FFX_MIN16_F x2)
     FFX_MIN16_F b = FFX_MIN16_F(1.0f / 4.0f) * x2 - FFX_MIN16_F(1);
     return (FFX_MIN16_F(25.0f / 16.0f) * a * a - FFX_MIN16_F(25.0f / 16.0f - 1)) * (b * b);
 }
+
+#if defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+
+FFX_MIN16_F2 PairedLanczos2ApproxSqNoClamp(FFX_MIN16_F2 x2)
+{
+    // Xbox ATG (Pavel):
+    // 
+    //     2.0 * x2 - 5.0     25.0           25.0 - 16.0     (2.0 * x2 - 5.0)^2 - (3.0)^2    (2.0 * x2 - 8.0) * (2.0 * x2 - 2.0)   (x2 - 4.0) * (x2 - 1.0)
+    // a = -------------- ==> ---- * a^2 - -------------- = ----------------------------- =  ---------------------------------- =  ----------------------- = b * (x2 - 1.0)
+    //           5.0          16.0              16.0                16.0                                     16.0                            4.0
+    //
+    // so we need to compute just (b * b) * (b * x2 - b), so we should get four packed instructions: 2 fma + 2 mul
+    //
+
+    FFX_MIN16_F2 b = (0.25 * x2 - 1.0);
+    return (b * b) * (b * x2 - b);
+}
+
+#endif
+
 #endif //FFX_HALF
 
 FfxFloat32 Lanczos2ApproxSq(FfxFloat32 x2)
@@ -183,6 +195,15 @@ FFX_MIN16_F Lanczos2ApproxSq(FFX_MIN16_F x2)
     x2 = ffxMin(x2, FFX_MIN16_F(4.0f));
     return Lanczos2ApproxSqNoClamp(x2);
 }
+
+#if defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+FFX_MIN16_F2 PairedLanczos2ApproxSq(FFX_MIN16_F2 x2)
+{
+    x2 = ffxMin(x2, FFX_MIN16_F2(4.0, 4.0));
+    return PairedLanczos2ApproxSqNoClamp(x2);
+}
+#endif
+
 #endif //FFX_HALF
 
 FfxFloat32 Lanczos2ApproxNoClamp(FfxFloat32 x)
@@ -219,6 +240,21 @@ FFX_MIN16_F Lanczos2_UseLUT(FFX_MIN16_F x)
 {
     return FFX_MIN16_F(SampleLanczos2Weight(abs(x)));
 }
+
+#if defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+
+FFX_MIN16_F Lanczos2_UseLUTNoAbs(FFX_MIN16_F x)
+{
+    return SampleLanczos2Weight_NoValu(x);
+}
+
+FFX_MIN16_F Lanczos2_UseLUTNoAbsNoA16(FfxFloat32 x)
+{
+    return SampleLanczos2Weight_NoValuNoA16(x);
+}
+
+#endif
+
 #endif //FFX_HALF
 
 FfxFloat32x4 Lanczos2_UseLUT(FfxFloat32x4 fColor0, FfxFloat32x4 fColor1, FfxFloat32x4 fColor2, FfxFloat32x4 fColor3, FfxFloat32 t)
@@ -364,6 +400,19 @@ FfxFloat32x4 Lanczos2LUT(FetchedBicubicSamples Samples, FfxFloat32x2 fPxFrac)
 }
 
 #if FFX_HALF
+
+#if defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+FFX_MIN16_F4 Lanczos2ApplyWeightX(FFX_MIN16_F4 fColor0, FFX_MIN16_F4 fColor1, FFX_MIN16_F4 fColor2, FFX_MIN16_F4 fColor3, FFX_MIN16_F2 fWeight0, FFX_MIN16_F2 fWeight1, FFX_MIN16_F2 fWeight2, FFX_MIN16_F2 fWeight3, FFX_MIN16_F2 fWeightSumInverted)
+{
+    return (((fWeight0.x * fColor0) + fWeight1.x * fColor1) + ((fWeight2.x * fColor2) + fWeight3.x * fColor3)) * fWeightSumInverted.x;
+}
+
+FFX_MIN16_F4 Lanczos2ApplyWeightY(FFX_MIN16_F4 fColor0, FFX_MIN16_F4 fColor1, FFX_MIN16_F4 fColor2, FFX_MIN16_F4 fColor3, FFX_MIN16_F2 fWeight0, FFX_MIN16_F2 fWeight1, FFX_MIN16_F2 fWeight2, FFX_MIN16_F2 fWeight3, FFX_MIN16_F2 fWeightSumInverted)
+{
+    return (((fWeight0.y * fColor0) + fWeight1.y * fColor1) + ((fWeight2.y * fColor2) + fWeight3.y * fColor3)) * fWeightSumInverted.y;
+}
+#endif
+
 FFX_MIN16_F4 Lanczos2LUT(FetchedBicubicSamplesMin16 Samples, FFX_MIN16_F2 fPxFrac)
 {
     FFX_MIN16_F4 fColorX0 = Lanczos2_UseLUT(Samples.fColor00, Samples.fColor10, Samples.fColor20, Samples.fColor30, fPxFrac.x);

@@ -28,6 +28,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include <atomic>
 #include <cstdint>
 
 #include "FrameInterpolationSwapchainVK_Helpers.h"
@@ -141,9 +142,17 @@ typedef struct ReplacementResource
 {
     VkImage                image                      = VK_NULL_HANDLE;
     VkDeviceMemory         memory                     = VK_NULL_HANDLE;
+    VkDeviceSize           allocationSize             = 0;
     uint64_t               availabilitySemaphoreValue = 0;
     FfxResourceDescription description                = {};
 } ReplacementResource;
+
+enum class FGSwapchainCompositionMode
+{
+    eNone,
+    eComposeOnPresentQueue,  ///< optimal behavior
+    eComposeOnGameQueue      ///< legacy behavior
+};
 
 struct FrameinterpolationPresentInfo
 {
@@ -151,6 +160,8 @@ struct FrameinterpolationPresentInfo
 
     PacingData scheduledInterpolations;
     PacingData scheduledPresents;
+
+    std::atomic<VkResult> lastPresentResult = VK_SUCCESS;
 
     FfxResource currentUiSurface   = {};
     uint32_t    uiCompositionFlags = 0;
@@ -191,13 +202,19 @@ struct FrameinterpolationPresentInfo
     HANDLE           pacerEvent                    = NULL;
     CRITICAL_SECTION swapchainCriticalSection;
 
-    bool          resetTimer = false;
-    volatile bool shutdown = false;
+    FGSwapchainCompositionMode compositionMode = FGSwapchainCompositionMode::eNone;
+    volatile bool              resetTimer      = false;
+    volatile bool              shutdown        = false;
 
     VkResult acquireNextRealImage(uint32_t& imageIndex, VkSemaphore& acquireSemaphore);
 
     // small helpers for queue ownership transfer
     VkImageMemoryBarrier queueFamilyOwnershipTransferGameToPresent(FfxResource resource) const;
+
+    volatile double            safetyMarginInSec = 0.0001; //0.1ms
+    volatile double            varianceFactor    = 0.1;
+
+    FfxWaitCallbackFunc waitCallback               = nullptr;
 };
 
 //////////////////////////////////////////////
@@ -227,16 +244,19 @@ public:  // vulkan functions reimplementation
 
 public:
     void            setFrameGenerationConfig(FfxFrameGenerationConfig const* config);
+    void            setFramePacingTuning(const FfxSwapchainFramePacingTuning* framePacingTuning);
     bool            waitForPresents();
     FfxResource     interpolationOutput(int index = 0);
     VkCommandBuffer getInterpolationCommandList();
     void            registerUiResource(FfxResource uiResource, uint32_t flags);
+    void            setWaitCallback(FfxWaitCallbackFunc waitCallbackFunc);
+    void            getGpuMemoryUsage(FfxEffectMemoryUsage* vramUsage);
 
 private:
     bool spawnPresenterThread();
     bool killPresenterThread();
 
-    void     presentInterpolated(const VkPresentInfoKHR* pPresentInfo, uint32_t currentBackBufferIndex, bool needUICopy);
+    VkResult presentInterpolated(const VkPresentInfoKHR* pPresentInfo, uint32_t currentBackBufferIndex, bool needUICopy);
     VkResult presentPassthrough(uint32_t              imageIndex,
                                 SubmissionSemaphores& gameQueueWait,
                                 SubmissionSemaphores& gameQueueSignal,
@@ -263,6 +283,21 @@ private:
     bool                 verifyUiDuplicateResource();
     VkImageMemoryBarrier copyUiResource(VkCommandBuffer commandBuffer, SubmissionSemaphores& gameQueueWait, bool transferToPresentQueue);
 
+    VkResult createImage(ReplacementResource&                    resource,
+                         VkImageCreateInfo&                      info,
+                         FfxSurfaceFormat                        format,
+                         const char*                             name,
+                         const VkPhysicalDeviceMemoryProperties& memProperties,
+                         const VkAllocationCallbacks*            pAllocator);
+    VkResult createImage(ReplacementResource&                    resource,
+                         VkImageCreateInfo&                      info,
+                         FfxSurfaceFormat                        format,
+                         const char*                             name,
+                         uint32_t                                index,
+                         const VkPhysicalDeviceMemoryProperties& memProperties,
+                         const VkAllocationCallbacks*            pAllocator);
+    void destroyImage(ReplacementResource& resource, const VkAllocationCallbacks* pAllocator);
+
 private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
@@ -274,9 +309,10 @@ private:
     FrameinterpolationPresentInfo presentInfo               = {};
     FfxFrameGenerationConfig      nextFrameGenerationConfig = {};
 
-    uint64_t interpolationSemaphoreValue      = 0;
-    uint64_t gameSemaphoreValue               = 0;
-    bool     frameInterpolationResetCondition = false;
+    uint64_t  interpolationSemaphoreValue      = 0;
+    uint64_t  gameSemaphoreValue               = 0;
+    bool      frameInterpolationResetCondition = false;
+    FfxRect2D interpolationRect;
     
     uint32_t            gameBufferCount                                                             = 0;
     ReplacementResource replacementSwapBuffers[FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_BUFFER_COUNT] = {};
@@ -286,6 +322,9 @@ private:
     uint32_t            interpolationBufferIndex                                                    = 0;
     uint64_t            presentCount                                                                = 0;
     uint64_t            acquiredCount                                                               = 0;
+
+    VkDeviceSize totalUsageInBytes     = 0;
+    VkDeviceSize aliasableUsageInBytes = 0;
 
     FfxFsr3FrameGenerationFlags configFlags = {};
 

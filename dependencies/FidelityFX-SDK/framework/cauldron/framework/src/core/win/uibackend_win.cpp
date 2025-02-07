@@ -32,10 +32,11 @@
 #include "render/device.h"
 #include "render/dynamicresourcepool.h"
 #include "render/rendermodules/ui/uirendermodule.h"
+#include "render/rendermodules/fpslimiter/fpslimiterrendermodule.h"
 #include "render/profiler.h"
 #include "render/swapchain.h"
 
-#include "render/rendermodules/runtimeshaderrecompiler/runtimeshaderrecompilerrendermodule.h"
+#include "render/rendermodules/rsr/runtimeshaderrecompilerrendermodule.h"
 
 // For windows DPI scaling fetching
 #include <shellscalingapi.h>
@@ -227,6 +228,48 @@ namespace cauldron
                 {
                     // Build the scene representation UI
                     BuildSceneTab();
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("Anti-Lag 2"))
+                {
+                    bool enabled = GetFramework()->GetDevice()->GetAntiLag2Enabled();
+
+                    if (!GetFramework()->GetDevice()->GetAntiLag2FeatureSupported())
+                        ImGui::BeginDisabled();
+
+                    if (ImGui::Checkbox("Anti-Lag 2 Enabled", &enabled))
+                    {
+                        GetFramework()->GetDevice()->SetAntiLag2Enabled(enabled);
+                    }
+
+                    if (enabled)
+                    {
+                        static bool limiter      = false;
+                        static int  limiterValue = 0;
+                        ImGui::Checkbox("Framerate Limiter Enabled", &limiter);
+
+                        if (!limiter)
+                            ImGui::BeginDisabled();
+
+                        ImGui::SliderInt("Max FPS", &limiterValue, 50, 300);
+
+                        GetFramework()->GetDevice()->SetAntiLag2FramerateLimiter(limiter ? limiterValue : 0);
+
+                        const FPSLimiterRenderModule* limiterModule = (const FPSLimiterRenderModule*)GetFramework()->GetRenderModule("FPSLimiterRenderModule");
+                        if (limiterModule && limiterModule->IsFPSLimited())
+                            ImGui::Text("(You need to disable the main framerate limiter first)");
+
+                        if (!limiter)
+                        {
+                            ImGui::EndDisabled();
+                            GetFramework()->GetDevice()->SetAntiLag2FramerateLimiter(0);
+                        }
+                    }
+
+                    if (!GetFramework()->GetDevice()->GetAntiLag2FeatureSupported())
+                        ImGui::EndDisabled();
+
                     ImGui::EndTabItem();
                 }
 

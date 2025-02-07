@@ -225,8 +225,8 @@ void CACAORenderModule::InitSdkContexts()
     FfxErrorCode errorCode         = SDKWrapper::ffxGetInterface(&m_FfxInterface, GetDevice(), scratchBuffer, 
                                                      scratchBufferSize, FFX_CACAO_CONTEXT_COUNT * 2);
     CauldronAssert(ASSERT_CRITICAL, errorCode == FFX_OK, L"Could not initialize FidelityFX SDK backend context.");
-    CauldronAssert(ASSERT_CRITICAL, m_FfxInterface.fpGetSDKVersion(&m_FfxInterface) == FFX_SDK_MAKE_VERSION(1, 1, 0),
-        L"FidelityFX CACAO 2.1 sample requires linking with a 1.1 version SDK backend");
+    CauldronAssert(ASSERT_CRITICAL, m_FfxInterface.fpGetSDKVersion(&m_FfxInterface) == FFX_SDK_MAKE_VERSION(1, 1, 2),
+        L"FidelityFX CACAO 2.1 sample requires linking with a 1.1.2 version SDK backend");
     CauldronAssert(ASSERT_CRITICAL, ffxCacaoGetEffectVersion() == FFX_SDK_MAKE_VERSION(1, 4, 0),
                        L"FidelityFX Cacao 2.1 sample requires linking with a 1.4 version FidelityFX Cacao library");
                        

@@ -1,6 +1,6 @@
-<!-- @page page_techniques_blur FidelityFX Blur 1.0 -->
+<!-- @page page_techniques_blur FidelityFX Blur 1.1 -->
 
-<h1>FidelityFX Blur 1.0</h1>
+<h1>FidelityFX Blur 1.1</h1>
 
 **FidelityFX Blur** is a compute-based, highly-optimized, single-pass Gaussian blur technique.
 

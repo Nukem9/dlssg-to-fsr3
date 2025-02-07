@@ -55,7 +55,7 @@
 /// The size of the context specified in 32bit values.
 ///
 /// @ingroup Denoiser
-#define FFX_DENOISER_CONTEXT_SIZE (73076)
+#define FFX_DENOISER_CONTEXT_SIZE (73098)
 
 #if defined(__cplusplus)
 extern "C" {

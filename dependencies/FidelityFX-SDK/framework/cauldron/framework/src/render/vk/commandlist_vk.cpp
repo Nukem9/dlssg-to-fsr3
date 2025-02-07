@@ -834,7 +834,14 @@ namespace cauldron
         CauldronAssert(ASSERT_WARNING, numColorViews <= 8, L"Cannot set more than 8 render targets.");
 
         if (pVrsInfo != nullptr)
+        {
             pCmdList->BeginVRSRendering(pVrsInfo);
+        }
+        else
+        {
+            ShadingRateCombiner combiner[] = {ShadingRateCombiner::ShadingRateCombiner_Passthrough, ShadingRateCombiner::ShadingRateCombiner_Passthrough};
+            SetShadingRate(pCmdList, ShadingRate::ShadingRate_1X1, combiner);
+        }
 
         VkRenderingInfo renderingInfo     = {};
         renderingInfo.sType               = VK_STRUCTURE_TYPE_RENDERING_INFO;

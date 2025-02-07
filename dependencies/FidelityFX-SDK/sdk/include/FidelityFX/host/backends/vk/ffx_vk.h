@@ -44,6 +44,14 @@ typedef struct VkQueueInfoFFX
     PFN_vkQueueSubmitFFX submitFunc;
 } VkQueueInfoFFX;
 
+
+typedef enum VkCompositonModeFFX
+{
+    VK_COMPOSITION_MODE_NOT_FORCED_FFX,
+    VK_COMPOSITION_MODE_GAME_QUEUE_FFX,
+    VK_COMPOSITION_MODE_PRESENT_QUEUE_FFX,
+} VkCompositonModeFFX;
+
 /// Structure holding additional information to effectively replace the game swapchain by the frame interpolation one.
 /// Some notes on the queues:
 ///   - please pass the queue, its family (for queue family ownership transfer purposes) and an optional function if you want to control concurrent submissions
@@ -61,6 +69,7 @@ typedef struct VkFrameInterpolationInfoFFX
     VkQueueInfoFFX               asyncComputeQueue;
     VkQueueInfoFFX               presentQueue;
     VkQueueInfoFFX               imageAcquireQueue;
+    VkCompositonModeFFX          compositionMode;
     const VkAllocationCallbacks* pAllocator;
 } VkFrameInterpolationInfoFFX;
 
@@ -299,6 +308,40 @@ FFX_API FfxResource ffxGetFrameinterpolationTextureVK(FfxSwapchain gameSwapChain
 ///
 /// @ingroup VKFrameInterpolation
 FFX_API FfxErrorCode ffxSetFrameGenerationConfigToSwapchainVK(FfxFrameGenerationConfig const* config);
+
+//enum values should match enum FfxApiConfigureFrameGenerationSwapChainKeyVK
+typedef enum FfxFrameInterpolationSwapchainConfigureKey
+{
+    FFX_FI_SWAPCHAIN_CONFIGURE_KEY_WAITCALLBACK = 0,
+    FFX_FI_SWAPCHAIN_CONFIGURE_KEY_FRAMEPACINGTUNING = 2,
+} FfxFrameInterpolationSwapchainConfigureKey;
+
+/// Configures <c><i>FfxSwapchain</i></c> via KeyValue API post <c><i>FfxSwapchain</i></c> context creation
+///
+/// @param [in] gameSwapChain           The <c><i>FfxSwapchain</i></c> to configure via KeyValue API
+/// @param [in] key                     The <c><i>FfxFrameInterpolationSwapchainConfigureKey</i></c> is key
+/// @param [in] valuePtr                The <c><i><void *></i></c> pointer to value. What this pointer deference to depends on key.
+/// 
+/// @retval
+/// FFX_OK                              The operation completed successfully.
+/// @retval
+/// FFX_ERROR_INVALID_ARGUMENT          Could not query the interface for the frame interpolation swap chain.
+///
+/// @ingroup VKFrameInterpolation
+FFX_API FfxErrorCode ffxConfigureFrameInterpolationSwapchainVK(FfxSwapchain gameSwapChain, FfxFrameInterpolationSwapchainConfigureKey key, void* valuePtr);
+
+/// Query how much GPU memory created by <c><i>FfxSwapchain</i></c>. This excludes GPU memory created by the VkSwapchain (ie. size of backbuffers).
+///
+/// @param [in] gameSwapChain           The <c><i>FfxSwapchain</i></c> to configure via KeyValue API
+/// @param [in out] vramUsage           The <c><i>FfxEffectMemoryUsage</i></c> is the GPU memory created by FrameInterpolationSwapchain
+/// 
+/// @retval
+/// FFX_OK                              The operation completed successfully.
+/// @retval
+/// FFX_ERROR_INVALID_ARGUMENT          Could not query the interface for the frame interpolation swap chain.
+///
+/// @ingroup VKFrameInterpolation
+FFX_API FfxErrorCode ffxFrameInterpolationSwapchainGetGpuMemoryUsageVK(FfxSwapchain gameSwapChain, FfxEffectMemoryUsage* vramUsage);
 
 typedef VkResult (*PFN_vkCreateSwapchainFFX)(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain, const VkFrameInterpolationInfoFFX* pFrameInterpolationInfo);
 

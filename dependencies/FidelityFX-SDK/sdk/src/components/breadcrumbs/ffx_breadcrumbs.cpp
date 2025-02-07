@@ -245,10 +245,10 @@ static FfxErrorCode breadcrumbsCreate(FfxBreadcrumbsContext_Private* context, co
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
     
     // Create the context.
-    FfxErrorCode errorCode = context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId);
+    FfxErrorCode errorCode = context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_BREADCRUMBS, nullptr, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     // Save GPU queues indetifiers

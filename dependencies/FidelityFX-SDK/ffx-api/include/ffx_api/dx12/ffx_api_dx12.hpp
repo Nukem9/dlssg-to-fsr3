@@ -75,4 +75,9 @@ struct struct_type<ffxConfigureDescFrameGenerationSwapChainKeyValueDX12> : std::
 
 struct ConfigureDescFrameGenerationSwapChainKeyValueDX12 : public InitHelper<ffxConfigureDescFrameGenerationSwapChainKeyValueDX12> {};
 
+template<>
+struct struct_type<ffxQueryFrameGenerationSwapChainGetGPUMemoryUsageDX12> : std::integral_constant<uint64_t, FFX_API_QUERY_DESC_TYPE_FRAMEGENERATIONSWAPCHAIN_GPU_MEMORY_USAGE_DX12> {};
+
+struct QueryFrameGenerationSwapChainGetGPUMemoryUsageDX12 : public InitHelper<ffxQueryFrameGenerationSwapChainGetGPUMemoryUsageDX12> {};
+
 }

@@ -1,17 +1,17 @@
 # This file is part of the FidelityFX SDK.
-# 
+#
 # Copyright (C) 2024 Advanced Micro Devices, Inc.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files(the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions :
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,8 +42,12 @@ if(CMAKE_GENERATOR_PLATFORM STREQUAL "x64" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/
     set(FFX_PLATFORM_NAME x64)
 elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "Win32" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/machine:X86")
     set(FFX_PLATFORM_NAME x86)
+elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/machine:ARM64")
+    set(FFX_PLATFORM_NAME ARM64)
+elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64EC" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/machine:ARM64EC")
+    set(FFX_PLATFORM_NAME ARM64EC)
 else()
-    message(FATAL_ERROR "Unsupported target platform \"${CMAKE_GENERATOR_PLATFORM}\" - only supporting x64 and Win32 currently")
+    message(FATAL_ERROR "Unsupported target platform \"${CMAKE_GENERATOR_PLATFORM}\"")
 endif()
 
 target_compile_definitions(backend_shader_reloader_impl PRIVATE FFX_PLATFORM_NAME=\"${FFX_PLATFORM_NAME}\")

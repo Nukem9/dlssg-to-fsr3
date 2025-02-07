@@ -105,8 +105,8 @@ public:
     enum Backend
     {
         DXC,                    ///< Use included DXC compiler processes
-        GDK_DESKTOP_X64,        ///< Use GDK-provided shader compiler dll (requires the GDK be installed)
         GDK_SCARLETT_X64,       ///< Use GDK-provided shader compiler dll (requires the GDK be installed)
+        GDK_XBOXONE_X64,        ///< Use GDK-provided shader compiler dll (requires the GDK be installed)
         FXC                     ///< Use included FXC compiler processes
     };
 

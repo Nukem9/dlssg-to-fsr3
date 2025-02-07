@@ -56,7 +56,7 @@ FFX_FORWARD_DECLARE(FfxInterface);
 /// FidelityFX SDK patch version.
 ///
 /// @ingroup FfxInterface
-#define FFX_SDK_VERSION_PATCH (0)
+#define FFX_SDK_VERSION_PATCH (2)
 
 /// Macro to pack a FidelityFX SDK version id together.
 ///
@@ -106,6 +106,7 @@ typedef FfxErrorCode (*FfxGetEffectGpuMemoryUsageFunc)(FfxInterface* backendInte
 /// It will create or reference the device and create required internal data structures.
 ///
 /// @param [in]  backendInterface                    A pointer to the backend interface.
+/// @param [in]  effect                              The effect the context is being created for
 /// @param [in]  bindlessConfig                      A pointer to the bindless configuration, if required by the effect.
 /// @param [out] effectContextId                     The context space to be used for the effect in question.
 ///
@@ -117,6 +118,7 @@ typedef FfxErrorCode (*FfxGetEffectGpuMemoryUsageFunc)(FfxInterface* backendInte
 /// @ingroup FfxInterface
 typedef FfxErrorCode (*FfxCreateBackendContextFunc)(
     FfxInterface* backendInterface,
+    FfxEffect effect,
     FfxEffectBindlessConfig* bindlessConfig,
     FfxUInt32* effectContextId);
 
@@ -470,8 +472,9 @@ typedef enum FfxUiCompositionFlags
 
 typedef FfxErrorCode(*FfxPresentCallbackFunc)(const FfxPresentCallbackDescription* params, void*);
 typedef FfxErrorCode(*FfxFrameGenerationDispatchFunc)(const FfxFrameGenerationDispatchDescription* params, void*);
+typedef FfxErrorCode(*FfxWaitCallbackFunc)(wchar_t* fenceName, uint64_t fenceValueToWaitFor);
 
-/// A structure representing the configuration options to pass to FfxFrameInterpolation.
+/// A structure representing the configuration options to pass to FrameInterpolationSwapChain
 ///
 /// @ingroup FfxInterface
 typedef struct FfxFrameGenerationConfig
@@ -489,6 +492,7 @@ typedef struct FfxFrameGenerationConfig
     bool                            onlyPresentInterpolated;         ///< Set to true to only present interpolated frame
     FfxRect2D                       interpolationRect;               ///< Set the area in the backbuffer that will be interpolated 
     uint64_t                        frameID;                         ///< A frame identifier used to synchronize resource usage in workloads
+    bool                            drawDebugPacingLines;            ///< Sets the state of pacing debug lines. Set to true to display debug lines
 } FfxFrameGenerationConfig;
 
 typedef FfxErrorCode (*FfxSwapChainConfigureFrameGenerationFunc)(FfxFrameGenerationConfig const* config);

@@ -136,6 +136,7 @@ namespace cauldron
         bool AGSEnabled : 1;
         bool StablePowerState : 1;
         bool InvertedDepth : 1;
+        bool AntiLag2 : 1;
 
         // RenderDoc
         bool EnableRenderDocCapture : 1;
@@ -185,6 +186,8 @@ namespace cauldron
 
         // DisplayMode
         DisplayMode CurrentDisplayMode = DisplayMode::DISPLAYMODE_LDR;
+
+        ResourceFormat SwapChainFormat = ResourceFormat::Unknown;
 
         // Requested minimum shader model
         ShaderModel MinShaderModel = ShaderModel::SM5_1;

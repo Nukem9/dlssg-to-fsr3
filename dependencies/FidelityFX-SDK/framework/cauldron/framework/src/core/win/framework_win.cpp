@@ -374,6 +374,8 @@ namespace cauldron
         MSG msg = { 0 };
         while (msg.message != WM_QUIT)
         {
+            GetDevice()->UpdateAntiLag2();
+
             // Check to see if any messages are waiting in the queue
             while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
             {

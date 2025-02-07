@@ -876,7 +876,7 @@ static FfxErrorCode brixelizerCreate(FfxBrixelizerRawContext_Private* context, c
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
 
     // Specify bindless requirements.
     FfxEffectBindlessConfig bindlessConfig = {};
@@ -884,7 +884,7 @@ static FfxErrorCode brixelizerCreate(FfxBrixelizerRawContext_Private* context, c
 
     // Create the device.
     FfxErrorCode errorCode =
-        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, &bindlessConfig, &context->effectContextId);
+        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_BRIXELIZER, &bindlessConfig, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     // call out for device caps.

@@ -27,6 +27,11 @@
 #include <FidelityFX/host/ffx_fsr3.h>
 #include <FidelityFX/host/ffx_fsr3upscaler.h>
 #define FFX_CPU
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic ignored "-Wsign-compare"
+#endif
+
 #include <FidelityFX/gpu/ffx_core.h>
 #include <FidelityFX/gpu/fsr3/ffx_fsr3_resources.h>
 #include <ffx_object_management.h>
@@ -56,44 +61,75 @@ FfxErrorCode ffxFsr3ContextCreate(FfxFsr3Context* context, FfxFsr3ContextDescrip
 
     contextPrivate->description = *contextDescription;
 
+    contextPrivate->backendInterfaceSharedResources = contextDescription->backendInterfaceSharedResources;
     contextPrivate->backendInterfaceUpscaling = contextDescription->backendInterfaceUpscaling;
     contextPrivate->backendInterfaceFrameInterpolation = contextDescription->backendInterfaceFrameInterpolation;
 
     bool upscalingOnly                      = (contextDescription->flags & FFX_FSR3_ENABLE_UPSCALING_ONLY) != 0;
     bool interpolationOnly                  = (contextDescription->flags & FFX_FSR3_ENABLE_INTERPOLATION_ONLY) != 0;
     contextPrivate->asyncWorkloadSupported  = (contextDescription->flags & FFX_FSR3_ENABLE_ASYNC_WORKLOAD_SUPPORT) != 0;
+    contextPrivate->sharedResourceCount     = contextPrivate->asyncWorkloadSupported ? FSR3_MAX_QUEUED_FRAMES : 1;
 
     // ensure upscalingOnly and interpolationOnly are not set simultaneously
     FFX_ASSERT(upscalingOnly == false || interpolationOnly == false);
 
     // validate that all callbacks are set for the backend interfaces
-    FfxUInt32 numBackendsToVerify = 0;
-    FfxInterface*   backendsToVerify[2]  = {};
-    if (interpolationOnly)
+    if (contextPrivate->interpolationOnly)
     {
-        numBackendsToVerify = 1;
-        backendsToVerify[0]  = &contextPrivate->backendInterfaceFrameInterpolation;
+        const FfxUInt32 numBackendsToVerify = 2;
+        FfxInterface* backendsToVerify[] = { &contextPrivate->backendInterfaceSharedResources,
+                                            &contextPrivate->backendInterfaceFrameInterpolation };
+
+        for (FfxUInt32 i = 0; i < numBackendsToVerify; i++)
+        {
+            FfxInterface* backend = backendsToVerify[i];
+            FFX_RETURN_ON_ERROR(backend, FFX_ERROR_INCOMPLETE_INTERFACE);
+            FFX_RETURN_ON_ERROR(backend->fpGetDeviceCapabilities, FFX_ERROR_INCOMPLETE_INTERFACE);
+            FFX_RETURN_ON_ERROR(backend->fpCreateBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
+            FFX_RETURN_ON_ERROR(backend->fpDestroyBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
+
+            // if a scratch buffer is declared, then we must have a size
+            if (backend->scratchBuffer)
+            {
+                FFX_RETURN_ON_ERROR(backend->scratchBufferSize, FFX_ERROR_INCOMPLETE_INTERFACE);
+            }
+        }
     }
     else
     {
-        numBackendsToVerify = upscalingOnly ? 1 : 2;
-        backendsToVerify[0]  = &contextPrivate->backendInterfaceUpscaling;
-        backendsToVerify[1]  = &contextPrivate->backendInterfaceFrameInterpolation;
+        const FfxUInt32 numBackendsToVerify = contextPrivate->upscalingOnly ? 1 : 3;
+        FfxInterface* backendsToVerify[] = { &contextPrivate->backendInterfaceUpscaling,
+                                               &contextPrivate->backendInterfaceSharedResources,
+                                               &contextPrivate->backendInterfaceFrameInterpolation };
+
+        for (FfxUInt32 i = 0; i < numBackendsToVerify; i++)
+        {
+            FfxInterface* backend = backendsToVerify[i];
+            FFX_RETURN_ON_ERROR(backend, FFX_ERROR_INCOMPLETE_INTERFACE);
+            FFX_RETURN_ON_ERROR(backend->fpGetSDKVersion, FFX_ERROR_INCOMPLETE_INTERFACE);
+            FFX_RETURN_ON_ERROR(backend->fpGetDeviceCapabilities, FFX_ERROR_INCOMPLETE_INTERFACE);
+            FFX_RETURN_ON_ERROR(backend->fpCreateBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
+            FFX_RETURN_ON_ERROR(backend->fpDestroyBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
+
+            // if a scratch buffer is declared, then we must have a size
+            if (backend->scratchBuffer)
+            {
+                FFX_RETURN_ON_ERROR(backend->scratchBufferSize, FFX_ERROR_INCOMPLETE_INTERFACE);
+            }
+        }
     }
 
-    for (FfxUInt32 i = 0; i < numBackendsToVerify; i++)
+    if (!contextPrivate->upscalingOnly)
     {
-        FfxInterface* backend = backendsToVerify[i];
-        FFX_RETURN_ON_ERROR(backend, FFX_ERROR_INCOMPLETE_INTERFACE);
-        FFX_RETURN_ON_ERROR(backend->fpGetDeviceCapabilities, FFX_ERROR_INCOMPLETE_INTERFACE);
-        FFX_RETURN_ON_ERROR(backend->fpCreateBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
-        FFX_RETURN_ON_ERROR(backend->fpDestroyBackendContext, FFX_ERROR_INCOMPLETE_INTERFACE);
-
-        // if a scratch buffer is declared, then we must have a size
-        if (backend->scratchBuffer)
-        {
-            FFX_RETURN_ON_ERROR(backend->scratchBufferSize, FFX_ERROR_INCOMPLETE_INTERFACE);
-        }
+        FFX_VALIDATE(contextPrivate->backendInterfaceSharedResources.fpCreateBackendContext(&contextPrivate->backendInterfaceSharedResources,
+            FFX_EFFECT_SHAREDRESOURCES,
+            nullptr,
+            &contextPrivate->effectContextIdSharedResources));
+    }
+    else
+    {
+        contextPrivate->backendInterfaceSharedResources = contextPrivate->backendInterfaceUpscaling;
+        contextDescription->backendInterfaceSharedResources = contextDescription->backendInterfaceUpscaling;
     }
 
     // set up FSR3 Upscaler
@@ -140,6 +176,8 @@ FfxErrorCode ffxFsr3ContextCreate(FfxFsr3Context* context, FfxFsr3ContextDescrip
         fiDescription.maxRenderSize = contextDescription->maxRenderSize;
         fiDescription.displaySize      = contextDescription->displaySize;
         fiDescription.backBufferFormat = contextDescription->backBufferFormat;
+        // This is a new item exposed only through ffx API on PC
+        fiDescription.previousInterpolationSourceFormat = contextDescription->backBufferFormat;
 
         // set up Frameinterpolation
         FFX_VALIDATE(ffxFrameInterpolationContextCreate(&contextPrivate->fiContext, &fiDescription));
@@ -149,10 +187,39 @@ FfxErrorCode ffxFsr3ContextCreate(FfxFsr3Context* context, FfxFsr3ContextDescrip
         FfxOpticalflowSharedResourceDescriptions ofResourceDescs = {};
         FFX_VALIDATE(ffxOpticalflowGetSharedResourceDescriptions(&contextPrivate->ofContext, &ofResourceDescs));
         
-        FFX_VALIDATE(contextDescription->backendInterfaceFrameInterpolation.fpCreateResource(
-            &contextDescription->backendInterfaceFrameInterpolation, &ofResourceDescs.opticalFlowVector, contextPrivate->effectContextIdFrameGeneration, &contextPrivate->fiSharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]));
-        FFX_VALIDATE(contextDescription->backendInterfaceFrameInterpolation.fpCreateResource(
-            &contextDescription->backendInterfaceFrameInterpolation, &ofResourceDescs.opticalFlowSCD, contextPrivate->effectContextIdFrameGeneration, &contextPrivate->fiSharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]));
+        FFX_VALIDATE(contextDescription->backendInterfaceSharedResources.fpCreateResource(
+            &contextDescription->backendInterfaceSharedResources, &ofResourceDescs.opticalFlowVector, contextPrivate->effectContextIdSharedResources, &contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]));
+        FFX_VALIDATE(contextDescription->backendInterfaceSharedResources.fpCreateResource(
+            &contextDescription->backendInterfaceSharedResources, &ofResourceDescs.opticalFlowSCD, contextPrivate->effectContextIdSharedResources, &contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]));
+    }
+
+    // set up FSR3Upscaler resources
+    if (!contextPrivate->interpolationOnly)
+    {
+        FfxFsr3UpscalerSharedResourceDescriptions fs3UpscalerResourceDescs = {};
+        FFX_VALIDATE(ffxFsr3UpscalerGetSharedResourceDescriptions(&contextPrivate->upscalerContext, &fs3UpscalerResourceDescs));
+
+        wchar_t Name[256] = {};
+        for (FfxUInt32 i = 0; i < contextPrivate->sharedResourceCount; i++)
+        {
+            FfxCreateResourceDescription dilD = fs3UpscalerResourceDescs.dilatedDepth;
+            swprintf(Name, 255, L"%s%d", fs3UpscalerResourceDescs.dilatedDepth.name, i);
+            dilD.name = Name;
+            FFX_VALIDATE(contextDescription->backendInterfaceSharedResources.fpCreateResource(
+                &contextDescription->backendInterfaceSharedResources, &dilD, contextPrivate->effectContextIdSharedResources, &contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0 + (i * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]));
+
+            FfxCreateResourceDescription dilMVs = fs3UpscalerResourceDescs.dilatedMotionVectors;
+            swprintf(Name, 255, L"%s%d", fs3UpscalerResourceDescs.dilatedMotionVectors.name, i);
+            dilMVs.name = Name;
+            FFX_VALIDATE(contextDescription->backendInterfaceSharedResources.fpCreateResource(
+                &contextDescription->backendInterfaceSharedResources, &dilMVs, contextPrivate->effectContextIdSharedResources, &contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0 + (i * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]));
+
+            FfxCreateResourceDescription recND = fs3UpscalerResourceDescs.reconstructedPrevNearestDepth;
+            swprintf(Name, 255, L"%s%d", fs3UpscalerResourceDescs.reconstructedPrevNearestDepth.name, i);
+            recND.name = Name;
+            FFX_VALIDATE(contextDescription->backendInterfaceSharedResources.fpCreateResource(
+                &contextDescription->backendInterfaceSharedResources, &recND, contextPrivate->effectContextIdSharedResources, &contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0 + (i * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]));
+        }
     }
 
     return ret;
@@ -236,8 +303,8 @@ FfxErrorCode ffxFsr3DispatchFrameGeneration(const FfxFrameGenerationDispatchDesc
         ofDispatchDesc.backbufferTransferFunction = callbackDesc->backBufferTransferFunction;
         ofDispatchDesc.minMaxLuminance.x = callbackDesc->minMaxLuminance[0];
         ofDispatchDesc.minMaxLuminance.y = callbackDesc->minMaxLuminance[1];
-        ofDispatchDesc.opticalFlowVector = contextPrivate->backendInterfaceFrameInterpolation.fpGetResource(&contextPrivate->backendInterfaceFrameInterpolation, contextPrivate->fiSharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]);
-        ofDispatchDesc.opticalFlowSCD = contextPrivate->backendInterfaceFrameInterpolation.fpGetResource(&contextPrivate->backendInterfaceFrameInterpolation, contextPrivate->fiSharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]);
+        ofDispatchDesc.opticalFlowVector = contextPrivate->backendInterfaceSharedResources.fpGetResource(&contextPrivate->backendInterfaceSharedResources, contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]);
+        ofDispatchDesc.opticalFlowSCD = contextPrivate->backendInterfaceSharedResources.fpGetResource(&contextPrivate->backendInterfaceSharedResources, contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]);
 
         errorCode |= ffxOpticalflowContextDispatch(&contextPrivate->ofContext, &ofDispatchDesc);
     }
@@ -255,8 +322,8 @@ FfxErrorCode ffxFsr3DispatchFrameGeneration(const FfxFrameGenerationDispatchDesc
 
         fiDispatchDesc.renderSize               = prepareDesc->renderSize;
         fiDispatchDesc.output                   = callbackDesc->outputs[0];
-        fiDispatchDesc.opticalFlowVector        = contextPrivate->backendInterfaceFrameInterpolation.fpGetResource(&contextPrivate->backendInterfaceFrameInterpolation, contextPrivate->fiSharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]);
-        fiDispatchDesc.opticalFlowSceneChangeDetection = contextPrivate->backendInterfaceFrameInterpolation.fpGetResource(&contextPrivate->backendInterfaceFrameInterpolation, contextPrivate->fiSharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]);
+        fiDispatchDesc.opticalFlowVector        = contextPrivate->backendInterfaceSharedResources.fpGetResource(&contextPrivate->backendInterfaceSharedResources, contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR]);
+        fiDispatchDesc.opticalFlowSceneChangeDetection = contextPrivate->backendInterfaceSharedResources.fpGetResource(&contextPrivate->backendInterfaceSharedResources, contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT]);
         fiDispatchDesc.opticalFlowBlockSize     = 8;
         fiDispatchDesc.opticalFlowScale         = { 1.f / fiDispatchDesc.displaySize.width, 1.f / fiDispatchDesc.displaySize.height };
         fiDispatchDesc.frameTimeDelta           = prepareDesc->frameTimeDelta;
@@ -271,6 +338,10 @@ FfxErrorCode ffxFsr3DispatchFrameGeneration(const FfxFrameGenerationDispatchDesc
         fiDispatchDesc.interpolationRect.height = callbackDesc->interpolationRect.height;
         fiDispatchDesc.frameID                  = callbackDesc->frameID;
 
+        // use the same surfaces that were specified in the upscale (or interpolation prepare)
+        fiDispatchDesc.dilatedDepth             = contextPrivate->dilatedDepth;
+        fiDispatchDesc.dilatedMotionVectors     = contextPrivate->dilatedMotionVectors;
+        fiDispatchDesc.reconstructedPrevDepth   = contextPrivate->reconstructedPrevNearestDepth;
 
         if (contextPrivate->frameGenerationFlags & FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_TEAR_LINES)
         {
@@ -306,28 +377,46 @@ FfxErrorCode ffxFsr3ContextDispatchUpscale(FfxFsr3Context* context, const FfxFsr
 
     contextPrivate->deltaTime = FFX_MAXIMUM(0.0f, FFX_MINIMUM(1.0f, dispatchParams->frameTimeDelta / 1000.0f));
 
+    FfxUInt32 sharedResourceIndexUpscaling = dispatchParams->frameID % contextPrivate->sharedResourceCount;
+
+    contextPrivate->dilatedDepth = contextPrivate->backendInterfaceSharedResources.fpGetResource(
+        &contextPrivate->backendInterfaceSharedResources,
+        contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0 +
+        (sharedResourceIndexUpscaling * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]);
+    contextPrivate->dilatedMotionVectors = contextPrivate->backendInterfaceSharedResources.fpGetResource(
+        &contextPrivate->backendInterfaceSharedResources,
+        contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0 +
+        (sharedResourceIndexUpscaling * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]);
+    contextPrivate->reconstructedPrevNearestDepth = contextPrivate->backendInterfaceSharedResources.fpGetResource(
+        &contextPrivate->backendInterfaceSharedResources,
+        contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0 +
+        (sharedResourceIndexUpscaling * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]);
+
     // dispatch FSR3
     FfxFsr3UpscalerDispatchDescription fsr3DispatchParams{};
-    fsr3DispatchParams.commandList                   = dispatchParams->commandList;
-    fsr3DispatchParams.color                         = dispatchParams->color;
-    fsr3DispatchParams.depth                         = dispatchParams->depth;
-    fsr3DispatchParams.motionVectors                 = dispatchParams->motionVectors;
-    fsr3DispatchParams.exposure                      = dispatchParams->exposure;
-    fsr3DispatchParams.reactive                      = dispatchParams->reactive;
-    fsr3DispatchParams.transparencyAndComposition    = dispatchParams->transparencyAndComposition;
-    fsr3DispatchParams.output                        = dispatchParams->upscaleOutput;
-    fsr3DispatchParams.jitterOffset                  = dispatchParams->jitterOffset;
-    fsr3DispatchParams.motionVectorScale             = dispatchParams->motionVectorScale;
-    fsr3DispatchParams.renderSize                    = dispatchParams->renderSize;
-    fsr3DispatchParams.enableSharpening              = dispatchParams->enableSharpening;
-    fsr3DispatchParams.sharpness                     = dispatchParams->sharpness;
-    fsr3DispatchParams.frameTimeDelta                = dispatchParams->frameTimeDelta;
-    fsr3DispatchParams.preExposure                   = dispatchParams->preExposure;
-    fsr3DispatchParams.reset                         = dispatchParams->reset;
-    fsr3DispatchParams.cameraNear                    = dispatchParams->cameraNear;
-    fsr3DispatchParams.cameraFar                     = dispatchParams->cameraFar;
-    fsr3DispatchParams.cameraFovAngleVertical        = dispatchParams->cameraFovAngleVertical;
-    fsr3DispatchParams.viewSpaceToMetersFactor       = dispatchParams->viewSpaceToMetersFactor;
+    fsr3DispatchParams.commandList                      = dispatchParams->commandList;
+    fsr3DispatchParams.color                            = dispatchParams->color;
+    fsr3DispatchParams.depth                            = dispatchParams->depth;
+    fsr3DispatchParams.motionVectors                    = dispatchParams->motionVectors;
+    fsr3DispatchParams.exposure                         = dispatchParams->exposure;
+    fsr3DispatchParams.reactive                         = dispatchParams->reactive;
+    fsr3DispatchParams.transparencyAndComposition       = dispatchParams->transparencyAndComposition;
+    fsr3DispatchParams.output                           = dispatchParams->upscaleOutput;
+    fsr3DispatchParams.jitterOffset                     = dispatchParams->jitterOffset;
+    fsr3DispatchParams.motionVectorScale                = dispatchParams->motionVectorScale;
+    fsr3DispatchParams.renderSize                       = dispatchParams->renderSize;
+    fsr3DispatchParams.enableSharpening                 = dispatchParams->enableSharpening;
+    fsr3DispatchParams.sharpness                        = dispatchParams->sharpness;
+    fsr3DispatchParams.frameTimeDelta                   = dispatchParams->frameTimeDelta;
+    fsr3DispatchParams.preExposure                      = dispatchParams->preExposure;
+    fsr3DispatchParams.reset                            = dispatchParams->reset;
+    fsr3DispatchParams.cameraNear                       = dispatchParams->cameraNear;
+    fsr3DispatchParams.cameraFar                        = dispatchParams->cameraFar;
+    fsr3DispatchParams.cameraFovAngleVertical           = dispatchParams->cameraFovAngleVertical;
+    fsr3DispatchParams.viewSpaceToMetersFactor          = dispatchParams->viewSpaceToMetersFactor;
+    fsr3DispatchParams.dilatedDepth                     = contextPrivate->dilatedDepth;
+    fsr3DispatchParams.dilatedMotionVectors             = contextPrivate->dilatedMotionVectors;
+    fsr3DispatchParams.reconstructedPrevNearestDepth    = contextPrivate->reconstructedPrevNearestDepth;
 
     if (dispatchParams->flags & FFX_FSR3_UPSCALER_FLAG_DRAW_DEBUG_VIEW)
     {
@@ -348,21 +437,46 @@ FfxErrorCode ffxFsr3ContextDispatchFrameGenerationPrepare(FfxFsr3Context* contex
     bool upscalingOnly     = (contextPrivate->description.flags & FFX_FSR3_ENABLE_UPSCALING_ONLY) != 0;
     FFX_ASSERT_MESSAGE(upscalingOnly == false, "Fsr3 context has not been initialized to support Frame Generation");
 
-    FfxFrameInterpolationPrepareDescription fiPrepareParams = {};
-    fiPrepareParams.commandList                             = dispatchParams->commandList;
-    fiPrepareParams.renderSize                              = dispatchParams->renderSize;
-    fiPrepareParams.depth                                   = dispatchParams->depth;
-    fiPrepareParams.motionVectors                           = dispatchParams->motionVectors;
-    fiPrepareParams.jitterOffset                            = dispatchParams->jitterOffset;
-    fiPrepareParams.motionVectorScale                       = dispatchParams->motionVectorScale;
-    fiPrepareParams.frameTimeDelta                          = dispatchParams->frameTimeDelta;
-    fiPrepareParams.cameraNear                              = dispatchParams->cameraNear;
-    fiPrepareParams.cameraFar                               = dispatchParams->cameraFar;
-    fiPrepareParams.viewSpaceToMetersFactor                 = dispatchParams->viewSpaceToMetersFactor;
-    fiPrepareParams.cameraFovAngleVertical                  = dispatchParams->cameraFovAngleVertical;
-    fiPrepareParams.frameID                                 = dispatchParams->frameID;
+    // if not interpolationOnly there's no need to execute prepare as prepared resources from upscale can be used
+    bool interpolationOnly = (contextPrivate->description.flags & FFX_FSR3_ENABLE_INTERPOLATION_ONLY) != 0;
 
-    ret = ffxFrameInterpolationPrepare(&contextPrivate->fiContext, &fiPrepareParams);
+    FfxUInt32 sharedResourceIndexUpscaling = dispatchParams->frameID % contextPrivate->sharedResourceCount;
+
+    FfxFrameInterpolationPrepareDescription fiPrepareParams = {};
+    fiPrepareParams.commandList = dispatchParams->commandList;
+    fiPrepareParams.renderSize = dispatchParams->renderSize;
+    fiPrepareParams.depth = dispatchParams->depth;
+    fiPrepareParams.motionVectors = dispatchParams->motionVectors;
+    fiPrepareParams.jitterOffset = dispatchParams->jitterOffset;
+    fiPrepareParams.motionVectorScale = dispatchParams->motionVectorScale;
+    fiPrepareParams.frameTimeDelta = dispatchParams->frameTimeDelta;
+    fiPrepareParams.cameraNear = dispatchParams->cameraNear;
+    fiPrepareParams.cameraFar = dispatchParams->cameraFar;
+    fiPrepareParams.viewSpaceToMetersFactor = dispatchParams->viewSpaceToMetersFactor;
+    fiPrepareParams.cameraFovAngleVertical = dispatchParams->cameraFovAngleVertical;
+    fiPrepareParams.frameID = dispatchParams->frameID;
+
+    contextPrivate->dilatedDepth = contextPrivate->backendInterfaceSharedResources.fpGetResource(
+        &contextPrivate->backendInterfaceSharedResources,
+        contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0 +
+        (sharedResourceIndexUpscaling * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]);
+    contextPrivate->dilatedMotionVectors = contextPrivate->backendInterfaceSharedResources.fpGetResource(
+        &contextPrivate->backendInterfaceSharedResources,
+        contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0 +
+        (sharedResourceIndexUpscaling * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]);
+    contextPrivate->reconstructedPrevNearestDepth = contextPrivate->backendInterfaceSharedResources.fpGetResource(
+        &contextPrivate->backendInterfaceSharedResources,
+        contextPrivate->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0 +
+        (sharedResourceIndexUpscaling * FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT)]);
+
+    fiPrepareParams.dilatedDepth = contextPrivate->dilatedDepth;
+    fiPrepareParams.dilatedMotionVectors = contextPrivate->dilatedMotionVectors;
+    fiPrepareParams.reconstructedPrevDepth = contextPrivate->reconstructedPrevNearestDepth;
+
+    if (interpolationOnly)
+    {
+        ret = ffxFrameInterpolationPrepare(&contextPrivate->fiContext, &fiPrepareParams);
+    }
 
     contextPrivate->fgPrepareDescriptions[dispatchParams->frameID & 1] = fiPrepareParams;
 
@@ -390,6 +504,11 @@ FfxErrorCode ffxFsr3ConfigureFrameGeneration(FfxFsr3Context* context, const FfxF
         patchedConfig.onlyPresentInterpolated = true;
     }
 
+    if (patchedConfig.flags & FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_PACING_LINES)
+    {
+        patchedConfig.drawDebugPacingLines = true;
+    }
+
     // reset shared resource indices
     if (contextPrivate->frameGenerationEnabled != patchedConfig.frameGenerationEnabled)
     {
@@ -413,8 +532,9 @@ FfxErrorCode ffxFsr3ContextDestroy(FfxFsr3Context* context)
 
 	for (FfxUInt32 i = 0; i < FFX_FSR3_RESOURCE_IDENTIFIER_COUNT; i++)
     {
-        FFX_VALIDATE(contextPrivate->backendInterfaceFrameInterpolation.fpDestroyResource(&contextPrivate->backendInterfaceFrameInterpolation, contextPrivate->fiSharedResources[i], contextPrivate->effectContextIdFrameGeneration));
+        FFX_VALIDATE(contextPrivate->backendInterfaceSharedResources.fpDestroyResource(&contextPrivate->backendInterfaceSharedResources, contextPrivate->sharedResources[i], contextPrivate->effectContextIdSharedResources))
     }
+    contextPrivate->backendInterfaceSharedResources.fpDestroyBackendContext(&contextPrivate->backendInterfaceSharedResources, contextPrivate->effectContextIdSharedResources);
 
     bool upscalingOnly     = (contextPrivate->description.flags & FFX_FSR3_ENABLE_UPSCALING_ONLY) != 0;
     bool interpolationOnly = (contextPrivate->description.flags & FFX_FSR3_ENABLE_INTERPOLATION_ONLY) != 0;
@@ -424,7 +544,7 @@ FfxErrorCode ffxFsr3ContextDestroy(FfxFsr3Context* context)
         FFX_VALIDATE(ffxFrameInterpolationContextDestroy(&contextPrivate->fiContext));
         FFX_VALIDATE(ffxOpticalflowContextDestroy(&contextPrivate->ofContext));
     }
-
+        
     if (!interpolationOnly)
     {
         FFX_VALIDATE(ffxFsr3UpscalerContextDestroy(&contextPrivate->upscalerContext));

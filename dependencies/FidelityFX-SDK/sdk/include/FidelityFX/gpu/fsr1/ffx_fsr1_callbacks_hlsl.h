@@ -190,9 +190,11 @@ SamplerState s_LinearClamp : register(s0);
 #endif // defined(FSR1_BIND_UAV_INTERNAL_UPSCALED_COLOR)
 
 #if defined(FSR1_BIND_UAV_UPSCALED_OUTPUT)
-        void StoreRCasOutput(FfxInt16x2 iPxPos, FfxFloat16x3 fColor)
+        void StoreRCasOutputHx2(FfxInt16x2 iPxPos, FfxFloat16x2 fColorR, FfxFloat16x2 fColorG, FfxFloat16x2 fColorB, FfxFloat16x2 fColorA)
         {
-            rw_upscaled_output[iPxPos] = FfxFloat32x4(fColor, 1.f);
+            rw_upscaled_output[iPxPos] = FfxFloat32x4(fColorR.x, fColorG.x, fColorB.x, fColorA.x);
+            iPxPos.x += 8;
+            rw_upscaled_output[iPxPos] = FfxFloat32x4(fColorR.y, fColorG.y, fColorB.y, fColorA.y);
         }
 #endif // defined(FSR1_BIND_UAV_UPSCALED_OUTPUT)
 
@@ -220,7 +222,7 @@ SamplerState s_LinearClamp : register(s0);
 #endif // defined(FSR1_BIND_SRV_INPUT_COLOR)
 
 
-#if defined(FFX_FSR1_OPTION_APPLY_RCAS)
+#if FFX_FSR1_OPTION_APPLY_RCAS
     #if defined(FSR1_BIND_UAV_INTERNAL_UPSCALED_COLOR)        
         void StoreEASUOutput(FfxUInt32x2 iPxPos, FfxFloat32x3 fColor)
         {
@@ -234,7 +236,7 @@ SamplerState s_LinearClamp : register(s0);
             rw_upscaled_output[iPxPos] = FfxFloat32x4(fColor, 1.f);
         }
     #endif // #if defined(FSR1_BIND_UAV_UPSCALED_OUTPUT)
-#endif // #if defined(FFX_FSR1_OPTION_APPLY_RCAS)
+#endif // #if FFX_FSR1_OPTION_APPLY_RCAS
 
 #if defined(FSR1_BIND_SRV_INTERNAL_UPSCALED_COLOR)
         FfxFloat32x4 LoadRCas_Input(FfxInt32x2 iPxPos)
@@ -244,9 +246,9 @@ SamplerState s_LinearClamp : register(s0);
 #endif // defined(FSR1_BIND_UAV_INTERNAL_UPSCALED_COLOR)
 
 #if defined(FSR1_BIND_UAV_UPSCALED_OUTPUT)
-        void StoreRCasOutput(FfxInt32x2 iPxPos, FfxFloat32x3 fColor)
+        void StoreRCasOutput(FfxInt32x2 iPxPos, FfxFloat32x4 fColor)
         {
-            rw_upscaled_output[iPxPos] = FfxFloat32x4(fColor, 1.f);
+            rw_upscaled_output[iPxPos] = fColor;
         }
 #endif // defined(FSR1_BIND_UAV_UPSCALED_OUTPUT)
 

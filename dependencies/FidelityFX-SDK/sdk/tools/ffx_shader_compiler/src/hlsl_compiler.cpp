@@ -24,7 +24,7 @@
 #include "utils.h"
 
 // D3D12SDKVersion needs to line up with the version number on Microsoft's DirectX12 Agility SDK Download page
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 608; }
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 614; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 struct DxcCustomIncludeHandler : public IDxcIncludeHandler
@@ -233,23 +233,28 @@ HLSLCompiler::HLSLCompiler(HLSLCompiler::Backend backend,
 
         break;
     }
-    case HLSLCompiler::GDK_DESKTOP_X64:
     case HLSLCompiler::GDK_SCARLETT_X64:
+    case HLSLCompiler::GDK_XBOXONE_X64:
     {
         // Setup the path to the compiler dll
         std::wstring dllPath;
 
-        if (m_backend == HLSLCompiler::GDK_DESKTOP_X64)
+        // Xbox One
+        if (m_backend == HLSLCompiler::GDK_XBOXONE_X64)
         {
-            // Look for the GDK environment variable. If not present, fail
-            const wchar_t* gdkPath = _wgetenv(L"GameDK");
+            const wchar_t* gdkPath = _wgetenv(L"GXDKLatest");
             if (!gdkPath)
             {
-                throw std::runtime_error("GDK Desktop compile requested, but could not find \"GameDK\" environment variable. Please ensure the GDK is installed");
+                throw std::runtime_error("GDK Xbox One compile requested, but could not find \"GXDKLatest\" environment variable. Please ensure the GDK is installed");
             }
 
             dllPath = gdkPath;
-            dllPath += L"bin\\dxcompiler.dll";
+            dllPath += L"bin\\XboxOne\\dxcompiler_x.dll";
+
+            // Compiler internally looks for local paths
+            std::wstring dllPathSearch = gdkPath;
+            dllPathSearch += L"bin\\XboxOne\\";
+            SetDllDirectoryW(dllPathSearch.c_str());
         }
         
         // Scarlett
@@ -417,6 +422,11 @@ bool HLSLCompiler::CompileDXC(Permutation& permutation, const std::vector<std::s
         strArgs.push_back(UTF8ToWChar(arg));
     }
 
+    if (m_backend == HLSLCompiler::GDK_SCARLETT_X64 || m_backend == HLSLCompiler::GDK_XBOXONE_X64)
+    {
+        strArgs.push_back(L"-Qstrip_debug");
+    }
+
     std::wstring pdbPath;
     if (m_DebugCompile)
     {
@@ -424,14 +434,6 @@ bool HLSLCompiler::CompileDXC(Permutation& permutation, const std::vector<std::s
         strArgs.push_back(DXC_ARG_DEBUG_NAME_FOR_SOURCE);  // -Zss
         strArgs.push_back(DXC_ARG_DEBUG);  // -Zi
         strArgs.push_back(DXC_ARG_SKIP_OPTIMIZATIONS);
-        strArgs.push_back(L"-Fd"); // Need to specify the pdb file with Fd flag, so later the pix can find it automatically.
-        std::wstring hashString{entry};
-        hashString += UTF8ToWChar(m_Source);
-        std::hash<std::wstring> hasher;
-        const size_t            hashID{hasher(hashString)};
-        hashString                     = std::to_wstring(hashID);
-        pdbPath                        = UTF8ToWChar(m_OutputPath + "/") + hashString + L".lld";
-        strArgs.push_back(pdbPath);
     }
 
     std::vector<LPCWSTR> args = {};
@@ -489,7 +491,7 @@ bool HLSLCompiler::CompileDXC(Permutation& permutation, const std::vector<std::s
     if (!m_DisableLogs && errors != nullptr && errors->GetStringLength() != 0)
     {
         writeMutex.lock();
-        printf("%s[%lu]\n%s", m_ShaderFileName.c_str(), permutation.key, errors->GetStringPointer());
+        fprintf(stderr, "%s[%lu]\n%s", m_ShaderFileName.c_str(), permutation.key, errors->GetStringPointer());
         writeMutex.unlock();
     }
 
@@ -528,6 +530,21 @@ bool HLSLCompiler::CompileDXC(Permutation& permutation, const std::vector<std::s
             CComPtr<IDxcBlob>      pPDB     = nullptr;
             CComPtr<IDxcBlobUtf16> pPDBName = nullptr;
 
+            std::wstring pdbPath;
+            // Use a unique name that takes the hash into consideration
+            pdbPath = UTF8ToWChar(m_OutputPath + "\\") + UTF8ToWChar(permutation.hashDigest) + L".pdb";
+
+
+            // Account for longer than MAX_PATH length file paths
+            if (pdbPath.length() > MAX_PATH - 1)
+            {
+                // We can get around MAX_PATH with "\\\\?\\", but this requires only having backslashes in the path (CMake uses forward slashes)
+                size_t pos;
+                while ((pos = pdbPath.find(L"/")) != std::wstring::npos) {
+                    pdbPath.replace(pos, 1, L"\\");
+                }
+                pdbPath = L"\\\\?\\" + pdbPath;
+            }
             hlslShaderBinary->pResults->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pPDB), &pPDBName);
 
             FILE* fp = NULL;
@@ -539,18 +556,6 @@ bool HLSLCompiler::CompileDXC(Permutation& permutation, const std::vector<std::s
             {
                 fwrite(pPDB->GetBufferPointer(), pPDB->GetBufferSize(), 1, fp);
                 fclose(fp);
-            }
-            else
-            {
-                // Could not open file. Print a warning message.
-                // FIXME/Note: because multiple permutations may generate the same shader, there is a race
-                // condition causing fopen to fail if another thread is in the process of writing
-                // the same PDB file. In that case, warnings will be printed from here but the PDB
-                // will be generated correctly regardless.
-                std::string errMsg = std::string("Failed to open ") + pathToPDB + " for PDB output";
-                writeMutex.lock();
-                perror(errMsg.c_str());
-                writeMutex.unlock();
             }
         }
 
@@ -710,7 +715,18 @@ bool HLSLCompiler::CompileFXC(Permutation&                    permutation,
             FILE* fp = NULL;
 
             std::string pdbName = permutation.hashDigest + ".pdb";
-            std::string pathToPDB = m_OutputPath + "/" + pdbName;
+            std::string pathToPDB = m_OutputPath + "\\" + pdbName;
+
+            // Account for longer than MAX_PATH length file paths
+            if (pathToPDB.length() > MAX_PATH - 1)
+            {
+                // We can get around MAX_PATH with "\\\\?\\", but this requires only having backslashes in the path (CMake uses forward slashes)
+                size_t pos;
+                while ((pos = pathToPDB.find("/")) != std::string::npos) {
+                    pathToPDB.replace(pos, 1, "\\");
+                }
+                pathToPDB = "\\\\?\\" + pathToPDB;
+            }
 
             fp = fopen(pathToPDB.c_str(), "wb");
             fwrite(pPDB->GetBufferPointer(), pPDB->GetBufferSize(), 1, fp);
@@ -731,8 +747,8 @@ bool HLSLCompiler::Compile(Permutation&                    permutation,
     switch (m_backend)
     {
     case HLSLCompiler::DXC:
-    case HLSLCompiler::GDK_DESKTOP_X64:
     case HLSLCompiler::GDK_SCARLETT_X64:
+    case HLSLCompiler::GDK_XBOXONE_X64:
         return CompileDXC(permutation, arguments, writeMutex);
     case HLSLCompiler::FXC:
         return CompileFXC(permutation, arguments, writeMutex);
@@ -797,9 +813,13 @@ bool HLSLCompiler::ExtractDXCReflectionData(Permutation& permutation)
             case D3D_SIT_RTACCELERATIONSTRUCTURE:
                 hlslReflectionData->rtAccelerationStructures.push_back(resourceInfo);
                 break;
-
             case D3D_SIT_BYTEADDRESS:
+                hlslReflectionData->srvBuffers.push_back(resourceInfo);
+                break;
             case D3D_SIT_UAV_RWBYTEADDRESS:
+                hlslReflectionData->uavBuffers.push_back(resourceInfo);
+                break;
+
             case D3D_SIT_UAV_APPEND_STRUCTURED:
             case D3D_SIT_UAV_CONSUME_STRUCTURED:
             case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
@@ -884,7 +904,12 @@ bool HLSLCompiler::ExtractFXCReflectionData(Permutation& permutation)
                 break;
 
             case D3D_SIT_BYTEADDRESS:
+                hlslReflectionData->srvBuffers.push_back(resourceInfo);
+                break;
             case D3D_SIT_UAV_RWBYTEADDRESS:
+                hlslReflectionData->uavBuffers.push_back(resourceInfo);
+                break;
+
             case D3D_SIT_UAV_APPEND_STRUCTURED:
             case D3D_SIT_UAV_CONSUME_STRUCTURED:
             case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
@@ -909,8 +934,8 @@ bool HLSLCompiler::ExtractReflectionData(Permutation& permutation)
     switch (m_backend)
     {
     case HLSLCompiler::DXC:
-    case HLSLCompiler::GDK_DESKTOP_X64:
     case HLSLCompiler::GDK_SCARLETT_X64:
+    case HLSLCompiler::GDK_XBOXONE_X64:
         return ExtractDXCReflectionData(permutation);
     case HLSLCompiler::FXC:
         return ExtractFXCReflectionData(permutation);

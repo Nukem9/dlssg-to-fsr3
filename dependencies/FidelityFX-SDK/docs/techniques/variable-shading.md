@@ -1,6 +1,6 @@
-<!-- @page page_techniques_variable-shading FidelityFX Variable Shading 1.1 -->
+<!-- @page page_techniques_variable-shading FidelityFX Variable Shading 1.2 -->
 
-<h1>FidelityFX Variable Shading 1.1</h1>
+<h1>FidelityFX Variable Shading 1.2</h1>
 
 <h2>Introduction</h2>
 

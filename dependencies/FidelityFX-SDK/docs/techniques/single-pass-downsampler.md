@@ -1,6 +1,6 @@
-<!-- @page page_techniques_single-pass-downsampler FidelityFX Single Pass Downsampler 2.1 -->
+<!-- @page page_techniques_single-pass-downsampler FidelityFX Single Pass Downsampler 2.2 -->
 
-<h1>FidelityFX Single Pass Downsampler 2.1</h1>
+<h1>FidelityFX Single Pass Downsampler 2.2</h1>
 
 FidelityFX Single Pass Downsampler (or "FidelityFX SPD" for short) is a technique which produces downsampled versions of an image without requiring multiple intermediate steps.
 

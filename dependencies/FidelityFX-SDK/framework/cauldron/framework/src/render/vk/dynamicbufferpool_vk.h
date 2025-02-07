@@ -38,6 +38,9 @@ namespace cauldron
         virtual ~DynamicBufferPoolInternal();
 
         virtual BufferAddressInfo AllocConstantBuffer(uint32_t size, const void* pInitData) override;
+        virtual void BatchAllocateConstantBuffer(uint32_t size, uint32_t count, BufferAddressInfo* pBufferAddressInfos) override;
+        virtual void InitializeConstantBuffer(const BufferAddressInfo& bufferAddressInfo, uint32_t size, const void* pInitData) override;
+
         virtual BufferAddressInfo AllocVertexBuffer(uint32_t vertexCount, uint32_t vertexStride, void** pBuffer) override;
         virtual BufferAddressInfo AllocIndexBuffer(uint32_t indexCount, uint32_t indexStride, void** pBuffer) override;
 

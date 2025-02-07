@@ -59,7 +59,7 @@
 
         FfxFloat32      deltaTime;
         FfxInt32        HUDLessAttachedFactor;
-        FfxFloat32x2    UNUSED;
+        FfxInt32x2      distortionFieldSize;
 
         FfxFloat32x2    opticalFlowScale;
         FfxInt32        opticalFlowBlockSize;
@@ -148,6 +148,11 @@
     FfxInt32 GetHUDLessAttachedFactor()
     {
         return HUDLessAttachedFactor;
+    }
+
+    FfxInt32x2 GetDistortionFieldSize()
+    {
+        return distortionFieldSize;
     }
 
     FfxUInt32 GetDispatchFlags()
@@ -429,9 +434,16 @@ SamplerState s_LinearClamp : register(s0);
     }
 #endif
 
-#ifdef FFX_FRAMEINTERPOLATION_BIND_SRV_OUTPUT
-    Texture2D<FfxFloat32x4> r_output : FFX_DECLARE_SRV(FFX_FRAMEINTERPOLATION_BIND_SRV_OUTPUT);
+#if defined(FFX_FRAMEINTERPOLATION_BIND_SRV_INPAINTING_MASK) && defined(FFX_FRAMEINTERPOLATION_BIND_SRV_OUTPUT)
+    Texture2D<FfxFloat32x3> r_output          : FFX_DECLARE_SRV(FFX_FRAMEINTERPOLATION_BIND_SRV_OUTPUT);
+    Texture2D<FfxFloat32>   r_inpainting_mask : FFX_DECLARE_SRV(FFX_FRAMEINTERPOLATION_BIND_SRV_INPAINTING_MASK);
 
+    FfxFloat32x4 LoadFrameInterpolationOutput(FFX_PARAMETER_IN FfxInt32x2 iPxInput)
+    {
+        return FfxFloat32x4(r_output[iPxInput], r_inpainting_mask[iPxInput]);
+    }
+#elif defined(FFX_FRAMEINTERPOLATION_BIND_SRV_OUTPUT)
+    Texture2D<FfxFloat32x4> r_output          : FFX_DECLARE_SRV(FFX_FRAMEINTERPOLATION_BIND_SRV_OUTPUT);
     FfxFloat32x4 LoadFrameInterpolationOutput(FFX_PARAMETER_IN FfxInt32x2 iPxInput)
     {
         return r_output[iPxInput];
@@ -497,10 +509,34 @@ FfxFloat32x2 LoadInputMotionVector(FfxInt32x2 iPxDilatedMotionVectorPos)
     return fUvMotionVector;
 }
 #endif
+
+#if defined(FFX_FRAMEINTERPOLATION_BIND_SRV_DISTORTION_FIELD)
+    Texture2D<FfxFloat32x2> r_input_distortion_field : FFX_DECLARE_SRV(FFX_FRAMEINTERPOLATION_BIND_SRV_DISTORTION_FIELD);
+    FfxFloat32x2 SampleDistortionField(FFX_PARAMETER_IN FfxFloat32x2 fUv)
+    {
+        return r_input_distortion_field.SampleLevel(s_LinearClamp, fUv, 0);
+    }
+#endif
+
 ///////////////////////////////////////////////
 // declare UAVs and UAV accessors
 ///////////////////////////////////////////////
-#ifdef FFX_FRAMEINTERPOLATION_BIND_UAV_OUTPUT
+#if defined(FFX_FRAMEINTERPOLATION_BIND_UAV_INPAINTING_MASK) && defined(FFX_FRAMEINTERPOLATION_BIND_UAV_OUTPUT)
+    RWTexture2D<FfxFloat32x3> rw_output          : FFX_DECLARE_UAV(FFX_FRAMEINTERPOLATION_BIND_UAV_OUTPUT);
+    RWTexture2D<FfxFloat32>   rw_inpainting_mask : FFX_DECLARE_UAV(FFX_FRAMEINTERPOLATION_BIND_UAV_INPAINTING_MASK);
+
+    FfxFloat32x4 RWLoadFrameinterpolationOutput(FFX_PARAMETER_IN FfxInt32x2 iPxPos)
+    {
+        return FfxFloat32x4(rw_output[iPxPos], rw_inpainting_mask[iPxPos]);
+    }
+
+    void StoreFrameinterpolationOutput(FFX_PARAMETER_IN FfxInt32x2 iPxPos, FFX_PARAMETER_IN FfxFloat32x4 val)
+    {
+        rw_output[iPxPos] = val.rgb;
+        rw_inpainting_mask[iPxPos] = val.a;
+    }
+
+#elif defined(FFX_FRAMEINTERPOLATION_BIND_UAV_OUTPUT)
     RWTexture2D<FfxFloat32x4> rw_output : FFX_DECLARE_UAV(FFX_FRAMEINTERPOLATION_BIND_UAV_OUTPUT);
 
     FfxFloat32x4 RWLoadFrameinterpolationOutput(FFX_PARAMETER_IN FfxInt32x2 iPxPos)

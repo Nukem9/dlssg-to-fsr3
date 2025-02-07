@@ -59,7 +59,7 @@ typedef struct FrameInterpolationConstants
 
     float   deltaTime;
     int     HUDLessAttachedFactor;
-    float   UNUSED__[2];
+    int32_t distortionFieldSize[2];
 
     float   opticalFlowScale[2];
     int32_t opticalFlowBlockSize;

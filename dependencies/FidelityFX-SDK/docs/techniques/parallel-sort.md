@@ -1,6 +1,6 @@
-<!-- @page page_techniques_parallel-sort FidelityFX Parallel Sort 1.2 -->
+<!-- @page page_techniques_parallel-sort FidelityFX Parallel Sort 1.3 -->
 
-<h1>FidelityFX Parallel Sort 1.2</h1>
+<h1>FidelityFX Parallel Sort 1.3</h1>
 
 FidelityFX Parallel Sort is a technique which uses a GPU-based radix sort algorithm to sort a provided buffer of keys, and an optional payload.
 

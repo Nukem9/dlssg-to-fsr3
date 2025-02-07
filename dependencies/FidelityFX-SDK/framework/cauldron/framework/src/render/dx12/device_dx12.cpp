@@ -1,7 +1,7 @@
 // This file is part of the FidelityFX SDK.
 //
 // Copyright (C) 2024 Advanced Micro Devices, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -32,12 +32,13 @@
 #include "render/dx12/uploadheap_dx12.h"
 
 #include "dxheaders/include/directx/d3dx12.h"
+#include "antilag2/ffx_antilag2_dx12.h"
 
 #pragma comment(lib, "dxguid.lib")
 #include <DXGIDebug.h>
 
 // D3D12SDKVersion needs to line up with the version number on Microsoft's DirectX12 Agility SDK Download page
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 613; }
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 614; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 namespace cauldron
@@ -234,13 +235,22 @@ namespace cauldron
         initQueue(CommandQueue::Compute,  L"CauldronComputeQueue");
         initQueue(CommandQueue::Copy,     L"CauldronCopyQueue");
 
-   
+        if (pConfig->AntiLag2)
+        {
+            if (AMD::AntiLag2DX12::Initialize(&m_AntiLag2Context, m_pDevice) == S_OK)
+            {
+                m_AntiLag2Supported = true;
+                m_AntiLag2Enabled   = true;
+            }
+        }
     }
 
     DeviceInternal::~DeviceInternal()
     {
         // Make sure everything is clear
         FlushAllCommandQueues();
+
+        AMD::AntiLag2DX12::DeInitialize(&m_AntiLag2Context);
 
         // Clear queue allocators
         for (uint32_t i = 0; i < static_cast<int32_t>(CommandQueue::Count); ++i)
@@ -309,6 +319,27 @@ namespace cauldron
 
     uint64_t DeviceInternal::PresentSwapChain(SwapChain* pSwapChain)
     {
+        if (m_AntiLag2Supported)
+        {
+            // {5083ae5b-8070-4fca-8ee5-3582dd367d13}
+            static const GUID IID_IFfxAntiLag2Data = {0x5083ae5b, 0x8070, 0x4fca, {0x8e, 0xe5, 0x35, 0x82, 0xdd, 0x36, 0x7d, 0x13}};
+
+            struct AntiLag2Data
+            {
+                AMD::AntiLag2DX12::Context* context;
+                bool                        enabled;
+            } data;
+
+            data.context = &m_AntiLag2Context;
+            data.enabled = m_AntiLag2Enabled;
+            pSwapChain->GetImpl()->GetImpl()->DX12SwapChain()->SetPrivateData(IID_IFfxAntiLag2Data, sizeof(data), &data);
+
+            if (m_AntiLag2Enabled)
+            {
+                AMD::AntiLag2DX12::MarkEndOfFrameRendering(&m_AntiLag2Context);
+            }
+        }
+
         HRESULT hrCode = S_OK;
         if (pSwapChain->GetImpl()->m_VSyncEnabled)
             hrCode = pSwapChain->GetImpl()->m_pSwapChain->Present(1, 0);
@@ -678,6 +709,14 @@ namespace cauldron
         m_pQueueFence->SetEventOnCompletion(waitValue, hHandleFenceEvent);
         WaitForSingleObject(hHandleFenceEvent, INFINITE);
         CloseHandle(hHandleFenceEvent);
+    }
+
+    void DeviceInternal::UpdateAntiLag2()
+    {
+        if (m_AntiLag2Supported)
+        {
+            AMD::AntiLag2DX12::Update(&m_AntiLag2Context, m_AntiLag2Enabled, m_AntiLag2FramerateLimiter);
+        }
     }
 
 } // namespace cauldron

@@ -24,6 +24,11 @@
 #include <stdlib.h>     // for _countof
 #include <cmath>        // for fabs, abs, sinf, sqrt, etc.
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wsign-compare"
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
+
 #include <FidelityFX/host/ffx_vrs.h>
 #include <FidelityFX/gpu/ffx_core.h>
 #define FFX_CPP
@@ -103,7 +108,7 @@ static FfxErrorCode patchResourceBindings(FfxPipelineState* inoutPipeline)
     return FFX_OK;
 }
 
-static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxVrsPass passId, uint32_t tileSize, bool fp16, bool force64)
+static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxVrsPass, uint32_t tileSize, bool, bool force64)
 {
     // work out what permutation to load.
     uint32_t flags = 0;
@@ -190,13 +195,13 @@ static FfxErrorCode vrsCreate(FfxVrsContext_Private* context, const FfxVrsContex
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
 
     context->constantBuffer.num32BitEntries = sizeof(VrsConstants) / sizeof(uint32_t);
 
     // Create the context.
     FfxErrorCode errorCode =
-        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId);
+        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_VARIABLE_SHADING, nullptr, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     // Call out for device caps.
@@ -246,7 +251,7 @@ FFX_API FfxErrorCode ffxVrsContextCreate(FfxVrsContext* context, const FfxVrsCon
 }
 
 static void scheduleDispatch(FfxVrsContext_Private*           context,
-                             const FfxVrsDispatchDescription* params,
+                             const FfxVrsDispatchDescription*,
                              const FfxPipelineState*          pipeline,
                              uint32_t                         dispatchX,
                              uint32_t                         dispatchY,
@@ -350,8 +355,6 @@ FFX_API FfxErrorCode ffxVrsContextDispatch(FfxVrsContext* context, const FfxVrsD
     // dispatch the VRS pass
     const FfxErrorCode errorCode = vrsDispatch(contextPrivate, dispatchDescription);
     return errorCode;
-
-    return FFX_OK;
 }
 
 static FfxErrorCode vrsRelease(FfxVrsContext_Private* context)

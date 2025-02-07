@@ -84,7 +84,7 @@ namespace cauldron
         D3D12_RESOURCE_DESC renderTargetDesc = pResource->GetImpl()->DX12Desc();
 
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-        rtvDesc.Format = GetDXGIFormat(textureDesc.Format);
+        rtvDesc.Format = ConvertTypelessDXGIFormat(GetDXGIFormat(textureDesc.Format));
 
         if (renderTargetDesc.SampleDesc.Count == 1)
         {
@@ -202,23 +202,21 @@ namespace cauldron
         D3D12_RESOURCE_DESC resourceDesc = pResource->GetImpl()->DX12Desc();
 
         // use the format from the TextureDesc to allow overriding it, e.g. for reading SRGB surfaces
-        resourceDesc.Format              = GetDXGIFormat(textureDesc.Format);
+        resourceDesc.Format              = ConvertTypelessDXGIFormat(GetDXGIFormat(textureDesc.Format));
 
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-        // Override TYPELESS resources to prevent device removal
         switch (resourceDesc.Format)
         {
-        case DXGI_FORMAT_D32_FLOAT:
-        case DXGI_FORMAT_R32_TYPELESS: srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-            break;
-        case DXGI_FORMAT_R16_TYPELESS: srvDesc.Format = DXGI_FORMAT_R16_FLOAT;
-            break;
-        case DXGI_FORMAT_D16_UNORM: srvDesc.Format = DXGI_FORMAT_R16_UNORM;
-            break;
-        default:
-            srvDesc.Format = resourceDesc.Format;
-            break;
+            case DXGI_FORMAT_D32_FLOAT:
+                srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+                break;
+            case DXGI_FORMAT_D16_UNORM:
+                srvDesc.Format = DXGI_FORMAT_R16_UNORM;
+                break;
+            default:
+                srvDesc.Format = resourceDesc.Format;
+                break;
         }
 
         switch (dimension)
@@ -286,14 +284,15 @@ namespace cauldron
         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
         // Override TYPELESS resources to prevent device removal
+        resourceDesc.Format = ConvertTypelessDXGIFormat(resourceDesc.Format);
+
         switch (resourceDesc.Format)
         {
         case DXGI_FORMAT_D32_FLOAT:
-        case DXGI_FORMAT_R32_TYPELESS: uavDesc.Format = DXGI_FORMAT_R32_FLOAT;
+            uavDesc.Format = DXGI_FORMAT_R32_FLOAT;
             break;
-        case DXGI_FORMAT_R16_TYPELESS: uavDesc.Format = DXGI_FORMAT_R16_FLOAT;
-            break;
-        case DXGI_FORMAT_D16_UNORM: uavDesc.Format = DXGI_FORMAT_R16_UNORM;
+        case DXGI_FORMAT_D16_UNORM: 
+            uavDesc.Format = DXGI_FORMAT_R16_UNORM;
             break;
         default:
             // sRGB format aren't allowed for UAV

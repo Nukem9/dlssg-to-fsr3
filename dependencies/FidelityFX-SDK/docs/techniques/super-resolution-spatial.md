@@ -1,6 +1,6 @@
-<!-- @page page_techniques_super-resolution-spatial FidelityFX Super Resolution 1.1 -->
+<!-- @page page_techniques_super-resolution-spatial FidelityFX Super Resolution 1.2 -->
 
-<h1>FidelityFX Super Resolution 1.1 (FSR1)</h1>
+<h1>FidelityFX Super Resolution 1.2 (FSR1)</h1>
 
 ![Screenshot](media/super-resolution-spatial/fsr-sample_resized.jpg "A screenshot showcasing the final output of the effect")
 

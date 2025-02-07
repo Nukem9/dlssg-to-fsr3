@@ -24,4 +24,12 @@
 // we are supporting up to Vulkan 1.3 for now
 #define VMA_VULKAN_VERSION 1003000
 
+#ifdef VMA_EXPORTS
+    #define VMA_CALL_PRE  __declspec(dllexport)
+    #define VMA_CALL_POST __cdecl
+#elif defined(VMA_IMPORTS)
+    #define VMA_CALL_PRE  __declspec(dllimport)
+    #define VMA_CALL_POST __cdecl
+#endif
+
 #include "memoryallocator/vk_mem_alloc.h"

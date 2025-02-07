@@ -33,6 +33,7 @@
 
 #include "AGS/amd_ags.h"
 #include "memoryallocator/D3D12MemAlloc.h"
+#include "antilag2/ffx_antilag2_dx12.h"
 
 namespace cauldron
 {
@@ -115,6 +116,8 @@ namespace cauldron
         static void ExecuteCommandListsImmediate(std::vector<CommandList*>& cmdLists, QueueSyncPrimitive& queueSyncPrim);
         static void WaitOnQueue(uint64_t waitValue, const QueueSyncPrimitive& queueSyncPrim);
 
+        virtual void UpdateAntiLag2() override;
+
     private:
         QueueSyncPrimitive m_QueueSyncPrims[static_cast<int32_t>(CommandQueue::Count)] = {};
 
@@ -124,6 +127,9 @@ namespace cauldron
 
         MSComPtr<D3D12MA::Allocator> m_pD3D12Allocator = nullptr;
         MSComPtr<IDXGIAdapter>       m_pAdapter        = nullptr;
+
+        AMD::AntiLag2DX12::Context m_AntiLag2Context = {};
+
     };
 
 } // namespace cauldron

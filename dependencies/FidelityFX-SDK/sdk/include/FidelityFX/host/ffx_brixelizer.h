@@ -26,12 +26,12 @@
 
 /// The size of the context specified in 32bit values.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 #define FFX_BRIXELIZER_CONTEXT_SIZE            (5938838)
 
 /// The size of the update description specified in 32bit values.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 #define FFX_BRIXELIZER_UPDATE_DESCRIPTION_SIZE 2099376
 
 #ifdef __cplusplus
@@ -49,14 +49,14 @@ extern "C" {
 /// or used by Brixelizer. It is therefore recommended that the GPU is idle
 /// before destroying the Brixelizer context.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerContext {
     uint32_t data[FFX_BRIXELIZER_CONTEXT_SIZE];
 } FfxBrixelizerContext;
 
 /// A structure representing an axis aligned bounding box for use with Brixelizer.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerAABB {
     float min[3];    ///< The minimum bounds of the AABB.
     float max[3];    ///< The maximum bounds of the AABB.
@@ -65,7 +65,7 @@ typedef struct FfxBrixelizerAABB {
 /// Flags used for cascade creation. A cascade may be specified
 /// as having static geometry, dynamic geometry, or both by combining these flags.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef enum FfxBrixelizerCascadeFlag {
     FFX_BRIXELIZER_CASCADE_STATIC  = (1 << 0),
     FFX_BRIXELIZER_CASCADE_DYNAMIC = (1 << 1),
@@ -73,7 +73,7 @@ typedef enum FfxBrixelizerCascadeFlag {
 
 /// A structure encapsulating the parameters for cascade creation.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerCascadeDescription {
     FfxBrixelizerCascadeFlag flags;        ///< Flags for cascade creation. See <c><i>FfxBrixelizerCascadeFlag</i></c>.
     float                    voxelSize;    ///< The edge size of voxels in world space for the cascade.
@@ -81,7 +81,7 @@ typedef struct FfxBrixelizerCascadeDescription {
 
 /// A structure encapsulating the parameters for creating a Brixelizer context.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerContextDescription {
     float                           sdfCenter[3];                                 ///< The point in world space around which to center the cascades.
     uint32_t                        numCascades;                                  ///< The number of cascades managed by the Brixelizer context.
@@ -92,7 +92,7 @@ typedef struct FfxBrixelizerContextDescription {
 
 /// Flags used for setting which AABBs to draw in a debug visualization of Brixelizer
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef enum FfxBrixelizerPopulateDebugAABBsFlags {
     FFX_BRIXELIZER_POPULATE_AABBS_NONE               = 0,                                                                                    ///< Draw no AABBs.
     FFX_BRIXELIZER_POPULATE_AABBS_STATIC_INSTANCES   = 1 << 0,                                                                               ///< Draw AABBs for all static instances.
@@ -103,7 +103,7 @@ typedef enum FfxBrixelizerPopulateDebugAABBsFlags {
 
 /// A structure containing the statistics for a Brixelizer context readable after an update of the Brixelizer API.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerContextStats {
     uint32_t brickAllocationsAttempted;      ///< Total number of brick allocations attempted this frame.
     uint32_t brickAllocationsSucceeded;      ///< Total number of brick allocations succeeded this frame.
@@ -114,7 +114,7 @@ typedef struct FfxBrixelizerContextStats {
 
 /// A structure containing the statistics for a Brixelizer cascade readable after an update of the Brixelizer API.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerCascadeStats {
     uint32_t trianglesAllocated;       ///< The number of triangle allocations that were attempted to the cascade in a given frame.
     uint32_t referencesAllocated;      ///< The number of reference allocations that were attempted to the cascade in a given frame.
@@ -123,7 +123,7 @@ typedef struct FfxBrixelizerCascadeStats {
 
 /// A structure containing the statistics readable after an update of the Brixelizer API.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerStats {
     uint32_t                  cascadeIndex;         ///< The index of the cascade that the statisticss have been collected for.
     FfxBrixelizerCascadeStats staticCascadeStats;   ///< The statistics for the static cascade.
@@ -134,7 +134,7 @@ typedef struct FfxBrixelizerStats {
 /// A structure encapsulating the parameters used for computing an update by the
 /// Brixelizer context.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerUpdateDescription {
     FfxBrixelizerResources                      resources;                    ///< Structure containing all resources to be used by the Brixelizer context.
     uint32_t                                    frameIndex;                   ///< The index of the current frame.
@@ -151,14 +151,14 @@ typedef struct FfxBrixelizerUpdateDescription {
 /// A structure generated by Brixelizer from an <c><i>FfxBrixelizerUpdateDescription</i></c> structure
 /// used for storing parameters necessary for an update with the underlying raw Brixelizer API.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerBakedUpdateDescription {
     uint32_t data[FFX_BRIXELIZER_UPDATE_DESCRIPTION_SIZE];
 } FfxBrixelizerBakedUpdateDescription;
 
 /// Flags used for specifying instance properties.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef enum FfxBrixelizerInstanceFlags {
     FFX_BRIXELIZER_INSTANCE_FLAG_NONE    = 0,       ///< No instance flags set.
     FFX_BRIXELIZER_INSTANCE_FLAG_DYNAMIC = 1 << 0,  ///< This flag is set for any instance which should be added to the dynamic cascade. Indicates that this instance will be resubmitted every frame.
@@ -166,7 +166,7 @@ typedef enum FfxBrixelizerInstanceFlags {
 
 /// A structure encapsulating the parameters necessary to create an instance with Brixelizer.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 typedef struct FfxBrixelizerInstanceDescription {
     uint32_t                    maxCascade;           ///< The index of the highest cascade this instance will be submitted to. This helps avoid submitting many small objects to least detailed cascades.
     FfxBrixelizerAABB           aabb;                 ///< An AABB surrounding the instance.
@@ -195,7 +195,7 @@ typedef struct FfxBrixelizerInstanceDescription {
 ///
 /// @return  The size in bytes of an <c><i>FfxBrixelizerContext</i></c> struct.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 inline size_t ffxBrixelizerGetContextSize()
 {
     return sizeof(FfxBrixelizerContext);
@@ -223,7 +223,7 @@ inline size_t ffxBrixelizerGetContextSize()
 /// @retval
 /// FFX_OK                        The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerContextCreate(const FfxBrixelizerContextDescription* desc, FfxBrixelizerContext* outContext);
 
 /// Delete the Brixelizer context associated with the <c><i>FfxBrixelizerContext</i></c> struct.
@@ -233,7 +233,7 @@ FFX_API FfxErrorCode ffxBrixelizerContextCreate(const FfxBrixelizerContextDescri
 /// @retval
 /// FFX_OK                        The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerContextDestroy(FfxBrixelizerContext* context);
 
 /// Fill in an <c><i>FfxBrixelizerContextInfo</i></c> struct for necessary for updating a constant buffer for use
@@ -245,7 +245,7 @@ FFX_API FfxErrorCode ffxBrixelizerContextDestroy(FfxBrixelizerContext* context);
 /// @retval
 /// FFX_OK                        The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerGetContextInfo(FfxBrixelizerContext* context, FfxBrixelizerContextInfo* contextInfo);
 
 /// Build an <c><i>FfxBrixelizerBakedUpdateDescription</i></c> struct from an <c><i>FfxBrixelizerUpdateDescription</i></c> struct
@@ -258,7 +258,7 @@ FFX_API FfxErrorCode ffxBrixelizerGetContextInfo(FfxBrixelizerContext* context, 
 /// @retval
 /// FFX_OK                        The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerBakeUpdate(FfxBrixelizerContext* context, const FfxBrixelizerUpdateDescription* desc, FfxBrixelizerBakedUpdateDescription* outDesc);
 
 /// Perform an update of Brixelizer, recording GPU commands to a command list.
@@ -271,7 +271,7 @@ FFX_API FfxErrorCode ffxBrixelizerBakeUpdate(FfxBrixelizerContext* context, cons
 /// @retval
 /// FFX_OK                        The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerUpdate(FfxBrixelizerContext* context, FfxBrixelizerBakedUpdateDescription* desc, FfxResource scratchBuffer, FfxCommandList commandList);
 
 /// Register a vertex or index buffer to use with Brixelizer.
@@ -283,7 +283,7 @@ FFX_API FfxErrorCode ffxBrixelizerUpdate(FfxBrixelizerContext* context, FfxBrixe
 /// @retval
 /// FFX_OK                      The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerRegisterBuffers(FfxBrixelizerContext* context, const FfxBrixelizerBufferDescription* bufferDescs, uint32_t numBufferDescs);
 
 /// Unregister a previously registered vertex or index buffer.
@@ -294,7 +294,7 @@ FFX_API FfxErrorCode ffxBrixelizerRegisterBuffers(FfxBrixelizerContext* context,
 /// @retval
 /// FFX_OK                      The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerUnregisterBuffers(FfxBrixelizerContext* context, const uint32_t* indices, uint32_t numIndices);
 
 /// Create a static instance for a Brixelizer context.
@@ -306,7 +306,7 @@ FFX_API FfxErrorCode ffxBrixelizerUnregisterBuffers(FfxBrixelizerContext* contex
 /// @retval
 /// FFX_OK                      The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerCreateInstances(FfxBrixelizerContext* context, const FfxBrixelizerInstanceDescription* descs, uint32_t numDescs);
 
 /// Delete a static instance from a Brixelizer context.
@@ -318,7 +318,7 @@ FFX_API FfxErrorCode ffxBrixelizerCreateInstances(FfxBrixelizerContext* context,
 /// @retval
 /// FFX_OK                      The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerDeleteInstances(FfxBrixelizerContext* context, const FfxBrixelizerInstanceID* instanceIDs, uint32_t numInstanceIDs);
 
 /// Get a pointer to the underlying Brixelizer raw context from a Brixelizer context.
@@ -331,7 +331,7 @@ FFX_API FfxErrorCode ffxBrixelizerDeleteInstances(FfxBrixelizerContext* context,
 /// @return
 /// FFX_OK                     The operation completed successfully.
 ///
-/// @ingroup Brixelizer
+/// @ingroup ffxBrixelizer
 FFX_API FfxErrorCode ffxBrixelizerGetRawContext(FfxBrixelizerContext* context, FfxBrixelizerRawContext** outContext);
 
 #ifdef __cplusplus

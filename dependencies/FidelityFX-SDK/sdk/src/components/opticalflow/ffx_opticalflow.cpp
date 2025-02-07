@@ -26,6 +26,11 @@
 #include <cfloat>       // for FLT_EPSILON
 #include "FidelityFX/host/ffx_opticalflow.h"
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic ignored "-Wsign-compare"
+#endif
+
 #define FFX_CPU
 #include <FidelityFX/gpu/ffx_core.h>
 #include <FidelityFX/gpu/spd/ffx_spd.h>
@@ -147,7 +152,7 @@ static FfxErrorCode patchResourceBindings(FfxPipelineState* inoutPipeline)
     return FFX_OK;
 }
 
-static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxPass passId, bool fp16, bool force64, bool useLut)
+static uint32_t getPipelinePermutationFlags(uint32_t, FfxPass, bool fp16, bool force64, bool)
 {
     uint32_t flags = 0;
     flags |= (force64) ? OPTICALFLOW_SHADER_PERMUTATION_FORCE_WAVE64 : 0;
@@ -273,9 +278,9 @@ static FfxErrorCode opticalflowCreate(FfxOpticalflowContext_Private* context, co
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
 
-    errorCode = context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId);
+    errorCode = context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_OPTICALFLOW, nullptr, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     errorCode = context->contextDescription.backendInterface.fpGetDeviceCapabilities(&context->contextDescription.backendInterface, &context->deviceCapabilities);
@@ -289,7 +294,6 @@ static FfxErrorCode opticalflowCreate(FfxOpticalflowContext_Private* context, co
 
     FfxDimensions2D opticalFlowInputTextureSize = context->contextDescription.resolution;
 
-    uint32_t atomicInitData = 0U;
     const FfxResourceType texture1dResourceType = (context->contextDescription.flags & FFX_OPTICALFLOW_ENABLE_TEXTURE1D_USAGE) ? FFX_RESOURCE_TYPE_TEXTURE1D : FFX_RESOURCE_TYPE_TEXTURE2D;
 
     uint32_t minBlockSize = 8;
@@ -746,7 +750,6 @@ static FfxErrorCode dispatch(FfxOpticalflowContext_Private* context, const FfxOp
                     {
                         uint32_t threadPixels = 4;
                         FFX_ASSERT(opticalFlowBlockSize >= threadPixels);
-                        uint32_t threadGroupSizeX = 4;
                         uint32_t threadGroupSizeY = 16;
                         uint32_t threadGroupSize = 64;
                         uint32_t dispatchX = ((inputLumaWidth + threadPixels - 1) / threadPixels * threadGroupSizeY + (threadGroupSize - 1)) / threadGroupSize;

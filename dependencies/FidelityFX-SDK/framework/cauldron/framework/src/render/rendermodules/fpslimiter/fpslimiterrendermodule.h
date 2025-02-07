@@ -47,6 +47,7 @@ public:
 
     void Init(const json& initData) override;
     void Execute(double deltaTime, cauldron::CommandList* pCmdList) override;
+    bool IsFPSLimited() const { return m_LimitFPS; }
 
 private:
     cauldron::RootSignature*  m_pRootSignature = nullptr;

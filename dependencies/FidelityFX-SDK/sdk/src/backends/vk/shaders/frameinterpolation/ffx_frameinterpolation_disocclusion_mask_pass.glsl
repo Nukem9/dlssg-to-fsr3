@@ -31,10 +31,11 @@
 #define FFX_FRAMEINTERPOLATION_BIND_SRV_DILATED_DEPTH                           3
 #define FFX_FRAMEINTERPOLATION_BIND_SRV_RECONSTRUCTED_DEPTH_INTERPOLATED_FRAME  4
 #define FFX_FRAMEINTERPOLATION_BIND_SRV_INPAINTING_PYRAMID                      5
+#define FFX_FRAMEINTERPOLATION_BIND_SRV_DISTORTION_FIELD                        6
 
-#define FFX_FRAMEINTERPOLATION_BIND_UAV_DISOCCLUSION_MASK                       6
+#define FFX_FRAMEINTERPOLATION_BIND_UAV_DISOCCLUSION_MASK                       7
 
-#define FFX_FRAMEINTERPOLATION_BIND_CB_FRAMEINTERPOLATION                       7
+#define FFX_FRAMEINTERPOLATION_BIND_CB_FRAMEINTERPOLATION                       8
 
 #include "frameinterpolation/ffx_frameinterpolation_callbacks_glsl.h"
 #include "frameinterpolation/ffx_frameinterpolation_common.h"

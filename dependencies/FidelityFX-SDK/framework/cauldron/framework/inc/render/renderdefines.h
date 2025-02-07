@@ -212,16 +212,19 @@ namespace cauldron
         // 8-bit
         R8_SINT,            ///< Single-component (R) 8-bit (signed int) type.
         R8_UINT,            ///< Single-component (R) 8-bit (unsigned int) type.
+        R8_TYPELESS,        ///< Single-component (R) 8-bit (typeless) type.
         R8_UNORM,           ///< Single-component (R) 8-bit (unsigned normalized) type.
 
         // 16-bit
         R16_SINT,           ///< Single-component (R) 16-bit (signed int) type.
         R16_UINT,           ///< Single-component (R) 16-bit (unsigned int) type.
+        R16_TYPELESS,       ///< Single-component (R) 16-bit (typeless) type.
         R16_FLOAT,          ///< Single-component (R) 16-bit (floating point) type.
         R16_UNORM,          ///< Single-component (R) 16-bit (unsigned normalized) type.
         R16_SNORM,          ///< Single-component (R) 16-bit (signed normalized) type.
         RG8_SINT,           ///< 2-component (RG) 16-bit (signed int) type.
         RG8_UINT,           ///< 2-component (RG) 16-bit (unsigned int) type.
+        RG8_TYPELESS,       ///< 2-component (RG) 16-bit (typeless) type.
         RG8_UNORM,          ///< 2-component (RG) 16-bit (unsigned normalized) type.
 
         // 32-bit
@@ -238,11 +241,15 @@ namespace cauldron
         BGRA8_SRGB,         ///< 4-Component (BGRA) 32-bit (SRGB) type.
         RGBA8_TYPELESS,     ///< 4-Component (RGBA) 32-bit (typeless) type.
         BGRA8_TYPELESS,     ///< 4-Component (BGRA) 32-bit (typeless) type.
+        RGB10A2_TYPELESS,   ///< 4-Component (RGBA) 32-bit (typeless) type.
         RGB10A2_UNORM,      ///< 4-Component (RGBA) 32-bit (unsigned normalized) type.
         RG11B10_FLOAT,      ///< 3-Component (RGB) 32-bit (floating point) type.
+        RGB9E5_SHAREDEXP,   ///< 3-Component (RGB) 32-bit (floating point) type.
         RG16_SINT,          ///< 2-Component (RG) 32-bit (signed int) type.
         RG16_UINT,          ///< 2-Component (RG) 32-bit (unsigned int) type.
+        RG16_TYPELESS,      ///< 2-Component (R) 32-bit (typeless) type.
         RG16_FLOAT,         ///< 2-Component (R) 32-bit (floating point) type.
+        R32_TYPELESS,       ///< Single-Component (R) 32-bit (typeless) type.
         R32_FLOAT,          ///< Single-Component (R) 32-bit (floating point) type.
 
         // 64-bit
@@ -250,9 +257,11 @@ namespace cauldron
         RGBA16_UINT,        ///< 4-Component (RGBA) 64-bit (unsigned int) type.
         RGBA16_UNORM,       ///< 4-Component (RGBA) 64-bit (unsigned normalized) type.
         RGBA16_SNORM,       ///< 4-Component (RGBA) 64-bit (signed normalized) type.
+        RGBA16_TYPELESS,    ///< 4-Component (RGBA) 64-bit (typeless) type.
         RGBA16_FLOAT,       ///< 4-Component (RGBA) 64-bit (floating point) type.
         RG32_SINT,          ///< 2-Component (RG) 64-bit (signed int) type.
         RG32_UINT,          ///< 2-Component (RG) 64-bit (unsigned int) type.
+        RG32_TYPELESS,      ///< 2-Component (RG) 64-bit (typeless) type.
         RG32_FLOAT,         ///< 2-Component (RG) 64-bit (floating point) type.
 
         // 96-bit

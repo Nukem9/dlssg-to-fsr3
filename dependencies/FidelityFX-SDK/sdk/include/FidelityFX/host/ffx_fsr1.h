@@ -57,7 +57,7 @@
 /// The size of the context specified in 32bit values.
 ///
 /// @ingroup ffxFsr1
-#define FFX_FSR1_CONTEXT_SIZE       (27442)
+#define FFX_FSR1_CONTEXT_SIZE       (27448)
 
 #if defined(__cplusplus)
 extern "C" {

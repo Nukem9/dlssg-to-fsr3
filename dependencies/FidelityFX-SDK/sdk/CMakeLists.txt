@@ -1,17 +1,17 @@
 # This file is part of the FidelityFX SDK.
-# 
+#
 # Copyright (C) 2024 Advanced Micro Devices, Inc.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files(the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions :
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,10 +33,12 @@ unset(FFX_GDK CACHE)
 include("CMakeWorkaroundPatches.cmake") # Separate file to minimize git changes
 message(STATUS "FFX_API_BACKEND is ${FFX_API_BACKEND}")
 
-if(FFX_API_BACKEND STREQUAL VK_X64 OR 
-   FFX_API_BACKEND STREQUAL DX12_X64 OR 
-   FFX_API_BACKEND STREQUAL GDK_DESKTOP_X64 OR 
-   FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64)
+if(FFX_API_BACKEND STREQUAL VK_X64 OR
+   FFX_API_BACKEND STREQUAL DX12_X64 OR
+   FFX_API_BACKEND STREQUAL DX12_ARM64 OR
+   FFX_API_BACKEND STREQUAL DX12_ARM64EC OR
+   FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64 OR
+   FFX_API_BACKEND STREQUAL GDK_XBOXONE_X64)
 	set(FFX_CUSTOM_API OFF)
 else()
 	set(FFX_CUSTOM_API ON)
@@ -46,26 +48,28 @@ endif()
 if (NOT FFX_CUSTOM_API)
 
 	# Are we buiding the GDK?
-	if (FFX_API_BACKEND STREQUAL GDK_DESKTOP_X64 OR FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64)
+	if (FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64 OR FFX_API_BACKEND STREQUAL GDK_XBOXONE_X64)
 		set(FFX_GDK ON)
 	endif()
 
 	# Pull in tool chain definitions
 	include(toolchain.cmake)
-	
+
 	# If we are NOT building the GDK, queue up DX12/VK solution for building
 	if (NOT FFX_GDK)
-		if (FFX_API_BACKEND STREQUAL DX12_X64)
+		if (FFX_API_BACKEND STREQUAL DX12_X64 OR
+			FFX_API_BACKEND STREQUAL DX12_ARM64 OR
+			FFX_API_BACKEND STREQUAL DX12_ARM64EC)
 			message(STATUS "Building FidelityFX SDK with DX12 backend")
 		elseif(FFX_API_BACKEND STREQUAL VK_X64)
 			message(STATUS "Building FidelityFX SDK with VK backend")
 		endif()
 	else()
 		# List the API we are building for
-		if(FFX_API_BACKEND STREQUAL GDK_DESKTOP_X64)
-			message(STATUS "Building FidelityFX SDK with GDK Gaming.Desktop.x64 backend")
-		elseif(FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64)
+		if(FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64)
 			message(STATUS "Building FidelityFX SDK with GDK Gaming.Scarlett.x64 backend")
+		elseif(FFX_API_BACKEND STREQUAL GDK_XBOXONE_X64)
+			message(STATUS "Building FidelityFX SDK with GDK Gaming.XboxOne.x64 backend")
 		else()
 			message(FATAL_ERROR "Requesting unsupported GDK build of FidelityFX SDK!")
 		endif()
@@ -73,16 +77,20 @@ if (NOT FFX_CUSTOM_API)
 endif()
 
 # Set platform
-if(CMAKE_GENERATOR_PLATFORM STREQUAL "Gaming.Desktop.x64")
-	set(FFX_PLATFORM_NAME gdk_desktop_x64)
-elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "Gaming.Xbox.Scarlett.x64")
+if(CMAKE_GENERATOR_PLATFORM STREQUAL "Gaming.Xbox.Scarlett.x64")
 	set(FFX_PLATFORM_NAME gdk_scarlett_x64)
+elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "Gaming.Xbox.XboxOne.x64")
+	set(FFX_PLATFORM_NAME gdk_xboxone_x64)
 elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "x64" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/machine:x64")
     set(FFX_PLATFORM_NAME x64)
 elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "Win32" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/machine:X86")
     set(FFX_PLATFORM_NAME x86)
+elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "arm64" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/machine:ARM64")
+    set(FFX_PLATFORM_NAME arm64)
+elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "arm64ec" OR CMAKE_EXE_LINKER_FLAGS STREQUAL "/machine:ARM64EC")
+	set(FFX_PLATFORM_NAME arm64ec)
 else()
-    message(FATAL_ERROR "Unsupported target platform \"${CMAKE_GENERATOR_PLATFORM}\" - only supporting gdk, x64, and Win32 currently")
+    message(FATAL_ERROR "Unsupported target platform \"${CMAKE_GENERATOR_PLATFORM}\"")
 endif()
 
 # Pre-compile shaders
@@ -110,11 +118,12 @@ if (NOT FFX_CUSTOM_API)
 
 	# Embed PDBs in the debug versions of the libs
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Z7 /Od")
-
-	# Write both debug and release versions of the static libs to the /bin folder as they are uniquely named
+    
+	# Write debug, profile, and release versions of the static libs to the /bin folder as they are uniquely named	
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_HOME_DIRECTORY}/bin/ffx_sdk/)
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_HOME_DIRECTORY}/bin/ffx_sdk/)
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_HOME_DIRECTORY}/bin/ffx_sdk/)
+
 
 	if (FFX_BUILD_AS_DLL)
 		# Write both debug and release versions of the dlls to the /bin folder as they are uniquely named
@@ -146,9 +155,14 @@ if (FFX_FSR3)
 	option(FFX_OF "Build FFX Optical Flow API" ON)
 endif()
 
+if (FFX_SSSR)
+	option(FFX_DENOISER "Build FFX Denoiser API" ON)
+endif()
+
 # Add requred compile definitions
 add_compile_definitions(_UNICODE)
 add_compile_definitions(UNICODE)
+add_compile_definitions(_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
 
 if(FFX_VS_VERSION STREQUAL 2015 OR FFX_VS_VERSION STREQUAL 2017)
     message(NOTICE "Forcing the SDK path for VS 2015 and VS 2017")
@@ -194,18 +208,24 @@ set(FFX_PUBLIC_SHADER_SOURCES
     "${FFX_GPU_PATH}/ffx_core_hlsl.h"
     "${FFX_GPU_PATH}/ffx_core_portability.h")
 
-if (FFX_API_BACKEND STREQUAL DX12_X64)
+if(FFX_API_BACKEND STREQUAL DX12_X64)
 	message(STATUS "Creating project FidelityFX-SDK_DX12_x64")
-	project (FidelityFX-SDK_DX12_x64)
+	project(FidelityFX-SDK_DX12_x64)
+elseif(FFX_API_BACKEND STREQUAL DX12_ARM64)
+	message(STATUS "Creating project FidelityFX-SDK_DX12_arm64")
+	project (FidelityFX-SDK_DX12_arm64)
+elseif(FFX_API_BACKEND STREQUAL DX12_ARM64EC)
+	message(STATUS "Creating project FidelityFX-SDK_DX12_arm64ec")
+	project (FidelityFX-SDK_DX12_arm64ec)
 elseif (FFX_API_BACKEND STREQUAL VK_X64)
 	message(STATUS "Creating project FidelityFX-SDK_VK_x64")
-	project (FidelityFX-SDK_VK_x64)
-elseif(FFX_API_BACKEND STREQUAL GDK_DESKTOP_X64)
-	message(STATUS "Creating project FidelityFX-SDK_GDK_Desktop_x64")
-	project (FidelityFX-SDK_GDK_Desktop_x64)
+	project(FidelityFX-SDK_VK_x64)
 elseif(FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64)
 	message(STATUS "Creating project FidelityFX-SDK_GDK_Scarlett_x64")
-	project (FidelityFX-SDK_GDK_Scarlett_x64)
+	project(FidelityFX-SDK_GDK_Scarlett_x64)
+elseif(FFX_API_BACKEND STREQUAL GDK_XBOXONE_X64)
+	message(STATUS "Creating project FidelityFX-SDK_GDK_XboxOne_x64")
+	project (FidelityFX-SDK_GDK_XboxOne_x64)
 else()
 	# This is likely a custom include
 	project (FidelityFX-SDK)
@@ -235,7 +255,9 @@ add_subdirectory(${FFX_COMPONENTS_PATH}/classifier)
 add_subdirectory(${FFX_COMPONENTS_PATH}/breadcrumbs)
 
 # Add appropriate graphics backend if requested
-if(FFX_API_BACKEND STREQUAL DX12_X64)
+if(FFX_API_BACKEND STREQUAL DX12_X64 OR
+    FFX_API_BACKEND STREQUAL DX12_ARM64 OR
+    FFX_API_BACKEND STREQUAL DX12_ARM64EC)
 	add_subdirectory(${FFX_LIB_PATH}/pix)
     add_subdirectory(${FFX_SRC_BACKENDS_PATH}/dx12)
 endif()
@@ -244,8 +266,6 @@ if (FFX_API_BACKEND STREQUAL VK_X64)
 	add_subdirectory(${FFX_SRC_BACKENDS_PATH}/vk)
 endif()
 
-if(FFX_API_BACKEND STREQUAL GDK_DESKTOP_X64 OR FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64)
-	# TODO when we have the right lib to include
-	#add_subdirectory(${FFX_LIB_PATH}/pix)
+if(FFX_API_BACKEND STREQUAL GDK_SCARLETT_X64 OR FFX_API_BACKEND STREQUAL GDK_XBOXONE_X64)
 	add_subdirectory(${FFX_SRC_BACKENDS_PATH}/gdk)
 endif()

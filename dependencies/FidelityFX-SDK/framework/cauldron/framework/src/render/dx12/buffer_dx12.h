@@ -69,10 +69,14 @@ namespace cauldron
         // only those this class can call the Buffer constructor
         friend class Buffer;
 
+        BufferAddressInfo addressInfo;
+
         BufferInternal() = delete;
         BufferInternal(const BufferDesc* pDesc, ResourceState initialState, ResizeFunction fn, void* customOwner);
 
         virtual void Recreate() override;
+
+        virtual void InitAddressInfo();
     };
 
 } // namespace cauldron

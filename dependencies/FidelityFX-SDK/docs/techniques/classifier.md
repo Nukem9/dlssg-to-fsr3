@@ -1,6 +1,6 @@
-<!-- @page page_techniques_classifier FidelityFX Classifier 1.0 -->
+<!-- @page page_techniques_classifier FidelityFX Classifier 1.3 -->
 
-<h1>FidelityFX Classifier 1.0</h1>
+<h1>FidelityFX Classifier 1.3</h1>
 
 **AMD FidelityFX Classifier** includes specialized tile classifiers optimized for specific workloads:
 

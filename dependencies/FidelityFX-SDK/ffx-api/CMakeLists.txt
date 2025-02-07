@@ -1,17 +1,17 @@
 # This file is part of the FidelityFX SDK.
-# 
+#
 # Copyright (C) 2024 Advanced Micro Devices, Inc.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files(the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions :
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,7 +30,9 @@ endif()
 if (FFX_API_BACKEND STREQUAL VK_X64)
 	set(FFX_PLATFORM_NAME vk)
 endif()
-if (FFX_API_BACKEND STREQUAL DX12_X64)
+if (FFX_API_BACKEND STREQUAL DX12_X64 OR
+	FFX_API_BACKEND STREQUAL DX12_ARM64 OR
+	FFX_API_BACKEND STREQUAL DX12_ARM64EC)
 	set(FFX_PLATFORM_NAME dx12)
 endif()
 
@@ -60,7 +62,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_HOME_DIRECTORY}/bin)
 
 add_compile_definitions(FFXDLL_VERSION_MAJOR=1)
 add_compile_definitions(FFXDLL_VERSION_MINOR=0)
-add_compile_definitions(FFXDLL_VERSION_PATCH=0)
+add_compile_definitions(FFXDLL_VERSION_PATCH=1)
+add_compile_definitions(_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
 
 if (DEFINED ENV{CI_PIPELINE_ID})
 add_compile_definitions(CI_PIPELINE_ID=$ENV{CI_PIPELINE_ID})
@@ -75,7 +78,7 @@ file(GLOB private_ffx_api
 
 file(GLOB public_ffx_api
 	${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/*.h
-	${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/*.hpp)	
+	${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/*.hpp)
 
 if (FFX_API_BACKEND STREQUAL VK_X64)
 	message(WARNING "Setting FFX_BACKEND_VK")
@@ -88,10 +91,12 @@ if (FFX_API_BACKEND STREQUAL VK_X64)
 
 	file(GLOB public_ffx_api_backend_vk
 		${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/vk/*.h
-		${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/vk/*.hpp)	
+		${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/vk/*.hpp)
 endif()
 
-if (FFX_API_BACKEND STREQUAL DX12_X64)
+if (FFX_API_BACKEND STREQUAL DX12_X64 OR
+	FFX_API_BACKEND STREQUAL DX12_ARM64 OR
+	FFX_API_BACKEND STREQUAL DX12_ARM64EC)
 	message(WARNING "Setting FFX_BACKEND_DX12")
 	add_compile_definitions(FFXDLL_VERSION_API=DX12)
 	set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS FFX_BACKEND_DX12)
@@ -102,7 +107,7 @@ if (FFX_API_BACKEND STREQUAL DX12_X64)
 
 	file(GLOB public_ffx_api_backend_dx12
 		${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/dx12/*.h
-		${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/dx12/*.hpp)	
+		${CMAKE_CURRENT_SOURCE_DIR}/include/ffx_api/dx12/*.hpp)
 endif()
 
 add_library(amd_fidelityfx_${FFX_PLATFORM_NAME} SHARED ${private_ffx_api} ${private_ffx_api_backend_dx12} ${private_ffx_api_backend_vk} ${public_ffx_api} ${public_ffx_api_backend_dx12} ${public_ffx_api_backend_vk})
@@ -115,7 +120,9 @@ if (FFX_API_BACKEND STREQUAL VK_X64)
 	source_group("public_source\\vk"  FILES ${public_ffx_api_backend_vk})
 endif()
 
-if (FFX_API_BACKEND STREQUAL DX12_X64)
+if (FFX_API_BACKEND STREQUAL DX12_X64 OR
+	FFX_API_BACKEND STREQUAL DX12_ARM64 OR
+	FFX_API_BACKEND STREQUAL DX12_ARM64EC)
 	source_group("private_source\\dx12" FILES ${private_ffx_api_backend_dx12})
 	source_group("public_source\\dx12"  FILES ${public_ffx_api_backend_dx12})
 endif()
@@ -134,10 +141,10 @@ set(FFX_AUTO_COMPILE_SHADERS ON)
 set(FFX_BUILD_AS_DLL OFF)
 add_subdirectory(../sdk sdk)
 
-target_link_libraries(amd_fidelityfx_${FFX_PLATFORM_NAME} PRIVATE ffx_fsr2_x64 ffx_fsr3upscaler_x64 ffx_opticalflow_x64 ffx_frameinterpolation_x64 DXGI)
+target_link_libraries(amd_fidelityfx_${FFX_PLATFORM_NAME} PRIVATE ffx_fsr2_${CMAKE_GENERATOR_PLATFORM} ffx_fsr3upscaler_${CMAKE_GENERATOR_PLATFORM} ffx_opticalflow_${CMAKE_GENERATOR_PLATFORM} ffx_frameinterpolation_${CMAKE_GENERATOR_PLATFORM} DXGI)
 if (FFX_API_BACKEND STREQUAL VK_X64)
 	find_package(Vulkan REQUIRED)
-	target_link_libraries(amd_fidelityfx_${FFX_PLATFORM_NAME} PRIVATE Vulkan::Headers ffx_backend_vk_x64)
+	target_link_libraries(amd_fidelityfx_${FFX_PLATFORM_NAME} PRIVATE Vulkan::Headers ffx_backend_vk_${CMAKE_GENERATOR_PLATFORM})
 else() # DX12
-	target_link_libraries(amd_fidelityfx_${FFX_PLATFORM_NAME} PRIVATE D3D12 ffx_backend_dx12_x64)
+	target_link_libraries(amd_fidelityfx_${FFX_PLATFORM_NAME} PRIVATE D3D12 ffx_backend_dx12_${CMAKE_GENERATOR_PLATFORM})
 endif()

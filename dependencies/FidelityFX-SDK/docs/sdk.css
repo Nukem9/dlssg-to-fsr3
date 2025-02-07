@@ -23,3 +23,7 @@
         min-width: 20%
     }
 }
+
+section#fidelityfx-breadcrumbs section#enumerations {
+    overflow-x: auto;
+  }

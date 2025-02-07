@@ -1,6 +1,6 @@
-<!-- @page page_techniques_super-resolution-interpolation FidelityFX Super Resolution 3.1 -->
+<!-- @page page_techniques_super-resolution-interpolation FidelityFX Super Resolution 3.1.3 -->
 
-<h1>FidelityFX Super Resolution 3.1.0 (FSR3) - Upscaling and Frame Generation</h1>
+<h1>FidelityFX Super Resolution 3.1.3 (FSR3) - Upscaling and Frame Generation</h1>
 
 ![Screenshot](media/super-resolution-temporal/fsr3-sample_resized.jpg "A screenshot showcasing the final output of the effect")
 
@@ -13,7 +13,7 @@
     - [Shading language and API requirements](#shading-language-and-api-requirements)
       - [DirectX 12 + HLSL](#directx-12--hlsl)
       - [Vulkan + GLSL](#vulkan--glsl)
-  - [Quick start checklist](#quick-start-checklist)
+    - [Quick start checklist](#quick-start-checklist)
     - [Walkthrough](#walkthrough)
       - [Add upscaling through FSR3 interface](#add-upscaling-through-fsr3-interface)
       - [Enable FSR3's proxy frame interpolation swapchain](#enable-fsr3-s-proxy-frame-interpolation-swapchain)
@@ -21,6 +21,8 @@
       - [Configure frame interpolation](#configure-frame-interpolation)
       - [UI composition](#ui-composition)
       - [Shutdown](#shutdown)
+    - [Thread Safety](#thread-safety)
+    - [Resource Lifetime](#resource-lifetime)
   - [The Technique](#the-technique)
   - [Memory Usage](#memory-usage)
   - [See also](#see-also)
@@ -82,9 +84,9 @@ FSR3 uses the [FidelityFX API](../getting-started/ffx-api.md). See the link for 
 
 <h4>Add upscaling through FSR3 interface</h4>
 
-Note: if an FSR2 or FSR 3.0 upscaling implementation is already present and working correctly, please refer to the [migration guide](/ffx-api/migration.md) for the new interface.
+Note: if an FSR2 or FSR 3.0 upscaling implementation is already present and working correctly, please refer to the [migration guide](../getting-started/migrating-to-fsr-3-1.md) for the new interface.
 
-Include the [`ffx_upscale.h`](/ffx-api/include/ffx_api/ffx_upscale.h) header (or for C++ helpers `ffx_upscale.hpp`):
+Include the [`ffx_upscale.h`](../../ffx-api/include/ffx_api/ffx_upscale.h) header (or for C++ helpers `ffx_upscale.hpp`):
 
 ```C++
 #include <ffx_api/ffx_upscale.h>
@@ -228,7 +230,7 @@ ffx::ReturnCode retCode = ffx::Dispatch(m_UpscalingContext, dispatchUpscale);
 CauldronAssert(ASSERT_CRITICAL, !!retCode, L"Dispatching FSR upscaling failed: %d", (uint32_t)retCode);
 ```
 
-The full code can be found in [`fsrapirendermodule.cpp`](/samples/fsrapi/fsrapirendermodule.cpp#L909).
+The full code can be found in [`fsrapirendermodule.cpp`](../../samples/fsrapi/fsrapirendermodule.cpp#L909).
 
 <h4>Enable FSR3's proxy frame generation swapchain</h4>
 
@@ -474,7 +476,7 @@ In that case the surface needs to be registered to the swap chain by calling `ff
 FfxResource uiColor = ffxGetResource(m_pUiTexture[m_curUiTextureIndex]->GetResource(), L"FSR3_UiTexture", FFX_RESOURCE_STATE_PIXEL_COMPUTE_READ);
 ffx::ConfigureDescFrameGenerationSwapChainRegisterUiResourceDX12 uiConfig{};
 uiConfig.uiResource = uiColor;
-uiConfig.flags      = m_DoublebufferInSwapchain ? FFX_UI_COMPOSITION_FLAG_ENABLE_INTERNAL_UI_DOUBLE_BUFFERING : 0;
+uiConfig.flags      = m_DoublebufferInSwapchain ? FFX_FRAMEGENERATION_UI_COMPOSITION_FLAG_ENABLE_INTERNAL_UI_DOUBLE_BUFFERING : 0;
 ffx::Configure(m_SwapChainContext, uiConfig);
 ```
 The final method to handle the UI is to provide a `HUDLessColor` surface in the `FfxFrameGenerationConfig`. This surface will get used during frame interpolation to detect the UI and avoid distortion on UI elements. This method has been added for compatibility with engines that can not apply either of the other two options for UI rendering.
@@ -516,6 +518,41 @@ ffx::DestroyContext(m_FrameGenContext);
 
 Finally, destroy the proxy swap chain by releasing the handle, destroying the context  with `ffxDestroyContext` and re-create the normal DX12 swap chain.
 
+<h3>Thread safety</h3>
+
+  The ffx-api context is not guarranted to be thread safe. In this technique, `FrameGenContext` and `SwapChainContext` are not thread safe. Race condition symptom includes `access violation error` crash, interpolation visual artifact, and infinite wait in Dx12CommandPool destructor when releasing swapchain. It's not obvious but `FrameInterpolationSwapchainDX12::Present()` actually access `SwapChainContext` and `FrameGenContext` (for dispatching Optical Flow and Frame Generation). A race condition occurs if app threads can simutaneously call `FrameInterpolationSwapchainDX12::Present()` and `Dispatch(m_FrameGenContext, DispatchDescFrameGenerationPrepare)`. Another race condition occurance is if app threads can simutaneously call `FrameInterpolationSwapchainDX12::Present()` and `DestroyContext(SwapChainContext)`. App could acquire mutex lock before calling ffx functions that access `FrameGenContext` or `SwapChainContext` to guarantee at any time there is at most 1 thread that can access the context.
+
+<h3>Resource Lifetime</h3>
+
+<h4>When UiTexture composition mode is used</h4> 
+
+<h5>If FFX_FRAMEGENERATION_UI_COMPOSITION_FLAG_ENABLE_INTERNAL_UI_DOUBLE_BUFFERING is set:</h5>
+
+The `UiTexture` gets copied to an internal resource on the game queue
+The `UiTexture` may be reused on the GFX queue immediately in the next frame
+
+<h5> If FFX_FRAMEGENERATION_UI_COMPOSITION_FLAG_ENABLE_INTERNAL_UI_DOUBLE_BUFFERING is not set:</h5>
+
+The application is responsible to ensure `UiTexture` persists until composition of the real frame is finished
+This is typically in the middle of the next frame, so the `UiTexture` should not be used during the next frame. The application must ensure double buffering of the UITexture
+
+<h4>When HUDLess composition mode is used:</h4>
+
+The HUDLess texture will be used during FrameInterpolation
+The application is responsible to ensure it persists until FrameInterpolation is complete
+If `FfxFrameGenerationConfig::allowAsyncWorkloads` is true:
+Frameinterpolation happens on an async compute queue so the HUDLess texture needs to be double buffered by the application
+If `FfxFrameGenerationConfig:: allowAsyncWorkloads` is false:
+Frameinterpolation happens on the game GFX queue, so app can safely modify HUDLess texture in the next frame
+
+<h4>When distortionField texture is registered to FrameInterpolation:</h4>
+
+The application is responsible to ensure `distortionField` texture persists until FrameInterpolation is complete
+If `FfxFrameGenerationConfig::allowAsyncWorkloads` is true:
+Frameinterpolation happens on an async compute queue so the `distortionField` texture needs to be double buffered by the application
+If `FfxFrameGenerationConfig:: allowAsyncWorkloads` is false:
+Frameinterpolation happens on the game GFX queue, so app can safely modify `distortionField` texture in the next frame
+
 <h2>The Technique</h2>
 
 FSR3 is a container effect consisting of four components. For details on each component, please refer to the dedicated documentation page:
@@ -546,6 +583,5 @@ Figures are given to the nearest MB, taken on Radeon RX 7900 XTX using DirectX 1
 
 <h2>See also</h2>
 
-- [Frame Pacing](frame-pacing.md)
 - [FidelityFX Super Resolution Sample](../samples/super-resolution.md)
 - [FidelityFX Naming guidelines](../getting-started/naming-guidelines.md)

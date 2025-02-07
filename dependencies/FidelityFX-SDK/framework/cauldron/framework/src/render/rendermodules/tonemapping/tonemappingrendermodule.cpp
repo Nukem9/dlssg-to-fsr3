@@ -32,6 +32,8 @@
 #include "render/color_conversion.h"
 #include "render/swapchain.h"
 #include "render/dynamicresourcepool.h"
+#include "render/rasterview.h"
+
 
 #define FFX_CPU
 #include <FidelityFX/host/ffx_spd.h>
@@ -64,6 +66,12 @@ void ToneMappingRenderModule::Init(const json& InitData)
     // Get the proper post tone map color target
     m_pRenderTargetOut = GetFramework()->GetRenderTexture(L"SwapChainProxy");
     CauldronAssert(ASSERT_CRITICAL, m_pRenderTargetOut != nullptr, L"Couldn't find the render target for the tone mapper output");
+
+    m_pDistortionField[0] = GetFramework()->GetRenderTexture(L"DistortionField0");
+    m_pDistortionField[1] = GetFramework()->GetRenderTexture(L"DistortionField1");
+    m_pDistortionFieldRasterView[0] = GetRasterViewAllocator()->RequestRasterView(m_pDistortionField[0], ViewDimension::Texture2D);
+    m_pDistortionFieldRasterView[1] = GetRasterViewAllocator()->RequestRasterView(m_pDistortionField[1], ViewDimension::Texture2D);
+
 
     TextureDesc desc = TextureDesc::Tex2D(L"AutomaticExposureSpdAtomicCounter", ResourceFormat::R32_UINT, 1, 1, 1, 1, ResourceFlags::AllowUnorderedAccess);
     m_pAutomaticExposureSpdAtomicCounter = GetDynamicResourcePool()->CreateRenderTexture(&desc);
@@ -133,6 +141,30 @@ void ToneMappingRenderModule::Init(const json& InitData)
     m_pAutoExposureSpdParameters->SetTextureUAV(m_pAutomaticExposureMips5, ViewDimension::Texture2D, 2);
     m_pAutoExposureSpdParameters->SetTextureUAV(m_pAutomaticExposureValue, ViewDimension::Texture2D, 3);
 
+    {
+        // Init build distortion field pipeline
+        RootSignatureDesc buildDistortionFieldSignatureDesc;
+        buildDistortionFieldSignatureDesc.AddConstantBufferView(0, ShaderBindStage::Compute, 1);
+        buildDistortionFieldSignatureDesc.AddTextureUAVSet(0, ShaderBindStage::Compute, 1);
+        m_pBuildDistortionFieldRootSignature = RootSignature::CreateRootSignature(L"BuildDistortionFieldRenderPass_RootSignature", buildDistortionFieldSignatureDesc);
+
+        // Setup the pipeline object
+        PipelineDesc buildDistortionFieldPsoDesc;
+        buildDistortionFieldPsoDesc.SetRootSignature(m_pBuildDistortionFieldRootSignature);
+
+        // Setup the shaders to build on the pipeline object
+        shaderPath = L"builddistortionfield.hlsl";
+
+        DefineList buildDistortionFieldDefineList;
+        buildDistortionFieldDefineList.insert(std::make_pair(L"NUM_THREAD_X", std::to_wstring(g_NumThreadX)));
+        buildDistortionFieldDefineList.insert(std::make_pair(L"NUM_THREAD_Y", std::to_wstring(g_NumThreadY)));
+        buildDistortionFieldPsoDesc.AddShaderDesc(ShaderBuildDesc::Compute(shaderPath.c_str(), L"MainCS", ShaderModel::SM6_0, &buildDistortionFieldDefineList));
+
+        m_pBuildDistortionFieldPipelineObj = PipelineObject::CreatePipelineObject(L"BuildDistortionFieldRenderPass_PipelineObj", buildDistortionFieldPsoDesc);
+
+        m_pBuildDistortionFieldParameters = ParameterSet::CreateParameterSet(m_pBuildDistortionFieldRootSignature);
+        m_pBuildDistortionFieldParameters->SetRootConstantBufferResource(GetDynamicBufferPool()->GetResource(), sizeof(TonemapperCBData), 0);
+    }
     // Init tonemapper
     // root signature
     RootSignatureDesc tonemapperSignatureDesc;
@@ -182,6 +214,10 @@ void ToneMappingRenderModule::Init(const json& InitData)
             }
         );
         uiSection->RegisterUIElement<UICheckBox>("AutoExposure", (bool&)m_TonemapperConstantData.UseAutoExposure);
+
+        uiSection->RegisterUIElement<UICheckBox>("Lens Distortion Enable", (bool&)m_TonemapperConstantData.LensDistortionEnabled);
+        uiSection->RegisterUIElement<UISlider<float>>("Lens Distortion Strength", m_TonemapperConstantData.LensDistortionStrength, -1.f, 1.f, (bool&)m_TonemapperConstantData.LensDistortionEnabled);
+        uiSection->RegisterUIElement<UISlider<float>>("Lens Distortion Zoom", m_TonemapperConstantData.LensDistortionZoom, 0.f, 1.f, (bool&)m_TonemapperConstantData.LensDistortionEnabled);
     }
 
     // We are now ready for use
@@ -193,6 +229,10 @@ ToneMappingRenderModule::~ToneMappingRenderModule()
     delete m_pAutoExposureSpdRootSignature;
     delete m_pAutoExposureSpdPipelineObj;
     delete m_pAutoExposureSpdParameters;
+
+    delete m_pBuildDistortionFieldRootSignature;
+    delete m_pBuildDistortionFieldPipelineObj;
+    delete m_pBuildDistortionFieldParameters;
 
     delete m_pTonemapperRootSignature;
     delete m_pTonemapperPipelineObj;
@@ -238,7 +278,7 @@ void ToneMappingRenderModule::Execute(double deltaTime, CommandList* pCmdList)
 
         Dispatch(pCmdList, m_DispatchThreadGroupCountXY[0], m_DispatchThreadGroupCountXY[1], 1);
     }
-    
+
     {
         GPUScopedProfileCapture tonemappingMarker(pCmdList, L"ToneMapping");
 
@@ -302,4 +342,73 @@ void ToneMappingRenderModule::Execute(double deltaTime, CommandList* pCmdList)
             ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource);
         ResourceBarrier(pCmdList, 1, &barrier);
     }
+        
+    if (shouldClearRenderTargets)
+    {
+        GPUScopedProfileCapture distortionFieldMarker(pCmdList, L"Clear Distortion Field");
+        std::vector<Barrier> barriers;
+        barriers.push_back(Barrier::Transition(m_pDistortionField[0]->GetResource(),
+            ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource,
+            ResourceState::RenderTargetResource));
+        barriers.push_back(Barrier::Transition(m_pDistortionField[1]->GetResource(),
+            ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource,
+            ResourceState::RenderTargetResource));
+        ResourceBarrier(pCmdList, static_cast<uint32_t> (barriers.size()), barriers.data());
+
+        float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        ClearRenderTarget(pCmdList, &m_pDistortionFieldRasterView[0]->GetResourceView(), clearColor);
+        ClearRenderTarget(pCmdList, &m_pDistortionFieldRasterView[1]->GetResourceView(), clearColor);
+        shouldClearRenderTargets = false;
+            
+        barriers.clear();
+        barriers.push_back(Barrier::Transition(m_pDistortionField[0]->GetResource(),
+            ResourceState::RenderTargetResource,
+            ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
+        barriers.push_back(Barrier::Transition(m_pDistortionField[1]->GetResource(),
+            ResourceState::RenderTargetResource,
+            ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource));
+        ResourceBarrier(pCmdList, static_cast<uint32_t> (barriers.size()), barriers.data());
+    }
+
+    if (m_TonemapperConstantData.LensDistortionEnabled)
+    {
+        GPUScopedProfileCapture distortionFieldMarker(pCmdList, L"Build Distortion Field");
+
+        Barrier barrierToWrite = Barrier::Transition(m_pDistortionField[m_curDoubleBufferedTextureIndex]->GetResource(),
+            ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource,
+            ResourceState::UnorderedAccess);
+        ResourceBarrier(pCmdList, 1, &barrierToWrite);
+
+        // Allocate a dynamic constant buffer and set
+        BufferAddressInfo bufferInfo = GetDynamicBufferPool()->AllocConstantBuffer(sizeof(TonemapperCBData), &m_TonemapperConstantData);
+        m_pBuildDistortionFieldParameters->UpdateRootConstantBuffer(&bufferInfo, 0);
+
+        // bind all the parameters
+        m_pBuildDistortionFieldParameters->SetTextureUAV(m_pDistortionField[m_curDoubleBufferedTextureIndex], ViewDimension::Texture2D, 0);
+        m_pBuildDistortionFieldParameters->Bind(pCmdList, m_pBuildDistortionFieldPipelineObj);
+
+        // Set pipeline and dispatch
+        SetPipelineState(pCmdList, m_pBuildDistortionFieldPipelineObj);
+
+        const uint32_t numGroupX = DivideRoundingUp(m_pDistortionField[m_curDoubleBufferedTextureIndex]->GetDesc().Width, g_NumThreadX);
+        const uint32_t numGroupY = DivideRoundingUp(m_pDistortionField[m_curDoubleBufferedTextureIndex]->GetDesc().Height, g_NumThreadY);
+        Dispatch(pCmdList, numGroupX, numGroupY, 1);
+
+        Barrier barrierToRead = Barrier::Transition(m_pDistortionField[m_curDoubleBufferedTextureIndex]->GetResource(),
+            ResourceState::UnorderedAccess,
+            ResourceState::NonPixelShaderResource | ResourceState::PixelShaderResource);
+        ResourceBarrier(pCmdList, 1, &barrierToRead);
+    }
+}
+
+void ToneMappingRenderModule::SetDoubleBufferedTextureIndex(uint32_t textureIndex)
+{
+    m_curDoubleBufferedTextureIndex = textureIndex;
+}
+
+void ToneMappingRenderModule::OnResize(const cauldron::ResolutionInfo& resInfo)
+{
+    if (!ModuleEnabled())
+        return;
+    shouldClearRenderTargets = true;
 }

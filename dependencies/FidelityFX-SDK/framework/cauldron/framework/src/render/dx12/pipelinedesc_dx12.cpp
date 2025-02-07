@@ -370,7 +370,7 @@ namespace cauldron
     {
         m_PipelineImpl->m_GraphicsPipelineDesc.NumRenderTargets = static_cast<UINT>(numColorFormats);
         for (uint32_t i = 0; i < numColorFormats; ++i)
-            m_PipelineImpl->m_GraphicsPipelineDesc.RTVFormats[i] = GetDXGIFormat(pColorFormats[i]);
+            m_PipelineImpl->m_GraphicsPipelineDesc.RTVFormats[i] = ConvertTypelessDXGIFormat(GetDXGIFormat(pColorFormats[i]));
 
         m_PipelineImpl->m_GraphicsPipelineDesc.DSVFormat = GetDXGIFormat(depthStencilFormat);
     }

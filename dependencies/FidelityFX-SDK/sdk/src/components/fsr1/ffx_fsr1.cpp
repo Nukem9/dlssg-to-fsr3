@@ -24,6 +24,15 @@
 #include <stdlib.h>     // for _countof
 #include <cmath>        // for fabs, abs, sinf, sqrt, etc.
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wsign-compare"
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(disable : 4505)
+#endif
+
 #include <FidelityFX/host/ffx_fsr1.h>
 #include <FidelityFX/gpu/ffx_core.h>
 #include <FidelityFX/gpu/fsr1/ffx_fsr1.h>
@@ -112,8 +121,13 @@ static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxFsr1Pass p
     flags |= (contextFlags & FFX_FSR1_ENABLE_SRGB_CONVERSIONS) ? FSR1_SHADER_PERMUTATION_SRGB_CONVERSIONS : 0;
     flags |= (passId != FFX_FSR1_PASS_EASU) ? FSR1_SHADER_PERMUTATION_APPLY_RCAS : 0;
     flags |= (force64) ? FSR1_SHADER_PERMUTATION_FORCE_WAVE64 : 0;
+#if defined(_GAMING_XBOX_SCARLETT)
+    // Never got reports about NaNs on Xbox
+    flags |= (fp16) ? FSR1_SHADER_PERMUTATION_ALLOW_FP16 : 0;
+#else
     // Some NaNs have been observed on other hardware during Rcas with FP16
     flags |= (fp16 && (passId != FFX_FSR1_PASS_RCAS)) ? FSR1_SHADER_PERMUTATION_ALLOW_FP16 : 0;
+#endif
     return flags;
 }
 
@@ -288,14 +302,14 @@ static FfxErrorCode fsr1Create(FfxFsr1Context_Private* context, const FfxFsr1Con
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
 
     // Setup constant buffer sizes.
     context->constantBuffer.num32BitEntries = sizeof(Fsr1Constants) / sizeof(uint32_t);
 
     // Create the context.
     FfxErrorCode errorCode =
-        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId);
+        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_FSR1, nullptr, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     // Call out for device caps.

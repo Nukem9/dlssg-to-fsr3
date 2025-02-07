@@ -112,8 +112,9 @@ namespace cauldron
 
         CopyBufferRegion(pImmediateCopyCmdList, &desc);
 
-        QueueFamilies families = pDevice->GetQueueFamilies();
-        bool          needsQueueOwnershipTransfer = (families.familyIndices[RequestedQueue::Graphics] != families.familyIndices[RequestedQueue::Copy]);
+        uint32_t              graphicsFamily              = pDevice->VKCmdQueueFamily(CommandQueue::Graphics);
+        uint32_t              copyFamily                  = pDevice->VKCmdQueueFamily(CommandQueue::Copy);
+        bool                  needsQueueOwnershipTransfer = (graphicsFamily != copyFamily);
         VkBufferMemoryBarrier bufferMemoryBarrier = {};
         if (needsQueueOwnershipTransfer)
         {
@@ -122,8 +123,8 @@ namespace cauldron
             bufferMemoryBarrier.pNext = nullptr;
             bufferMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             bufferMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            bufferMemoryBarrier.srcQueueFamilyIndex = families.familyIndices[RequestedQueue::Copy];
-            bufferMemoryBarrier.dstQueueFamilyIndex = families.familyIndices[RequestedQueue::Graphics];
+            bufferMemoryBarrier.srcQueueFamilyIndex = copyFamily;
+            bufferMemoryBarrier.dstQueueFamilyIndex = graphicsFamily;
             bufferMemoryBarrier.buffer = m_pResource->GetImpl()->GetBuffer();
             bufferMemoryBarrier.offset = 0;
             bufferMemoryBarrier.size = static_cast<VkDeviceSize>(size);
@@ -211,8 +212,9 @@ namespace cauldron
 
         CopyBufferRegion(pUploadContext->GetImpl()->GetCopyCmdList(), &desc);
 
-        QueueFamilies         families                    = pDevice->GetQueueFamilies();
-        bool                  needsQueueOwnershipTransfer = (families.familyIndices[RequestedQueue::Graphics] != families.familyIndices[RequestedQueue::Copy]);
+        uint32_t              graphicsFamily              = pDevice->VKCmdQueueFamily(CommandQueue::Graphics);
+        uint32_t              copyFamily                  = pDevice->VKCmdQueueFamily(CommandQueue::Copy);
+        bool                  needsQueueOwnershipTransfer = (graphicsFamily != copyFamily);
         VkBufferMemoryBarrier bufferMemoryBarrier         = {};
         if (needsQueueOwnershipTransfer)
         {
@@ -221,8 +223,8 @@ namespace cauldron
             bufferMemoryBarrier.pNext               = nullptr;
             bufferMemoryBarrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
             bufferMemoryBarrier.dstAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
-            bufferMemoryBarrier.srcQueueFamilyIndex = families.familyIndices[RequestedQueue::Copy];
-            bufferMemoryBarrier.dstQueueFamilyIndex = families.familyIndices[RequestedQueue::Graphics];
+            bufferMemoryBarrier.srcQueueFamilyIndex = copyFamily;
+            bufferMemoryBarrier.dstQueueFamilyIndex = graphicsFamily;
             bufferMemoryBarrier.buffer              = m_pResource->GetImpl()->GetBuffer();
             bufferMemoryBarrier.offset              = 0;
             bufferMemoryBarrier.size                = static_cast<VkDeviceSize>(size);

@@ -26,31 +26,37 @@
 #include <FidelityFX/host/ffx_interface.h>
 #include <FidelityFX/host/ffx_brixelizer_raw.h>
 
+/// @defgroup ffxBrixgi FidelityFX Brixelizer GI
+/// FidelityFX Brixelizer GI runtime library
+///
+/// @ingroup SDKComponents
+
+
 /// FidelityFX Brixelizer GI major version.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 #define FFX_BRIXELIZER_GI_VERSION_MAJOR (1)
 
 /// FidelityFX Brixelizer GI minor version.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 #define FFX_BRIXELIZER_GI_VERSION_MINOR (0)
 
 /// FidelityFX Brixelizer GI patch version.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 #define FFX_BRIXELIZER_GI_VERSION_PATCH (0)
 
 /// The size of the context specified in 32bit values.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 #define FFX_BRIXELIZER_GI_CONTEXT_SIZE (210000)
 
 /// FidelityFX Brixelizer GI context count
 /// 
 /// Defines the number of internal effect contexts required by Brixelizer
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 #define FFX_BRIXELIZER_GI_CONTEXT_COUNT 1
 
 #ifdef __cplusplus
@@ -68,7 +74,7 @@ extern "C" {
 /// or used by Brixelizer GI. It is therefore recommended that the GPU is idle
 /// before destroying the Brixelizer GI context.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef struct FfxBrixelizerGIContext
 {
     uint32_t data[FFX_BRIXELIZER_GI_CONTEXT_SIZE];
@@ -77,7 +83,7 @@ typedef struct FfxBrixelizerGIContext
 /// An enumeration of flag bits used when creating an <c><i>FfxBrixelizerGIContext</i></c>.
 /// See <c><i>FfxBrixelizerGIContextDescription</i></c>.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef enum FfxBrixelizerGIFlags 
 {
     FFX_BRIXELIZER_GI_FLAG_DEPTH_INVERTED   = (1 << 0),  ///< Indicates input resources were generated with inverted depth.
@@ -87,7 +93,7 @@ typedef enum FfxBrixelizerGIFlags
 
 /// An enumeration of the quality modes supported by FidelityFX Brixelizer GI.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef enum FfxBrixelizerGIInternalResolution
 {
     FFX_BRIXELIZER_GI_INTERNAL_RESOLUTION_NATIVE,     ///< Output GI at native resolution.
@@ -99,7 +105,7 @@ typedef enum FfxBrixelizerGIInternalResolution
 /// A structure encapsulating the parameters used for creating an
 /// <c><i>FfxBrixelizerGIContext</i></c>.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef struct FfxBrixelizerGIContextDescription
 {
     FfxBrixelizerGIFlags              flags;              ///< A bit field representings various options.
@@ -111,7 +117,7 @@ typedef struct FfxBrixelizerGIContextDescription
 /// A structure encapsulating the parameters used for computing a dispatch by the
 /// Brixelizer GI context.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef struct FfxBrixelizerGIDispatchDescription
 {
     FfxFloat32x4x4 view;                    ///< The view matrix for the scene in row major order.
@@ -161,7 +167,7 @@ typedef struct FfxBrixelizerGIDispatchDescription
 /// An enumeration of which output mode to be used by Brixelizer GI debug visualization.
 /// See <c><i>FfxBrixelizerGIDebugDescription</i></c>.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef enum FfxBrixelizerGIDebugMode
 {
     FFX_BRIXELIZER_GI_DEBUG_MODE_RADIANCE_CACHE,   ///< Draw the radiance cache.
@@ -170,7 +176,7 @@ typedef enum FfxBrixelizerGIDebugMode
 
 /// A structure encapsulating the parameters for drawing a debug visualization.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef struct FfxBrixelizerGIDebugDescription
 {
     FfxFloat32x4x4           view;              ///< The view matrix for the scene in row major order.
@@ -204,7 +210,7 @@ typedef struct FfxBrixelizerGIDebugDescription
 /// more comprehensive description of each pass, please refer to the Brixelizer
 /// reference documentation.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 typedef enum FfxBrixelizerGIPass
 {
     FFX_BRIXELIZER_GI_PASS_BLUR_X,
@@ -237,7 +243,7 @@ typedef enum FfxBrixelizerGIPass
 ///
 /// @return  The size in bytes of an <c><i>FfxBrixelizerGIContext</i></c> struct.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 inline size_t ffxBrixelizerGIGetContextSize()
 {
     return sizeof(FfxBrixelizerGIContext);
@@ -271,7 +277,7 @@ inline size_t ffxBrixelizerGIGetContextSize()
 /// @retval
 /// FFX_ERROR_BACKEND_API_ERROR        The operation failed because of an error from the backend.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 FFX_API FfxErrorCode ffxBrixelizerGIContextCreate(FfxBrixelizerGIContext* pContext, const FfxBrixelizerGIContextDescription* pContextDescription);
 
 /// Destroy the FidelityFX Brixelizer GI context.
@@ -283,7 +289,7 @@ FFX_API FfxErrorCode ffxBrixelizerGIContextCreate(FfxBrixelizerGIContext* pConte
 /// @retval
 /// FFX_ERROR_INVALID_POINTER   The <c><i>pContext</i></c> pointer provided was <c><i>NULL</i></c>.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 FFX_API FfxErrorCode ffxBrixelizerGIContextDestroy(FfxBrixelizerGIContext* pContext);
 
 /// Perform an update of Brixelizer GI, recording GPU commands to a command list.
@@ -295,7 +301,7 @@ FFX_API FfxErrorCode ffxBrixelizerGIContextDestroy(FfxBrixelizerGIContext* pCont
 /// @retval
 /// FFX_OK                        The operation completed successfully.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 FFX_API FfxErrorCode ffxBrixelizerGIContextDispatch(FfxBrixelizerGIContext* pContext, const FfxBrixelizerGIDispatchDescription* pDispatchDescription, FfxCommandList pCommandList);
 
 /// Make a debug visualization from the <c><i>FfxBrixelizerGIContext</i></c>.
@@ -307,7 +313,7 @@ FFX_API FfxErrorCode ffxBrixelizerGIContextDispatch(FfxBrixelizerGIContext* pCon
 /// @retval
 /// FFX_OK                        The operation completed successfully.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 FFX_API FfxErrorCode ffxBrixelizerGIContextDebugVisualization(FfxBrixelizerGIContext* pContext, const FfxBrixelizerGIDebugDescription* pDebugDescription, FfxCommandList pCommandList);
 
 /// Queries the effect version number.
@@ -315,7 +321,7 @@ FFX_API FfxErrorCode ffxBrixelizerGIContextDebugVisualization(FfxBrixelizerGICon
 /// @returns
 /// The SDK version the effect was built with.
 ///
-/// @ingroup Brixelizer GI
+/// @ingroup ffxBrixgi
 FFX_API FfxVersionNumber ffxBrixelizerGIGetEffectVersion();
 
 #ifdef __cplusplus

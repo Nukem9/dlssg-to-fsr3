@@ -1,17 +1,17 @@
 # This file is part of the FidelityFX SDK.
-# 
+#
 # Copyright (C) 2024 Advanced Micro Devices, Inc.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files(the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions :
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,12 +31,12 @@ project(FFX_LENS)
 add_library(ffx_lens_native STATIC IMPORTED)
 set_target_properties(ffx_lens_native PROPERTIES
 					  IMPORTED_CONFIGURATIONS "DebugDX12;DebugVK;RelWithDebInfoDX12;RelWithDebInfoVK;ReleaseDX12;ReleaseVK"
-					  IMPORTED_LOCATION_DEBUGDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_x64d.lib"
-					  IMPORTED_LOCATION_DEBUGVK "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_x64d.lib"
-					  IMPORTED_LOCATION_RELEASEDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_x64.lib"
-					  IMPORTED_LOCATION_RELEASEVK "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_x64.lib"
-					  IMPORTED_LOCATION_RELWITHDEBINFODX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_x64drel.lib"
-					  IMPORTED_LOCATION_RELWITHDEBINFOVK "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_x64drel.lib")
+					  IMPORTED_LOCATION_DEBUGDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_${CMAKE_GENERATOR_PLATFORM}d.lib"
+					  IMPORTED_LOCATION_DEBUGVK "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_${CMAKE_GENERATOR_PLATFORM}d.lib"
+					  IMPORTED_LOCATION_RELEASEDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_${CMAKE_GENERATOR_PLATFORM}.lib"
+					  IMPORTED_LOCATION_RELEASEVK "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_${CMAKE_GENERATOR_PLATFORM}.lib"
+					  IMPORTED_LOCATION_RELWITHDEBINFODX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_${CMAKE_GENERATOR_PLATFORM}drel.lib"
+					  IMPORTED_LOCATION_RELWITHDEBINFOVK "${SDK_ROOT}/bin/ffx_sdk/ffx_lens_${CMAKE_GENERATOR_PLATFORM}drel.lib")
 
 # Lens
 file(GLOB lens_src

@@ -234,12 +234,29 @@ static FfxShaderBlob fsr2GetAccumulatePassPermutationBlobByIndex(uint32_t permut
     }
 }
 
-static FfxShaderBlob fsr2GetRCASPassPermutationBlobByIndex(uint32_t permutationOptions, bool isWave64, bool)
+static FfxShaderBlob fsr2GetRCASPassPermutationBlobByIndex(uint32_t permutationOptions, bool isWave64, bool is16Bit)
 {
 
     ffx_fsr2_rcas_pass_PermutationKey key;
 
     POPULATE_PERMUTATION_KEY(permutationOptions, key);
+#if defined(_GAMING_XBOX)
+    if (is16Bit) {
+        if (isWave64) {
+
+            const int32_t tableIndex = g_ffx_fsr2_rcas_pass_wave64_16bit_IndirectionTable[key.index];
+            return POPULATE_SHADER_BLOB_FFX(g_ffx_fsr2_rcas_pass_wave64_16bit_PermutationInfo, tableIndex);
+        }
+        else {
+
+            const int32_t tableIndex = g_ffx_fsr2_rcas_pass_16bit_IndirectionTable[key.index];
+            return POPULATE_SHADER_BLOB_FFX(g_ffx_fsr2_rcas_pass_16bit_PermutationInfo, tableIndex);
+        }
+    }
+    else
+#else
+    FFX_UNUSED(is16Bit);
+#endif
 
     if (isWave64) {
         

@@ -109,9 +109,32 @@ namespace cauldron
         BufferAddressInfo bufferInfo = {};
         BufferAddressInfoInternal* pInfo = (BufferAddressInfoInternal*)(&bufferInfo);
         pInfo->GPUBufferView = m_pResource->GetImpl()->DX12Resource()->GetGPUVirtualAddress() + offset;
-
+        pInfo->SizeInBytes = alignedSize;
         return bufferInfo;
     }
+
+    void DynamicBufferPoolInternal::BatchAllocateConstantBuffer(uint32_t size, uint32_t count, BufferAddressInfo* pBufferAddressInfos)
+    {
+        uint32_t alignedSize = AlignUp(size, 256u);
+        uint32_t offset;
+        CauldronAssert(
+            ASSERT_CRITICAL, InternalAlloc(alignedSize * count, &offset), L"DynamicBufferPool has run out of memory. Please increase the allocation size.");
+        for (uint32_t i = 0; i < count; i++)
+        {
+            BufferAddressInfoInternal* pInfo      = (BufferAddressInfoInternal*)(&pBufferAddressInfos[i]);
+            pInfo->GPUBufferView                  = m_pResource->GetImpl()->DX12Resource()->GetGPUVirtualAddress() + (offset + (i*alignedSize));
+            pInfo->SizeInBytes                    = alignedSize;
+        }
+    }
+
+    void DynamicBufferPoolInternal::InitializeConstantBuffer(const BufferAddressInfo& bufferAddressInfo, uint32_t size, const void* pInitData)
+    {
+        const BufferAddressInfoInternal* pInfo = bufferAddressInfo.GetImpl();
+        CauldronAssert(ASSERT_CRITICAL, size <= pInfo->SizeInBytes, L"Constant buffer too small to inialize with provided data.");
+        void*                            pBuffer = (void*)(m_pData + (pInfo->GPUBufferView - m_pResource->GetImpl()->DX12Resource()->GetGPUVirtualAddress()));
+        memcpy(pBuffer, pInitData, size);
+    }
+
 
     BufferAddressInfo DynamicBufferPoolInternal::AllocVertexBuffer(uint32_t vertexCount, uint32_t vertexStride, void** pBuffer)
     {

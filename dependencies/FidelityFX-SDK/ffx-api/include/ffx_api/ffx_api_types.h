@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-/// An enumeration of surface formats.
+/// An enumeration of surface formats. Needs to match enum FfxSurfaceFormat
 enum FfxApiSurfaceFormat
 {
     FFX_API_SURFACE_FORMAT_UNKNOWN,                     ///< Unknown format
@@ -55,11 +55,21 @@ enum FfxApiSurfaceFormat
     FFX_API_SURFACE_FORMAT_R8_UNORM,                    ///<  8 bit per channel, 1 channel unsigned normalized format
     FFX_API_SURFACE_FORMAT_R8G8_UNORM,                  ///<  8 bit per channel, 2 channel unsigned normalized format
     FFX_API_SURFACE_FORMAT_R8G8_UINT,                   ///<  8 bit per channel, 2 channel unsigned integer format
-    FFX_API_SURFACE_FORMAT_R32_FLOAT                    ///< 32 bit per channel, 1 channel float format
+    FFX_API_SURFACE_FORMAT_R32_FLOAT,                   ///< 32 bit per channel, 1 channel float format
+    FFX_API_SURFACE_FORMAT_R9G9B9E5_SHAREDEXP,          ///<  9 bit per channel, 5 bit exponent format
+
+    FFX_API_SURFACE_FORMAT_R16G16B16A16_TYPELESS,       ///< 16 bit per channel, 4 channel typeless format
+    FFX_API_SURFACE_FORMAT_R32G32_TYPELESS,             ///< 32 bit per channel, 2 channel typeless format
+    FFX_API_SURFACE_FORMAT_R10G10B10A2_TYPELESS,        ///< 10 bit per 3 channel, 2 bit for 1 channel typeless format
+    FFX_API_SURFACE_FORMAT_R16G16_TYPELESS,             ///< 16 bit per channel, 2 channel typless format
+    FFX_API_SURFACE_FORMAT_R16_TYPELESS,                ///< 16 bit per channel, 1 channel typeless format
+    FFX_API_SURFACE_FORMAT_R8_TYPELESS,                 ///<  8 bit per channel, 1 channel typeless format
+    FFX_API_SURFACE_FORMAT_R8G8_TYPELESS,               ///<  8 bit per channel, 2 channel typeless format
+    FFX_API_SURFACE_FORMAT_R32_TYPELESS,                ///< 32 bit per channel, 1 channel typeless format
 };
 
 /// An enumeration of resource usage.
-enum FfxApiResorceUsage
+enum FfxApiResourceUsage
 {
     FFX_API_RESOURCE_USAGE_READ_ONLY = 0,                   ///< No usage flags indicate a resource is read only.
     FFX_API_RESOURCE_USAGE_RENDERTARGET = (1<<0),           ///< Indicates a resource will be used as render target.
@@ -67,7 +77,9 @@ enum FfxApiResorceUsage
     FFX_API_RESOURCE_USAGE_DEPTHTARGET = (1<<2),            ///< Indicates a resource will be used as depth target.
     FFX_API_RESOURCE_USAGE_INDIRECT = (1<<3),               ///< Indicates a resource will be used as indirect argument buffer
     FFX_API_RESOURCE_USAGE_ARRAYVIEW = (1<<4),              ///< Indicates a resource that will generate array views. Works on 2D and cubemap textures
+    FFX_API_RESOURCE_USAGE_STENCILTARGET = (1<<5),          ///< Indicates a resource will be used as stencil target.
 };
+typedef FfxApiResourceUsage FfxApiResorceUsage;             // Corrects a typo that shipped with original API
 
 /// An enumeration of resource states.
 enum FfxApiResourceState
@@ -173,3 +185,58 @@ struct FfxApiResource
     struct FfxApiResourceDescription description;
     uint32_t state;
 };
+
+//struct definition matches FfxEffectMemoryUsage
+typedef struct FfxApiEffectMemoryUsage
+{
+    uint64_t totalUsageInBytes;
+    uint64_t aliasableUsageInBytes;
+} FfxApiEffectMemoryUsage;
+
+/*
+Tuning varianceFactor and safetyMarginInMs Tips:
+Calculation of frame pacing algorithm's next target timestamp: 
+target frametime delta = average Frametime - (variance * varianceFactor) - safetyMarginInMs
+
+Default Tuning uses safetyMarginInMs==0.1ms and varianceFactor==0.1.
+Say Tuning set A uses safetyMarginInMs==0.75ms, and varianceFactor==0.1.
+Say Tuning Set B uses safetyMarginInMs==0.01ms and varianceFactor==0.3.
+
+Example #1 - Actual Game Cutscene. Game's framerate after FG ON during camera pan from normal (19ms avg frametime) to complex (37ms avg frametime over 1 sec) and back to normal scene complexity (19ms avg frametime).
+After the panning is done, 
+- Default Tuning now gets stuck at targeting ~33ms after panning to a complex scene. GPU utilization significantly lower in this case.
+- Tuning Set B and Tuning Set A are able to recover close to ~19ms because of these 2 tuning result in lower "target frametime delta" than Default Tuning. 
+
+However, larger varianceFactor or safetyMarginInMs results in higher variance. As seen in Example #2 bellow.
+
+Example #2 - FFX_API_FSR sample. Set app fps cap to 33.33ms. Use OCAT to capture 10s at default camera position.
+FSR 3.1.0 FG msbetweenpresents ping-pong between 16.552 (5th-percentile) and 16.832 (95th-percentile). Variance is 0.01116.
+Tuning set A FG msbetweenpresents ping-pong between 15.901 (5th-percentile) and 17.500 (95th-percentile). Variance is 0.057674.
+Tuning Set B FG msbetweenpresents ping-pong between 16.589 (5th-percentile) and 16.971 (95th-percentile). Variance is 0.014452.
+
+| FG output Frames timestamp | n | n+1    | n+2   | n+3    | frame delta n+1 to n+2 | frame delta n+2 to n+3 |
+| -------------------------- | - | ------ | ----- | ------ | ---------------------- | ---------------------- |
+| App real frame presents    | 0 |        | 33.33 |        |                        |                        |
+| Default Tuning             | 0 | 16.552 | 33.33 | 49.882 | 16.778                 | 16.552                 |
+| Tuning Set A               | 0 | 15.901 | 33.33 | 49.231 | 17.429                 | 15.901                 |
+| Tuning Set B               | 0 | 16.589 | 33.33 | 49.919 | 16.741                 | 16.589                 |
+
+Analysis of table data in words:
+Ignoring the cost of FI,
+"Tuning set A"'s "target frametime delta" of 15.901 results in larger frame to frame delta (or in other words larger variance) vs Default tuning.
+"Tuning set B"'s "target frametime delta" of 16.589 results in a bit larger frame to frame delta (or in other words a bit larger variance) vs Default tuning.
+
+TLDR:
+If your game when using FG, frame rate is running at unexpectly low frame rate, after gradual transition from rendering complex to easy scene complexity, you could try setting "Tuning Set B" to recover lost FPS at cost of a bit higher variance.
+
+*/
+
+//struct definition matches FfxSwapchainFramePacingTuning
+typedef struct FfxApiSwapchainFramePacingTuning
+{
+    float safetyMarginInMs; // in Millisecond. Default is 0.1ms
+    float varianceFactor; // valid range [0.0,1.0]. Default is 0.1
+    bool     allowHybridSpin; //Allows pacing spinlock to sleep. Default is false.
+    uint32_t hybridSpinTime;  //How long to spin if allowHybridSpin is true. Measured in timer resolution units. Not recommended to go below 2. Will result in frequent overshoots. Default is 2.
+    bool     allowWaitForSingleObjectOnFence; //Allows WaitForSingleObject instead of spinning for fence value. Default is false.
+} FfxApiSwapchainFramePacingTuning;

@@ -25,7 +25,7 @@
 :: Known bundle SHA256 hash to attempt to download
 SET default_bundle_sha256=7c82a9704f11c082ad12115eadb944e7884a73cb678bb51e8c7486a3190c7f98
 
-SET ffx_sdk_root=%~dp0
+SET ffx_sdk_root="%~dp0"
 
 SET ARG=%1
 IF DEFINED ARG (

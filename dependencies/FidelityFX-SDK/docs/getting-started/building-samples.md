@@ -7,7 +7,7 @@
 To build the samples in the AMD FidelityFX SDK:
 
  1. Download and install the following software developer tool minimum versions:
-    - [CMake 3.17](https://cmake.org/download/)
+    - [CMake 3.17 - 3.30](https://cmake.org/download/)
     - [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
     - [Windows 10 SDK 10.0.18362.0](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk)
     - [Vulkan SDK 1.3.239](https://vulkan.lunarg.com/)
@@ -15,12 +15,12 @@ To build the samples in the AMD FidelityFX SDK:
  2. Generate Visual Studio solution:
 
     ```bash
-    > <installation path>\BuildSamplesSolution.bat
+    > <installation path>\BuildSamplesSolution[DX12/VK].bat
     ```
 	
-	The batch file will inquire if the solution should build the SDK as a DLL (builds as a statically linked library if no ('n') is provided) and which samples should be included. Please use '1' to build a solution with all samples included or provide the list of samples to be included (using the corresponding number of the samples with spaces in between).
-  
-    This will generate a `build\` directory where you will find the solution for the SDK samples (`FidelityFX SDK Samples.sln`).
+	The batch file will inquire if the solution should build the SDK as a DLL (builds as a statically linked library if no (`n`) is provided) and which samples should be included.  
+    Please use `1` to build a solution with all samples included or provide the list of samples to be included (using the corresponding number of the samples with spaces in between).  
+    This will generate a `build\` directory where you will find the solution for the SDK samples (`FidelityFX SDK [DX12/VK] Samples.sln`).
   
 <h2>Building and running in Visual Studio</h2>
 

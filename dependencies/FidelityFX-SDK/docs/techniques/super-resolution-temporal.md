@@ -1,6 +1,6 @@
-<!-- @page page_techniques_super-resolution-temporal FidelityFX Super Resolution 2.2 -->
+<!-- @page page_techniques_super-resolution-temporal FidelityFX Super Resolution 2.3.2 -->
 
-<h1>FidelityFX Super Resolution 2.2.2 (FSR2)</h1>
+<h1>FidelityFX Super Resolution 2.3.2 (FSR2)</h1>
 
 ![Screenshot](media/super-resolution-temporal/fsr2-sample_resized.jpg "A screenshot showcasing the final output of the effect")
 

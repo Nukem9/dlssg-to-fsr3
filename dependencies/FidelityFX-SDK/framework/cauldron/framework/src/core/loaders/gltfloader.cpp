@@ -991,113 +991,115 @@ namespace cauldron
         }
     }
 
-    void GLTFLoader::LoadAnimInterpolants(AnimChannel* pAnimChannel, AnimChannel::ComponentSampler samplerType, int32_t samplerIndex, GLTFBufferLoadParams* pBufferLoadParams)
+    void GLTFLoader::LoadAnimInterpolant(AnimInterpolants& animInterpolant, const json& gltfData, int32_t interpAccessorID, const GLTFBufferLoadParams* pBufferLoadParams)
+    {
+        auto&       accessors    = gltfData["accessors"];
+        auto&       bufferViews  = gltfData["bufferViews"];
+
+        const json& inAccessor = accessors.at(interpAccessorID);
+
+        int32_t bufferViewIdx = inAccessor.value("bufferView", -1);
+        CauldronAssert(ASSERT_CRITICAL, bufferViewIdx >= 0, L"Animation buffer view ID invalid");
+        const json& bufferView = bufferViews.at(bufferViewIdx);
+
+        int32_t bufferIdx = bufferView.value("buffer", -1);
+        CauldronAssert(ASSERT_CRITICAL, bufferIdx >= 0, L"Animation buffer ID invalid");
+
+        std::vector<char>& animData = pBufferLoadParams->pGLTFData->GLTFBufferData[bufferIdx];
+
+        int32_t offset     = bufferView.value("byteOffset", 0);
+        int32_t byteLength = bufferView["byteLength"];
+        int32_t byteOffset = inAccessor.value("byteOffset", 0);
+
+        offset += byteOffset;
+        byteLength -= byteOffset;
+
+        animInterpolant.Data      = std::vector<char>(animData.begin() + offset, animData.end());
+        animInterpolant.Dimension = ResourceFormatDimension(inAccessor["type"]);
+        animInterpolant.Stride    = animInterpolant.Dimension * ResourceDataStride(inAccessor["componentType"]);
+        animInterpolant.Count     = inAccessor["count"];
+
+        // Read in min/max according to how big they are (rest is zero initialized)
+        if (inAccessor.find("min") != inAccessor.end())
+        {
+            animInterpolant.Min[0] = inAccessor["min"][0];
+            if (inAccessor["min"].size() > 1)
+            {
+                animInterpolant.Min[1] = inAccessor["min"][1];
+
+                if (inAccessor["min"].size() > 2)
+                {
+                    animInterpolant.Min[2] = inAccessor["min"][2];
+
+                    if (inAccessor["min"].size() > 3)
+                    {
+                        animInterpolant.Min[3] = inAccessor["min"][3];
+                    }
+                }
+            }
+        }
+
+        if (inAccessor.find("max") != inAccessor.end())
+        {
+            animInterpolant.Max[0] = inAccessor["max"][0];
+            if (inAccessor["max"].size() > 1)
+            {
+                animInterpolant.Max[1] = inAccessor["max"][1];
+
+                if (inAccessor["max"].size() > 2)
+                {
+                    animInterpolant.Max[2] = inAccessor["max"][2];
+
+                    if (inAccessor["max"].size() > 3)
+                    {
+                        animInterpolant.Max[3] = inAccessor["max"][3];
+                    }
+                }
+            }
+        }
+    }
+
+    void GLTFLoader::LoadAnimInterpolants(AnimChannel* pAnimChannel, AnimChannel::ComponentSampler samplerType, int32_t samplerIndex, const GLTFBufferLoadParams* pBufferLoadParams)
     {
         const json& gltfData = *pBufferLoadParams->pGLTFData->pGLTFJsonData;
-        auto& accessors = gltfData["accessors"];
-        auto& bufferViews = gltfData["bufferViews"];
         auto& animations = gltfData["animations"];
         auto& samplersJson = animations[pBufferLoadParams->BufferIndex]["samplers"];
 
-        // Our interpolants
-        AnimInterpolants animInterpolants[2];
+        
+        // Create the component sampler and retrieve interpolant addresses to be populated
+        AnimInterpolants* pTimeInterpolant = nullptr;
+        AnimInterpolants* pValueInterpolant = nullptr;
+        pAnimChannel->CreateComponentSampler(samplerType, &pTimeInterpolant, &pValueInterpolant);
 
-        // Setup accessor ids for time/value interpolants
-        int32_t interpAccessorID[] = { samplersJson[samplerIndex]["input"], samplersJson[samplerIndex]["output"] };
+        //Populate interpolant data
+        LoadAnimInterpolant(*pTimeInterpolant, gltfData, samplersJson[samplerIndex]["input"], pBufferLoadParams);
+        LoadAnimInterpolant(*pValueInterpolant, gltfData, samplersJson[samplerIndex]["output"], pBufferLoadParams);
 
-        for (int32_t interpId = 0; interpId < 2; ++interpId)
-        {
-            const json& inAccessor = accessors.at(interpAccessorID[interpId]);
-
-            int32_t bufferViewIdx = inAccessor.value("bufferView", -1);
-            CauldronAssert(ASSERT_CRITICAL, bufferViewIdx >= 0, L"Animation buffer view ID invalid");
-            const json& bufferView = bufferViews.at(bufferViewIdx);
-
-            int32_t bufferIdx = bufferView.value("buffer", -1);
-            CauldronAssert(ASSERT_CRITICAL, bufferIdx >= 0, L"Animation buffer ID invalid");
-
-            std::vector<char> animData = pBufferLoadParams->pGLTFData->GLTFBufferData[bufferIdx];
-
-            int32_t offset      = bufferView.value("byteOffset", 0);
-            int32_t byteLength  = bufferView["byteLength"];
-            int32_t byteOffset = inAccessor.value("byteOffset", 0);
-
-            offset += byteOffset;
-            byteLength -= byteOffset;
-
-            animInterpolants[interpId].Data      = std::vector<char>(animData.begin() + offset, animData.end());
-            animInterpolants[interpId].Dimension = ResourceFormatDimension(inAccessor["type"]);
-            animInterpolants[interpId].Stride = animInterpolants[interpId].Dimension * ResourceDataStride(inAccessor["componentType"]);
-            animInterpolants[interpId].Count = inAccessor["count"];
-
-            // Read in min/max according to how big they are (rest is zero initialized)
-            if (inAccessor.find("min") != inAccessor.end())
-            {
-                animInterpolants[interpId].Min[0] = inAccessor["min"][0];
-                if (inAccessor["min"].size() > 1)
-                {
-                    animInterpolants[interpId].Min[1] = inAccessor["min"][1];
-
-                    if (inAccessor["min"].size() > 2)
-                    {
-                        animInterpolants[interpId].Min[2] = inAccessor["min"][2];
-
-                        if (inAccessor["min"].size() > 3)
-                        {
-                            animInterpolants[interpId].Min[3] = inAccessor["min"][3];
-                        }
-                    }
-                }
-            }
-
-            if (inAccessor.find("max") != inAccessor.end())
-            {
-                animInterpolants[interpId].Max[0] = inAccessor["max"][0];
-                if (inAccessor["max"].size() > 1)
-                {
-                    animInterpolants[interpId].Max[1] = inAccessor["max"][1];
-
-                    if (inAccessor["max"].size() > 2)
-                    {
-                        animInterpolants[interpId].Max[2] = inAccessor["max"][2];
-
-                        if (inAccessor["max"].size() > 3)
-                        {
-                            animInterpolants[interpId].Max[3] = inAccessor["max"][3];
-                        }
-                    }
-                }
-            }
-        }
-
-        // Validate the data and create the sampler from interpolant data
+        // Validate the data
         switch (samplerType)
         {
-        case AnimChannel::ComponentSampler::Translation:
-        {
-            CauldronAssert(ASSERT_CRITICAL, animInterpolants[1].Stride == 3 * 4, L"Animation translation stride differs from expected value");
-            CauldronAssert(ASSERT_CRITICAL, animInterpolants[1].Dimension == 3, L"Animation translation dimension differs from expected value");
-        }
-        break;
-        case AnimChannel::ComponentSampler::Rotation:
-        {
-            CauldronAssert(ASSERT_CRITICAL, animInterpolants[1].Stride == 4 * 4, L"Animation rotation stride differs from expected value");
-            CauldronAssert(ASSERT_CRITICAL, animInterpolants[1].Dimension == 4, L"Animation rotation dimension differs from expected value");
-        }
-        break;
-        case AnimChannel::ComponentSampler::Scale:
-        {
-            CauldronAssert(ASSERT_CRITICAL, animInterpolants[1].Stride == 3 * 4, L"Animation scale stride differs from expected value");
-            CauldronAssert(ASSERT_CRITICAL, animInterpolants[1].Dimension == 3, L"Animation scale dimension differs from expected value");
-        }
-        break;
-        default:
-            CauldronCritical(L"Unsupported Animation component sampler type");
+            case AnimChannel::ComponentSampler::Translation:
+            {
+                CauldronAssert(ASSERT_CRITICAL, pValueInterpolant->Stride == 3 * 4, L"Animation translation stride differs from expected value");
+                CauldronAssert(ASSERT_CRITICAL, pValueInterpolant->Dimension == 3, L"Animation translation dimension differs from expected value");
+            }
+            break;
+            case AnimChannel::ComponentSampler::Rotation:
+            {
+                CauldronAssert(ASSERT_CRITICAL, pValueInterpolant->Stride == 4 * 4, L"Animation rotation stride differs from expected value");
+                CauldronAssert(ASSERT_CRITICAL, pValueInterpolant->Dimension == 4, L"Animation rotation dimension differs from expected value");
+            }
+            break;
+            case AnimChannel::ComponentSampler::Scale:
+            {
+                CauldronAssert(ASSERT_CRITICAL, pValueInterpolant->Stride == 3 * 4, L"Animation scale stride differs from expected value");
+                CauldronAssert(ASSERT_CRITICAL, pValueInterpolant->Dimension == 3, L"Animation scale dimension differs from expected value");
+            }
+            break;
+            default:
+                CauldronCritical(L"Unsupported Animation component sampler type");
             break;
         }
-
-        // Create the component sampler
-        pAnimChannel->CreateComponentSampler(samplerType, &animInterpolants[0], &animInterpolants[1]);
     }
 
     // Called for each mesh in order to create and load mesh information
@@ -1264,7 +1266,7 @@ namespace cauldron
         }
     }
 
-    void GLTFLoader::GetBufferDetails(int accessor, AnimInterpolants* pAccessor, GLTFBufferLoadParams* pBufferLoadParams)
+    void GLTFLoader::GetBufferDetails(int accessor, AnimInterpolants* pAccessor, const GLTFBufferLoadParams* pBufferLoadParams)
     {
         const json& gltfData    = *pBufferLoadParams->pGLTFData->pGLTFJsonData;
         auto&       accessors   = gltfData["accessors"];
@@ -1279,7 +1281,7 @@ namespace cauldron
         int32_t bufferIdx = bufferView.value("buffer", -1);
         assert(bufferIdx >= 0);
 
-        std::vector<char> animData = pBufferLoadParams->pGLTFData->GLTFBufferData[bufferIdx];
+        std::vector<char> &animData = pBufferLoadParams->pGLTFData->GLTFBufferData[bufferIdx];
 
         int32_t offset     = bufferView.value("byteOffset", 0);
         int32_t byteLength = bufferView["byteLength"];

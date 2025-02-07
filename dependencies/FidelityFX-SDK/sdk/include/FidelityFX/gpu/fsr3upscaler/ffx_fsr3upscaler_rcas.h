@@ -25,38 +25,82 @@
 
 #include "ffx_core.h"
 
+#if FFX_HALF && defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+    #define FSR_RCAS_PREFER_PAIRED_VERSION 1
+#else
+    #define FSR_RCAS_PREFER_PAIRED_VERSION 0
+#endif
+
 void WriteUpscaledOutput(FFX_MIN16_U2 iPxHrPos, FfxFloat32x3 fUpscaledColor)
 {
     StoreUpscaledOutput(FFX_MIN16_I2(iPxHrPos), fUpscaledColor);
 }
 
-#define FSR_RCAS_F 1
-FfxFloat32x4 FsrRcasLoadF(FfxInt32x2 p)
-{
-    FfxFloat32x4 fColor = LoadRCAS_Input(p);
+#if FSR_RCAS_PREFER_PAIRED_VERSION
+    #define FSR_RCAS_HX2 1
+    FfxFloat16x4 FsrRcasLoadHx2(FfxInt16x2 p)
+    {
+        return FfxFloat16x4(LoadRCAS_Input(p));
+    }
+    void FsrRcasInputHx2(inout FfxFloat16x2 r, inout FfxFloat16x2 g, inout FfxFloat16x2 b)
+    {
+        FfxFloat32 e = Exposure();
+        r = FfxFloat16x2(r * e);
+        g = FfxFloat16x2(g * e);
+        b = FfxFloat16x2(b * e);
+    }
 
-    fColor.rgb *= Exposure();
+	#include "fsr1/ffx_fsr1.h"
+	
+	void CurrFilterPaired(FFX_MIN16_U2 pos)
+    {
+        FfxFloat16x2 cr;
+        FfxFloat16x2 cg;
+        FfxFloat16x2 cb;
+        FsrRcasHx2(cr, cg, cb, pos, RCASConfig());
+		FfxFloat32 InvExposure = 1.0f / Exposure();
+		cr = FfxFloat16x2(cr * InvExposure);
+        cg = FfxFloat16x2(cg * InvExposure);
+        cb = FfxFloat16x2(cb * InvExposure);
+		WriteUpscaledOutput(pos, FfxFloat16x3(cr.x, cg.x, cb.x)); //TODO: fix type
+        pos.x += 8;
+        WriteUpscaledOutput(pos, FfxFloat16x3(cr.y, cg.y, cb.y)); //TODO: fix type
+    }	
+#else
+    #define FSR_RCAS_F 1
+    FfxFloat32x4 FsrRcasLoadF(FfxInt32x2 p)
+    {
+        FfxFloat32x4 fColor = LoadRCAS_Input(p);
 
-    return fColor;
-}
-void FsrRcasInputF(inout FfxFloat32 r, inout FfxFloat32 g, inout FfxFloat32 b) {}
+        fColor.rgb *= Exposure();
 
-#include "fsr1/ffx_fsr1.h"
+        return fColor;
+    }
+    void FsrRcasInputF(inout FfxFloat32 r, inout FfxFloat32 g, inout FfxFloat32 b) {}
 
-void CurrFilter(FFX_MIN16_U2 pos)
-{
-    FfxFloat32x3 c;
-    FsrRcasF(c.r, c.g, c.b, pos, RCASConfig());
+    #include "fsr1/ffx_fsr1.h"
 
-    c /= Exposure();
+    void CurrFilter(FFX_MIN16_U2 pos)
+    {
+        FfxFloat32x3 c;
+        FsrRcasF(c.r, c.g, c.b, pos, RCASConfig());
 
-    WriteUpscaledOutput(pos, c);
-}
+        c /= Exposure();
+
+        WriteUpscaledOutput(pos, c);
+    }
+
+#endif // #if FSR_RCAS_PREFER_PAIRED_VERSION
 
 void RCAS(FfxUInt32x3 LocalThreadId, FfxUInt32x3 WorkGroupId, FfxUInt32x3 Dtid)
 {
     // Do remapping of local xy in workgroup for a more PS-like swizzle pattern.
     FfxUInt32x2 gxy = ffxRemapForQuad(LocalThreadId.x) + FfxUInt32x2(WorkGroupId.x << 4u, WorkGroupId.y << 4u);
+#if FSR_RCAS_PREFER_PAIRED_VERSION
+    CurrFilterPaired(FFX_MIN16_U2(gxy));
+    gxy.y += 8u;
+    CurrFilterPaired(FFX_MIN16_U2(gxy));
+#else
     CurrFilter(FFX_MIN16_U2(gxy));
     gxy.x += 8u;
     CurrFilter(FFX_MIN16_U2(gxy));
@@ -64,4 +108,5 @@ void RCAS(FfxUInt32x3 LocalThreadId, FfxUInt32x3 WorkGroupId, FfxUInt32x3 Dtid)
     CurrFilter(FFX_MIN16_U2(gxy));
     gxy.x -= 8u;
     CurrFilter(FFX_MIN16_U2(gxy));
+#endif
 }

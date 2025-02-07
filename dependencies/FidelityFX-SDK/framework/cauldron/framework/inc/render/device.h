@@ -231,6 +231,31 @@ namespace cauldron
         void RegisterDeviceRemovedCallback(DeviceRemovedCallback callback, void* customData) { m_DeviceRemovedCallback = callback; m_DeviceRemovedCustomData = customData; }
 
         /**
+         * @brief   Gets whether Anti-Lag 2.0 is available on the system.
+         */
+        bool GetAntiLag2FeatureSupported() const { return m_AntiLag2Supported; }
+
+        /**
+         * @brief   Gets the current state of Anti-Lag 2.0.
+         */
+        bool GetAntiLag2Enabled() const { return m_AntiLag2Enabled; }
+
+        /**
+         * @brief   Sets the current state of Anti-Lag 2.0.
+         */
+        void SetAntiLag2Enabled(bool enable) { m_AntiLag2Enabled = enable; }
+
+        /**
+         * @brief   Sets the framerate limiter for Anti-Lag 2.0. Zero disables the limiter.
+         */
+        void SetAntiLag2FramerateLimiter(uint32_t maxFPS) { m_AntiLag2FramerateLimiter = maxFPS; }
+
+        /**
+         * @brief   Update Anti-Lag 2.0 state.
+         */
+        virtual void UpdateAntiLag2() = 0;
+
+        /**
          * @brief   Gets the internal implementation for api/platform parameter accessors.
          */
         virtual const DeviceInternal* GetImpl() const = 0;
@@ -271,6 +296,10 @@ namespace cauldron
         // Callback for receiving device removed error while presenting the frame
         DeviceRemovedCallback m_DeviceRemovedCallback = nullptr;
         void*                 m_DeviceRemovedCustomData = nullptr;
+
+        bool     m_AntiLag2Supported        = false;
+        bool     m_AntiLag2Enabled          = false;
+        uint32_t m_AntiLag2FramerateLimiter = 0;
     };
 
 } // namespace cauldron

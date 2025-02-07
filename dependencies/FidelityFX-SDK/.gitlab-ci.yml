@@ -21,36 +21,9 @@ format_check:
   needs: []
   script:
   - echo Coming soon!
-  
-build_release_cauldron:
-  stage: build
-  needs: []
-  script:
-  - 'mkdir build'
-  - 'cd build'
-  - 'cmake -A x64 .. -DBUILD_TYPE=CAULDRON'
-  - 'cmake --build . --config ReleaseDX12 %CMAKE_BUILD_DRIVER%'
-  - 'cmake --build . --config ReleaseVK %CMAKE_BUILD_DRIVER%'
-  artifacts:
-    paths:
-    - ./bin
-
-build_debug_cauldron:
-  stage: build
-  needs: []
-  script:
-  - 'mkdir build'
-  - 'cd build'
-  - 'cmake -A x64 .. -DBUILD_TYPE=CAULDRON'
-  - 'cmake --build . --config DebugDX12 %CMAKE_BUILD_DRIVER%'
-  - 'cmake --build . --config DebugVK %CMAKE_BUILD_DRIVER%'
-  artifacts:
-    paths:
-    - ./bin
     
 build_release_sdk_dx12:
   stage: build
-  needs: []
   script:
   - 'cd sdk/'
   - 'mkdir build'
@@ -60,10 +33,10 @@ build_release_sdk_dx12:
   artifacts:
     paths:
     - ./sdk/bin
+    expire_in: 2 weeks
 
 build_debug_sdk_dx12:
   stage: build
-  needs: []
   script:
   - 'cd sdk/'
   - 'mkdir build'
@@ -73,10 +46,10 @@ build_debug_sdk_dx12:
   artifacts:
     paths:
     - ./sdk/bin
+    expire_in: 2 weeks
     
 build_release_sdk_vk:
   stage: build
-  needs: []
   script:
   - 'cd sdk/'
   - 'mkdir build'
@@ -86,10 +59,10 @@ build_release_sdk_vk:
   artifacts:
     paths:
     - ./sdk/bin
+    expire_in: 2 weeks
 
 build_debug_sdk_vk:
   stage: build
-  needs: []
   script:
   - 'cd sdk/'
   - 'mkdir build'
@@ -99,10 +72,10 @@ build_debug_sdk_vk:
   artifacts:
     paths:
     - ./sdk/bin
+    expire_in: 2 weeks
 
 build_debug_api_dll_dx12:
   stage: build
-  needs: []
   script:
   - 'cd ffx-api'
   - 'mkdir build'
@@ -112,10 +85,10 @@ build_debug_api_dll_dx12:
   artifacts:
     paths:
     - ./ffx-api/bin
+    expire_in: 2 weeks
 
 build_release_api_dll_dx12:
   stage: build
-  needs: []
   script:
   - 'cd ffx-api'
   - 'mkdir build'
@@ -129,7 +102,6 @@ build_release_api_dll_dx12:
     
 build_debug_api_dll_vk:
   stage: build
-  needs: []
   script:
   - 'cd ffx-api'
   - 'mkdir build'
@@ -139,10 +111,10 @@ build_debug_api_dll_vk:
   artifacts:
     paths:
     - ./ffx-api/bin
+    expire_in: 2 weeks
 
 build_release_api_dll_vk:
   stage: build
-  needs: []
   script:
   - 'cd ffx-api'
   - 'mkdir build'
@@ -167,6 +139,7 @@ build_release_samples_dx12:
   artifacts:
     paths:
     - ./bin
+    expire_in: 2 weeks
 
 build_release_samples_vk:
   stage: build
@@ -181,6 +154,7 @@ build_release_samples_vk:
   artifacts:
     paths:
     - ./bin
+    expire_in: 2 weeks
 
 build_debug_samples_dx12:
   stage: build
@@ -195,6 +169,7 @@ build_debug_samples_dx12:
   artifacts:
     paths:
     - ./bin
+    expire_in: 2 weeks
 
 build_debug_samples_vk:
   stage: build
@@ -209,19 +184,20 @@ build_debug_samples_vk:
   artifacts:
     paths:
     - ./bin
-
+    expire_in: 2 weeks
+    
 package_release_samples_pc:
   stage: package
   needs:
   - job: build_release_api_dll_dx12
   - job: build_release_api_dll_vk
   - job: build_release_samples_dx12
-  - job: build_release_samples_vk
+  - job: build_release_samples_vk  
   script:
   - echo "Packaging FidelityFX SDK Samples"
   - 'copy %VULKAN_SDK%\Bin\glslc.exe .\bin'
   artifacts:
-    name: "FIDELITYFX-SDK-SAMPLES-%CI_COMMIT_TAG%-%CI_COMMIT_REF_NAME%-%CI_COMMIT_SHORT_SHA%"
+    name: "FIDELITYFX-SDK-SAMPLES-$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
     - ./bin
     - ./docs
@@ -233,6 +209,6 @@ package_release_samples_pc:
     - ./*.bat
     - ./CMakeLists.txt
     - ./common.cmake
-    - ./LICENSE.txt
+    - ./sdk/LICENSE.txt
     - ./readme.md
     - ./sample.cmake

@@ -25,9 +25,13 @@
 
 
 #include "FrameInterpolationSwapchainDX12_Helpers.h"
+#include <timeapi.h>
+#pragma comment(lib, "winmm.lib")
 
 #include <dwmapi.h>
 #pragma comment(lib, "Dwmapi.lib")
+
+#include <string> //needed for std::to_wstring
 
 IDXGIFactory* getDXGIFactoryFromSwapChain(IDXGISwapChain* swapChain)
 {
@@ -39,25 +43,78 @@ IDXGIFactory* getDXGIFactoryFromSwapChain(IDXGISwapChain* swapChain)
     return factory;
 }
 
-void waitForPerformanceCount(const int64_t targetCount)
+void waitForPerformanceCount(const int64_t targetCount, const int64_t frequency, const UINT timerResolution, const UINT spinTime)
 {
-    int64_t currentCount = 0;
+    int64_t currentCount;
+    QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&currentCount));
+    if (currentCount >= targetCount)
+        return;
+        
+    double millis = static_cast<double>(((targetCount - currentCount) * 1000000) / frequency) / 1000.;
+
+    //Sleep if safe, to free up cores.
+    while (timerResolution != UNKNOWN_TIMER_RESOlUTION && millis > spinTime * timerResolution)
+    {
+        MMRESULT result = timeBeginPeriod(timerResolution);           //Request 1ms timer resolution from OS. Necessary to prevent overshooting sleep.
+        if (result != TIMERR_NOERROR)
+            break; //Can't guarantee sleep precision.              
+        Sleep(static_cast<DWORD>((millis - timerResolution*spinTime)));  //End sleep a few timer resolution units early to prevent overshooting.
+        timeEndPeriod(timerResolution);
+
+        QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&currentCount));
+
+        millis = static_cast<double>(((targetCount - currentCount) * 1000000) / frequency) / 1000.;
+    }
+
     do
     {
         QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&currentCount));
     } while (currentCount < targetCount);
 }
 
-bool waitForFenceValue(ID3D12Fence* fence, UINT64 value, DWORD dwMilliseconds)
+bool waitForFenceValue(ID3D12Fence* fence, UINT64 value, DWORD dwMilliseconds, FfxWaitCallbackFunc waitCallback, const bool waitForSingleObjectOnFence)
 {
     bool status = false;
 
     if (fence)
     {
-        if (dwMilliseconds == INFINITE)
+        int64_t originalQpc = 0;
+        QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&originalQpc));
+        int64_t currentQpc = originalQpc;
+        int64_t qpcFrequency;
+        QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&qpcFrequency));
+        const DWORD waitCallbackIntervalInMs = 1;
+        int64_t deltaQpcWaitCallback = qpcFrequency * waitCallbackIntervalInMs / 1000;
+        int64_t deltaQpcTimeout = qpcFrequency * dwMilliseconds /1000;
+        wchar_t fenceName[64];
+        uint32_t fenceNameLen = sizeof(fenceName);
+        fence->GetPrivateData(WKPDID_D3DDebugObjectNameW, &fenceNameLen, &fenceName);
+
+        if (waitForSingleObjectOnFence == false)
         {
-            while (fence->GetCompletedValue() < value);
-            status = true;
+            int64_t previousQpc = originalQpc;
+            while (status != true)
+            {
+                status = fence->GetCompletedValue() >= value;
+                QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&currentQpc));
+                if (waitCallback)
+                {
+                    int64_t deltaQpc = currentQpc - previousQpc;
+                    if ((deltaQpc > deltaQpcWaitCallback))
+                    {
+                        waitCallback(fenceName, value);
+                        previousQpc = currentQpc;
+                    }
+                }
+                if (dwMilliseconds != INFINITE)
+                {
+                    int64_t deltaQpc = currentQpc - originalQpc;
+                    if (deltaQpc > deltaQpcTimeout)
+                    {
+                        break;
+                    }
+                }
+            }
         }
         else
         {
@@ -69,15 +126,23 @@ bool waitForFenceValue(ID3D12Fence* fence, UINT64 value, DWORD dwMilliseconds)
 
                 if (isValidHandle(handle))
                 {
-                    //Wait until command queue is done.
-                    if (!status)
+                    if (SUCCEEDED(fence->SetEventOnCompletion(value, handle)))
                     {
-                        if (SUCCEEDED(fence->SetEventOnCompletion(value, handle)))
+                        while (status != true)
                         {
-                            status = (WaitForSingleObject(handle, dwMilliseconds) == WAIT_OBJECT_0);
+                            QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&currentQpc));
+                            int64_t deltaQpc = currentQpc - originalQpc;
+                            if (deltaQpc > deltaQpcTimeout && dwMilliseconds != INFINITE)
+                            {
+                                break;
+                            }
+                            status = (WaitForSingleObject(handle, waitCallbackIntervalInMs) == WAIT_OBJECT_0);
+                            if (waitCallback)
+                            {
+                                waitCallback(fenceName, value);
+                            }
                         }
                     }
-
                     CloseHandle(handle);
                 }
             }
@@ -196,5 +261,23 @@ bool getMonitorLuminanceRange(IDXGISwapChain* swapChain, float *outMinLuminance,
     }
 
     return bResult;
+}
+
+uint64_t GetResourceGpuMemorySize(ID3D12Resource* resource)
+{
+    uint64_t      size = 0;
+    D3D12_RESOURCE_ALLOCATION_INFO allocInfo = {};
+    if (resource)
+    {
+        D3D12_RESOURCE_DESC desc = resource->GetDesc();
+        ID3D12Device4* pDevice4 = nullptr;
+        if (SUCCEEDED(resource->GetDevice(IID_PPV_ARGS(&pDevice4))))
+        {
+            allocInfo = pDevice4->GetResourceAllocationInfo(0, 1, &desc);
+            size = allocInfo.SizeInBytes;
+            SafeRelease(pDevice4);
+        }
+    }
+    return size;
 }
 

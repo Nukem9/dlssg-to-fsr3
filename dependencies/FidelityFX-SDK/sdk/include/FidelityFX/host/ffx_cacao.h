@@ -184,7 +184,7 @@
 /// The size of the context specified in 32bit values.
 ///
 /// @ingroup FfxCacao
-#define FFX_CACAO_CONTEXT_SIZE (300988)
+#define FFX_CACAO_CONTEXT_SIZE (301054)
 
 /// FidelityFX CACAO context count.
 ///
@@ -325,7 +325,7 @@ typedef struct FfxCacaoConstants {
 	float                   EffectFadeOutMul;	/// Multiplication value for effect fade out.
 	float                   EffectFadeOutAdd;	/// Addition value for effect fade out.
 	float                   EffectHorizonAngleThreshold;	/// Minimum angle necessary between geometry and a point to create occlusion. Adjusting this value helps reduce self-shadowing.
-	float                   EffectSamplingRadiusNearLimitRec;	/// Default: EffectRadius∗1.2. Used to set limit on the sampling disk size when near.
+	float                   EffectSamplingRadiusNearLimitRec;	/// Default: EffectRadius*1.2. Used to set limit on the sampling disk size when near.
 
 	float                   DepthPrecisionOffsetMod;	/// Default: 0.9992. Offset used to prevent artifacts due to imprecision.
 	float                   NegRecEffectRadius;	/// Negative reciprocal of the effect radius.
@@ -339,8 +339,8 @@ typedef struct FfxCacaoConstants {
 
 	float                   PatternRotScaleMatrices[4][5][4];	/// Sampling pattern rotation/scale matrices.
 
-	float                   NormalsUnpackMul;	/// Multiplication value to unpack normals. Set to 1 if normals are already in [−1,1] range.
-	float                   NormalsUnpackAdd;	/// Addition value to unpack normals. Set to 0 if normals are already in [−1,1]range.
+	float                   NormalsUnpackMul;	/// Multiplication value to unpack normals. Set to 1 if normals are already in [-1,1] range.
+	float                   NormalsUnpackAdd;	/// Addition value to unpack normals. Set to 0 if normals are already in [-1,1]range.
 	float                   DetailAOStrength;	/// Adds in more detailed shadows based on edges. These are less temporally stable.
 	float                   Dummy0;
 
@@ -393,8 +393,8 @@ typedef struct FfxCacaoDispatchDescription
     FfxResource                outputBuffer;	///< A <c><i>FfxResource</i></c> containing the output color buffer for CACAO.
     FfxFloat32x4x4*			   proj;        	///< A <c><i>FfxFloat32x4x4</i></c> containing the projection matrix for the current frame.
     FfxFloat32x4x4*       	   normalsToView;	///< A <c><i>FfxFloat32x4x4</i></c> containing the normal matrix for the current frame.
-    float                      normalUnpackMul;	/// Multiplication value to unpack normals. Set to 1 if normals are already in [−1,1] range.
-    float                      normalUnpackAdd;	/// Addition value to unpack normals. Set to 0 if normals are already in [−1,1]range.
+    float                      normalUnpackMul;	/// Multiplication value to unpack normals. Set to 1 if normals are already in [-1,1] range.
+    float                      normalUnpackAdd;	/// Addition value to unpack normals. Set to 0 if normals are already in [-1,1]range.
 } FfxCacaoDispatchDescription;
 
 ///	A structure containing sizes of each of the buffers used by FidelityFX CACAO.

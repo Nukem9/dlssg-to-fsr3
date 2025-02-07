@@ -48,6 +48,12 @@ public:
     virtual void Init(const json& initData) override;
     virtual void Execute(double deltaTime, cauldron::CommandList* pCmdList) override;
 
+    void SetDoubleBufferedTextureIndex(uint32_t textureIndex);
+
+    /**
+     * @brief ClearRenderTarget() on render targets that may not be written to before being read. Called by the framework when the resolution changes.
+     */
+    void OnResize(const cauldron::ResolutionInfo& resInfo) override;
 private:
     // No copy, No move
     NO_COPY(ToneMappingRenderModule)
@@ -65,6 +71,10 @@ private:
     cauldron::PipelineObject*   m_pAutoExposureSpdPipelineObj   = nullptr;
     cauldron::ParameterSet*     m_pAutoExposureSpdParameters    = nullptr;
 
+    cauldron::RootSignature*    m_pBuildDistortionFieldRootSignature = nullptr;
+    cauldron::PipelineObject*   m_pBuildDistortionFieldPipelineObj   = nullptr;
+    cauldron::ParameterSet*     m_pBuildDistortionFieldParameters    = nullptr;
+
     cauldron::RootSignature*    m_pTonemapperRootSignature  = nullptr;
     const cauldron::RasterView* m_pRasterView               = nullptr;
     cauldron::PipelineObject*   m_pTonemapperPipelineObj    = nullptr;
@@ -77,5 +87,11 @@ private:
     cauldron::SamplerDesc    m_LinearSamplerDesc;
 
     const cauldron::Texture* m_pRenderTargetIn   = nullptr;
-    const cauldron::Texture* m_pRenderTargetOut = nullptr;
+    const cauldron::Texture* m_pRenderTargetOut  = nullptr;
+    const cauldron::Texture* m_pDistortionField[2] = {};
+    const cauldron::RasterView* m_pDistortionFieldRasterView[2] = {};
+
+    uint32_t m_curDoubleBufferedTextureIndex = 0;
+
+    bool shouldClearRenderTargets = true;
 };

@@ -168,14 +168,14 @@ namespace cauldron
         }
 
         /**
-         * @brief   Creates a <c><i>ComponentSampler</i></c> and populates it with data.
+         * @brief   Creates a <c><i>ComponentSampler</i></c> and assigns time and value fields to be populated.
          */
-        void CreateComponentSampler(ComponentSampler samplerID, AnimInterpolants* timeInterpolants, AnimInterpolants* valueInterpolants)
+        void CreateComponentSampler(ComponentSampler samplerID, AnimInterpolants** timeInterpolants, AnimInterpolants** valueInterpolants)
         {
             CauldronAssert(ASSERT_CRITICAL, nullptr == m_pComponentSamplers[static_cast<uint32_t>(samplerID)], L"Overriding and existing animation component sampler. Memory leak!");
             m_pComponentSamplers[static_cast<uint32_t>(samplerID)] = new AnimSampler();
-            m_pComponentSamplers[static_cast<uint32_t>(samplerID)]->m_Time = *timeInterpolants;
-            m_pComponentSamplers[static_cast<uint32_t>(samplerID)]->m_Value = *valueInterpolants;
+            *timeInterpolants = &m_pComponentSamplers[static_cast<uint32_t>(samplerID)]->m_Time;
+            *valueInterpolants = &m_pComponentSamplers[static_cast<uint32_t>(samplerID)]->m_Value;
         }
 
         /**

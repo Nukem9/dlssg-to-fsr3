@@ -83,5 +83,5 @@ For sample controls, configuration and FidelityFX Cauldron Framework UI element 
 <h2>See also</h2>
 
 - [FidelityFX Brixelizer](../techniques/brixelizer.md)
-- [FidelityFX Brixelizer GI](../techniques/brixelizergi.md)
+- [FidelityFX Brixelizer GI](../techniques/brixelizer-gi.md)
 - [FidelityFX Naming guidelines](../getting-started/naming-guidelines.md)

@@ -43,7 +43,7 @@
 /// FidelityFX Super Resolution 0 patch version.
 ///
 /// @ingroup FSR3
-#define FFX_FSR3_VERSION_PATCH      (0)
+#define FFX_FSR3_VERSION_PATCH      (3)
 
 /// FidelityFX Super Resolution 3 context count
 ///
@@ -139,6 +139,7 @@ typedef enum FfxFsr3FrameGenerationFlags
 {
     FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_TEAR_LINES    = FFX_FRAMEINTERPOLATION_DISPATCH_DRAW_DEBUG_TEAR_LINES,  ///< A bit indicating that the debug tear lines will be drawn to the interpolated output.
     FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_VIEW          = FFX_FRAMEINTERPOLATION_DISPATCH_DRAW_DEBUG_VIEW,  ///< A bit indicating that the interpolated output resource will contain debug views with relevant information.
+    FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_PACING_LINES  = FFX_FRAMEINTERPOLATION_DISPATCH_DRAW_DEBUG_PACING_LINES  ///< A bit indicating that the debug pacing lines will be drawn to the generated output.
 } FfxFsr3FrameGenerationFlags;
 
 typedef enum FfxFsr3UpscalingFlags
@@ -155,6 +156,7 @@ typedef struct FfxFsr3ContextDescription {
     FfxDimensions2D             maxRenderSize;                      ///< The maximum size that rendering will be performed at.
     FfxDimensions2D             maxUpscaleSize;                  ///< The size of the presentation resolution targeted by the upscaling process.
     FfxDimensions2D             displaySize;                        ///< The size of the presentation resolution targeted by the frame interpolation process.
+    FfxInterface                backendInterfaceSharedResources;    ///< A set of pointers to the backend implementation for FidelityFX SDK
     FfxInterface                backendInterfaceUpscaling;          ///< A set of pointers to the backend implementation for FidelityFX SDK
     FfxInterface                backendInterfaceFrameInterpolation; ///< A set of pointers to the backend implementation for FidelityFX SDK
     FfxFsr3UpscalerMessage      fpMessage;                          ///< A pointer to a function that can receive messages from the runtime.
@@ -190,6 +192,7 @@ typedef struct FfxFsr3DispatchUpscaleDescription {
     float                       cameraFovAngleVertical;             ///< The camera angle field of view in the vertical direction (expressed in radians).
     float                       viewSpaceToMetersFactor;            ///< The scale factor to convert view space units to meters
     uint32_t                    flags;                              ///< combination of FfxFsr3UpscalingFlags
+    uint64_t                    frameID;
 } FfxFsr3DispatchUpscaleDescription;
 
 typedef struct FfxFsr3DispatchFrameGenerationPrepareDescription

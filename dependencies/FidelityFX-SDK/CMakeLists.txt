@@ -1,17 +1,17 @@
 # This file is part of the FidelityFX SDK.
-# 
+#
 # Copyright (C) 2024 Advanced Micro Devices, Inc.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files(the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions :
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -50,9 +50,9 @@ include(common)
 include(sample)
 
 # Configuration setup
-set(CMAKE_GENERATOR_PLATFORM x64)
-
-if (CMAKE_GENERATOR_PLATFORM STREQUAL x64)
+if (CMAKE_GENERATOR_PLATFORM STREQUAL x64 OR
+	CMAKE_GENERATOR_PLATFORM STREQUAL ARM64 OR
+	CMAKE_GENERATOR_PLATFORM STREQUAL ARM64EC)
     message(STATUS "Creating sample configs ...")
 	set(CMAKE_CONFIGURATION_TYPES "")
 	if (CAULDRON_DX12)
@@ -61,14 +61,14 @@ if (CMAKE_GENERATOR_PLATFORM STREQUAL x64)
 		createConfig(DX12 ReleaseDX12 RELEASE)
 		list(APPEND CMAKE_CONFIGURATION_TYPES "DebugDX12;RelWithDebInfoDX12;ReleaseDX12;")
 	endif()
-	
+
 	if (CAULDRON_VK)
 		createConfig(VK DebugVK DEBUG)
 		createConfig(VK RelWithDebInfoVK RELWITHDEBINFO)
 		createConfig(VK ReleaseVK RELEASE)
 		list(APPEND CMAKE_CONFIGURATION_TYPES "DebugVK;RelWithDebInfoVK;ReleaseVK;")
 	endif()
-    
+
     message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 
     # Set compile definitions as well
@@ -83,7 +83,7 @@ if (CMAKE_GENERATOR_PLATFORM STREQUAL x64)
     )
 
 else()
-    message(FATAL_ERROR "Requested architecture not yet supported!)")
+    message(FATAL_ERROR "Requested architecture ${CMAKE_GENERATOR_PLATFORM} not yet supported!)")
 endif()
 
 # Ouput exe to bin directory
@@ -102,12 +102,12 @@ endif()
 add_library(ffx_backend_native STATIC IMPORTED)
 set_target_properties(ffx_backend_native PROPERTIES
 					  IMPORTED_CONFIGURATIONS "DebugDX12;DebugVK;RelWithDebInfoDX12;RelWithDebInfoVK;ReleaseDX12;ReleaseVK"
-					  IMPORTED_LOCATION_DEBUGDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_dx12_x64d.lib"
-					  IMPORTED_LOCATION_RELEASEDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_dx12_x64.lib"
-					  IMPORTED_LOCATION_RELWITHDEBINFODX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_dx12_x64drel.lib"
-					  IMPORTED_LOCATION_DEBUGVK "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_vk_x64d.lib"
-					  IMPORTED_LOCATION_RELEASEVK "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_vk_x64.lib"
-					  IMPORTED_LOCATION_RELWITHDEBINFOVK "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_vk_x64drel.lib")
+					  IMPORTED_LOCATION_DEBUGDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_dx12_${CMAKE_GENERATOR_PLATFORM}d.lib"
+					  IMPORTED_LOCATION_RELEASEDX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_dx12_${CMAKE_GENERATOR_PLATFORM}.lib"
+					  IMPORTED_LOCATION_RELWITHDEBINFODX12 "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_dx12_${CMAKE_GENERATOR_PLATFORM}drel.lib"
+					  IMPORTED_LOCATION_DEBUGVK "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_vk_${CMAKE_GENERATOR_PLATFORM}d.lib"
+					  IMPORTED_LOCATION_RELEASEVK "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_vk_${CMAKE_GENERATOR_PLATFORM}.lib"
+					  IMPORTED_LOCATION_RELWITHDEBINFOVK "${SDK_ROOT}/bin/ffx_sdk/ffx_backend_vk_${CMAKE_GENERATOR_PLATFORM}drel.lib")
 
 if (FFX_BUILD_AS_DLL)
     file(GLOB SDK_DLLS "${SDK_ROOT}/bin/ffx_sdk/*.dll")

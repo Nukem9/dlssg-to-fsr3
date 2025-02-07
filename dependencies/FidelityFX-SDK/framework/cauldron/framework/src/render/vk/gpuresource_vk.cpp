@@ -130,6 +130,8 @@ VkFormat GetVkFormatFromSurfaceFormat(FfxSurfaceFormat fmt)
             return VK_FORMAT_R8G8_UINT;
         case (FFX_SURFACE_FORMAT_R32_FLOAT):
             return VK_FORMAT_R32_SFLOAT;
+        case (FFX_SURFACE_FORMAT_R9G9B9E5_SHAREDEXP):
+            return VK_FORMAT_E5B9G9R9_UFLOAT_PACK32;
         case (FFX_SURFACE_FORMAT_UNKNOWN):
             return VK_FORMAT_UNDEFINED;
 
@@ -430,24 +432,6 @@ VkFormat GetVkFormatFromSurfaceFormat(FfxSurfaceFormat fmt)
         ClearResource();
 
         DeviceInternal* pDevice = GetDevice()->GetImpl();
-
-        // adjust the image creation structure if mutable views are allowed
-        std::array<VkFormat, 2> formats;
-        VkImageFormatListCreateInfo imageFormatInfo = {};
-        if ((m_ImageCreateInfo.flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT) != 0)
-        {
-            formats[0] = m_ImageCreateInfo.format;
-            formats[1] = VKToGamma(m_ImageCreateInfo.format);
-            imageFormatInfo.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO;
-            imageFormatInfo.pNext = nullptr;
-            imageFormatInfo.viewFormatCount = static_cast<uint32_t>(formats.size());
-            imageFormatInfo.pViewFormats = formats.data();
-            m_ImageCreateInfo.pNext = &imageFormatInfo;
-
-            // Add some asserts to be sure that we are handling the case of a image with sRGB view on it
-            CauldronAssert(ASSERT_CRITICAL, formats[0] != formats[1], L"Image is already a sRGB one, this shouldn't happen if the VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT is set.");
-            CauldronAssert(ASSERT_CRITICAL, (m_ImageCreateInfo.usage & VK_IMAGE_USAGE_STORAGE_BIT) != 0, L"VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT should ony be set to handle storage views on a texture.");
-        }
 
         m_MemoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
 

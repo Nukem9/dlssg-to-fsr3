@@ -310,14 +310,14 @@ namespace cauldron
         static bool s_InvertedDepth = GetConfig()->InvertedDepth;
         D3D12_CLEAR_VALUE* pClearValue = NULL;
         D3D12_CLEAR_VALUE clearValue;
-        if (m_ResourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+        if (m_ResourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL && !IsTypelessDXGIFormat(m_ResourceDesc.Format))
         {
             clearValue.Format = m_ResourceDesc.Format;
             clearValue.DepthStencil.Depth = s_InvertedDepth ? 0.f : 1.0f;
             clearValue.DepthStencil.Stencil = 0;
             pClearValue = &clearValue;
         }
-        else if (m_ResourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+        else if (m_ResourceDesc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET && !IsTypelessDXGIFormat(m_ResourceDesc.Format))
         {
             clearValue.Format = m_ResourceDesc.Format;
             clearValue.Color[0] = 0.0f;
@@ -347,6 +347,8 @@ namespace cauldron
             return DXGI_FORMAT_R8_SINT;
         case ResourceFormat::R8_UINT:
             return DXGI_FORMAT_R8_UINT;
+        case ResourceFormat::R8_TYPELESS:
+            return DXGI_FORMAT_R8_TYPELESS;
         case ResourceFormat::R8_UNORM:
             return DXGI_FORMAT_R8_UNORM;
 
@@ -355,6 +357,8 @@ namespace cauldron
             return DXGI_FORMAT_R16_SINT;
         case ResourceFormat::R16_UINT:
             return DXGI_FORMAT_R16_UINT;
+        case ResourceFormat::R16_TYPELESS:
+            return DXGI_FORMAT_R16_TYPELESS;
         case ResourceFormat::R16_FLOAT:
             return DXGI_FORMAT_R16_FLOAT;
         case ResourceFormat::R16_UNORM:
@@ -365,6 +369,8 @@ namespace cauldron
             return DXGI_FORMAT_R8G8_SINT;
         case ResourceFormat::RG8_UINT:
             return DXGI_FORMAT_R8G8_UINT;
+        case ResourceFormat::RG8_TYPELESS:
+            return DXGI_FORMAT_R8G8_TYPELESS;
         case ResourceFormat::RG8_UNORM:
             return DXGI_FORMAT_R8G8_UNORM;
 
@@ -383,18 +389,32 @@ namespace cauldron
             return DXGI_FORMAT_R8G8B8A8_SNORM;
         case ResourceFormat::RGBA8_SRGB:
             return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+        case ResourceFormat::BGRA8_TYPELESS:
+            return DXGI_FORMAT_B8G8R8A8_TYPELESS;
+        case ResourceFormat::BGRA8_UNORM:
+            return DXGI_FORMAT_B8G8R8A8_UNORM;
+        case ResourceFormat::BGRA8_SRGB:
+            return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
         case ResourceFormat::RGBA8_TYPELESS:
             return DXGI_FORMAT_R8G8B8A8_TYPELESS;
+        case ResourceFormat::RGB10A2_TYPELESS:
+            return DXGI_FORMAT_R10G10B10A2_TYPELESS;
         case ResourceFormat::RGB10A2_UNORM:
             return DXGI_FORMAT_R10G10B10A2_UNORM;
         case ResourceFormat::RG11B10_FLOAT:
             return DXGI_FORMAT_R11G11B10_FLOAT;
+        case ResourceFormat::RGB9E5_SHAREDEXP:
+            return DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
         case ResourceFormat::RG16_SINT:
             return DXGI_FORMAT_R16G16_SINT;
         case ResourceFormat::RG16_UINT:
             return DXGI_FORMAT_R16G16_UINT;
+        case ResourceFormat::RG16_TYPELESS:
+            return DXGI_FORMAT_R16G16_TYPELESS;
         case ResourceFormat::RG16_FLOAT:
             return DXGI_FORMAT_R16G16_FLOAT;
+        case ResourceFormat::R32_TYPELESS:
+            return DXGI_FORMAT_R32_TYPELESS;
         case ResourceFormat::R32_FLOAT:
             return DXGI_FORMAT_R32_FLOAT;
 
@@ -406,12 +426,16 @@ namespace cauldron
             return DXGI_FORMAT_R16G16B16A16_UINT;
         case ResourceFormat::RGBA16_SNORM:
             return DXGI_FORMAT_R16G16B16A16_SNORM;
+        case ResourceFormat::RGBA16_TYPELESS:
+            return DXGI_FORMAT_R16G16B16A16_TYPELESS;
         case ResourceFormat::RGBA16_FLOAT:
             return DXGI_FORMAT_R16G16B16A16_FLOAT;
         case ResourceFormat::RG32_SINT:
             return DXGI_FORMAT_R32G32_SINT;
         case ResourceFormat::RG32_UINT:
             return DXGI_FORMAT_R32G32_UINT;
+        case ResourceFormat::RG32_TYPELESS:
+            return DXGI_FORMAT_R32G32_TYPELESS;
         case ResourceFormat::RG32_FLOAT:
             return DXGI_FORMAT_R32G32_FLOAT;
 
@@ -475,6 +499,39 @@ namespace cauldron
         }
     }
 
+    // Override TYPELESS resources to prevent device removal
+    DXGI_FORMAT ConvertTypelessDXGIFormat(DXGI_FORMAT format)
+    {
+        switch (format)
+        {
+            case DXGI_FORMAT_R8_TYPELESS:
+                return DXGI_FORMAT_R8_UNORM;
+            case DXGI_FORMAT_R16_TYPELESS:
+                return DXGI_FORMAT_R16_FLOAT;
+            case DXGI_FORMAT_R8G8_TYPELESS:
+                return DXGI_FORMAT_R8G8_UNORM;
+            case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+                return DXGI_FORMAT_R8G8B8A8_UNORM;
+            case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+                return DXGI_FORMAT_B8G8R8A8_UNORM;
+            case DXGI_FORMAT_R10G10B10A2_TYPELESS:
+                return DXGI_FORMAT_R10G10B10A2_UNORM;
+            case DXGI_FORMAT_R16G16_TYPELESS:
+                return DXGI_FORMAT_R16G16_FLOAT;
+            case DXGI_FORMAT_R32_TYPELESS:
+                return DXGI_FORMAT_R32_FLOAT;
+            case DXGI_FORMAT_R16G16B16A16_TYPELESS:
+                return DXGI_FORMAT_R16G16B16A16_FLOAT;
+            case DXGI_FORMAT_R32G32_TYPELESS:
+                return DXGI_FORMAT_R32G32_FLOAT;
+            case DXGI_FORMAT_R32G32B32A32_TYPELESS:
+                return DXGI_FORMAT_R32G32B32A32_FLOAT;
+            default:
+                return format;
+        }
+
+    }
+
     DXGI_FORMAT DXGIToGamma(DXGI_FORMAT format)
     {
         switch (format)
@@ -527,6 +584,7 @@ namespace cauldron
         case ResourceFormat::RGBA8_TYPELESS:
         case ResourceFormat::RGB10A2_UNORM:
         case ResourceFormat::RG11B10_FLOAT:
+        case ResourceFormat::RGB9E5_SHAREDEXP:
         case ResourceFormat::RG16_FLOAT:
         case ResourceFormat::R32_UINT:
         case ResourceFormat::R32_FLOAT:
@@ -637,7 +695,26 @@ namespace cauldron
 
         return resourceFlags;
     }
-
+    bool IsTypelessDXGIFormat(DXGI_FORMAT format)
+    {
+        switch (format)
+        {
+            case DXGI_FORMAT_R32G32B32A32_TYPELESS:
+            case DXGI_FORMAT_R16G16B16A16_TYPELESS:
+            case DXGI_FORMAT_R32G32_TYPELESS:
+            case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+            case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+            case DXGI_FORMAT_R10G10B10A2_TYPELESS:
+            case DXGI_FORMAT_R16G16_TYPELESS:
+            case DXGI_FORMAT_R16_TYPELESS:
+            case DXGI_FORMAT_R8_TYPELESS:
+            case DXGI_FORMAT_R8G8_TYPELESS:
+            case DXGI_FORMAT_R32_TYPELESS:
+                return true;
+            default:
+                return false;
+        }
+    }
 } // namespace cauldron
 
 #endif // #if defined(_DX12)

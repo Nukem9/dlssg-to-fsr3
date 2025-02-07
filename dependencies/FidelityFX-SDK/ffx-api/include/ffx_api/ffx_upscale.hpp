@@ -70,4 +70,9 @@ struct struct_type<ffxConfigureDescUpscaleKeyValue> : std::integral_constant<uin
 
 struct ConfigureDescUpscaleKeyValue : public InitHelper<ffxConfigureDescUpscaleKeyValue> {};
 
+template<>
+struct struct_type<ffxQueryDescUpscaleGetGPUMemoryUsage> : std::integral_constant<uint64_t, FFX_API_QUERY_DESC_TYPE_UPSCALE_GPU_MEMORY_USAGE> {};
+
+struct QueryDescUpscaleGetGPUMemoryUsage : public InitHelper<ffxQueryDescUpscaleGetGPUMemoryUsage> {};
+
 }

@@ -32,6 +32,16 @@ FfxFloat32x4 WrapHistory(FfxInt32x2 iPxSample)
 DeclareCustomFetchBicubicSamples(FetchHistorySamples, WrapHistory)
 DeclareCustomTextureSample(HistorySample, FFX_FSR3UPSCALER_GET_LANCZOS_SAMPLER1D(FFX_FSR3UPSCALER_OPTION_REPROJECT_USE_LANCZOS_TYPE), FetchHistorySamples)
 
+#if FFX_HALF
+FFX_MIN16_F4 WrapHistory16(FfxInt32x2 iPxSample)
+{
+    return FFX_MIN16_F4(LoadHistory(iPxSample));
+}
+
+DeclareCustomFetchBicubicSamplesMin16(FetchHistorySamples16, WrapHistory16)
+DeclareCustomTextureSampleMin16(HistorySample16, FFX_FSR3UPSCALER_GET_LANCZOS_SAMPLER1D(FFX_FSR3UPSCALER_OPTION_REPROJECT_USE_LANCZOS_TYPE), FetchHistorySamples16)
+#endif
+
 FfxFloat32x2 GetMotionVector(FfxInt32x2 iPxHrPos, FfxFloat32x2 fHrUv)
 {
 #if FFX_FSR3UPSCALER_OPTION_LOW_RESOLUTION_MOTION_VECTORS
@@ -51,8 +61,13 @@ void ComputeReprojectedUVs(FFX_PARAMETER_INOUT AccumulationPassCommonParams para
 }
 
 void ReprojectHistoryColor(const AccumulationPassCommonParams params, FFX_PARAMETER_INOUT AccumulationPassData data)
+
 {
+#if FFX_HALF && FFX_FSR3UPSCALER_OPTION_REPROJECT_SAMPLERS_USE_DATA_HALF
+    const FfxFloat32x4 fReprojectedHistory = FfxFloat32x4(HistorySample16(params.fReprojectedHrUv, UpscaleSize()));
+#else
     const FfxFloat32x4 fReprojectedHistory = HistorySample(params.fReprojectedHrUv, PreviousFrameUpscaleSize());
+#endif
 
     data.fHistoryColor = fReprojectedHistory.rgb;
     data.fHistoryColor *= DeltaPreExposure();

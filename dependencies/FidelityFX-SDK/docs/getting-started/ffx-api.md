@@ -1,8 +1,8 @@
 <!-- @page page_ffx-api Introduction to FidelityFX API -->
 
-<h1>Introduction to the FidelityFX API</h1>
+<h1>Introduction to FidelityFX API</h1>
 
-The FidelityFX API is a simple API for FidelityFX techniques, created with a small ABI surface and forwards-compatibility. It is delivered in Dynamic Link Library form and consists of 5 functions, declared in [`ffx_api.h`](/ffx-api/include/ffx_api/ffx_api.h):
+The FidelityFX API is a simple API created for small ABI surface and forwards-compatibility. It is delivered in Dynamic Link Library form and consists of 5 functions, declared in [`ffx_api.h`](../../ffx-api/include/ffx_api/ffx_api.h):
 
 * `ffxCreateContext`
 * `ffxDestroyContext`
@@ -14,7 +14,8 @@ Arguments are provided in a linked list of structs, each having a header with a 
 
 An application using the FidelityFX API must use one of the provided signed DLLs. This can be loaded at runtime with `LoadLibrary` and `GetProcAddress` (this is recommended) or at application startup using the dynamic linker via the .lib file.
 
-Backend-specific functionality (for DirectX 12 or Vulkan) is only supported with the respective DLL. Linking to both within the same application is not possible due to name resolution conflicts.
+Backend-specific functionality (for DirectX 12 or Vulkan) is only supported with the respective DLL.
+Linking to both within the same application is not possible due to name resolution conflicts.
 
 For convenience in C++ applications, helpers for initializing struct types correctly and linking headers are provided. Simply use the `.hpp` version of each header and replace the `ffx` prefix with the `ffx::` namespace.
 Note that the helper functions wrapping API functions only work when linking using the .lib file. Using them with runtime loading will result in linker errors.
@@ -32,7 +33,6 @@ typedef struct ffxApiHeader
 ```
 
 Each descriptor has an associated struct type, usually defined directly before the struct declaration in the header.
-
 The `type` field in the header must be set to that struct type. Failing to do this is undefined behavior and will likely result in crashes. The C++ headers (with extension `.hpp`) expose helpers for automatic initialization.
 
 The `pNext` field is used to specify additional parameters and extensions in a linked list (or "chain"). Some calls require chaining certain other structs.

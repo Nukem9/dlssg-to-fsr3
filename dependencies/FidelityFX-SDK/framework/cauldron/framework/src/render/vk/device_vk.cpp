@@ -406,6 +406,29 @@ namespace cauldron
         Appender         m_PropertiesAppender;
     };
 
+    
+    enum RequestedQueue : uint32_t
+    {
+        Graphics = 0,
+        Compute,
+        Copy,
+
+        // frame interpolation
+        FIAsyncCompute,
+        FIPresent,
+        FIImageAcquire,
+
+        Count
+    };
+    struct QueueFamilies
+    {
+        struct
+        {
+            uint32_t family = 0;
+            uint32_t index = 0;
+        } queues[RequestedQueue::Count];
+    };
+
     QueueFamilies GetQueues(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     {
         // Get queue/memory/device properties
@@ -424,12 +447,7 @@ namespace cauldron
 
         // init
         for (uint32_t i = 0; i < RequestedQueue::Count; ++i)
-            families.familyIndices[i] = UINT32_MAX;
-        
-        // How to select a queue:
-        //   - it should have the requested capabilities
-        //   - it should have no more capabilities than the requested one
-        //   - it shouldn't be used by another RequestedQueue
+            families.queues[i].family = UINT32_MAX;
 
         // Find a graphics device and a queue that can present to the above surface
         // We only support device where the graphics queue can present
@@ -438,171 +456,135 @@ namespace cauldron
             if (queueProps[i].queueCount == 0)
                 continue;
             VkBool32 supportsPresent;
-            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent);
+            VkResult res = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent);
 
             if (HAS_QUEUE_FAMILY_FLAG((VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))  // VK_QUEUE_TRANSFER_BIT is implied
-                && supportsPresent)
+                && res == VK_SUCCESS && supportsPresent && queueAvailability[i].queueCount > 0)
             {
-                if (families.familyIndices[RequestedQueue::Graphics] == UINT32_MAX)
-                {
-                    families.familyIndices[RequestedQueue::Graphics] = i;
-                    families.properties[RequestedQueue::Graphics]    = queueProps[i];
-                    break;
-                }
+                families.queues[RequestedQueue::Graphics].family = i;
+                --queueAvailability[i].queueCount;
+                break;
             }
         }
-        --queueAvailability[families.familyIndices[RequestedQueue::Graphics]].queueCount;
+        CauldronAssert(ASSERT_CRITICAL, families.queues[RequestedQueue::Graphics].family != UINT32_MAX, L"Unable to get a graphics queue that supports Present.");
 
-        CauldronAssert(ASSERT_CRITICAL, families.familyIndices[RequestedQueue::Graphics] != UINT32_MAX, L"Unable to get a graphics queue that supports Present.");
-
-        // Get a compute queue that isn't the graphics one if possible
+        // Get an async compute queue
         for (uint32_t i = 0; i < queueFamilyCount; ++i)
         {
-            if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) && (queueAvailability[i].queueCount > 0))  // VK_QUEUE_TRANSFER_BIT is implied
+            if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) && !HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) && (queueAvailability[i].queueCount > 0))  // VK_QUEUE_TRANSFER_BIT is implied
             {
-                if (families.familyIndices[RequestedQueue::Compute] == UINT32_MAX)
-                {
-                    families.familyIndices[RequestedQueue::Compute] = i;
-                    families.properties[RequestedQueue::Compute]    = queueProps[i];
-                    break;
-                }
+                families.queues[RequestedQueue::Compute].family = i;
+                --queueAvailability[i].queueCount;
+                break;
             }
         }
-        --queueAvailability[families.familyIndices[RequestedQueue::Compute]].queueCount;
+        CauldronAssert(ASSERT_CRITICAL, families.queues[RequestedQueue::Compute].family != UINT32_MAX, L"Unable to get an async compute queue.");
 
-        // chose the same queue for FI async compute as we use for app async compute. We don't mind to share that one as we won't use it much.
-        families.familyIndices[RequestedQueue::FIAsyncCompute] = families.familyIndices[RequestedQueue::Compute];
-        families.properties[RequestedQueue::FIAsyncCompute]    = families.properties[RequestedQueue::Compute];
-
-        // for present and image aquire select a queue family that has not been selected or supports more than 1 queue
+        // Get a copy queue
         for (uint32_t i = 0; i < queueFamilyCount; ++i)
         {
-            VkBool32 supportsPresent;
-            if (vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, (uint32_t)i, surface, &supportsPresent) == VK_SUCCESS)
+            if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_TRANSFER_BIT) && !HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) &&
+                !HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) &&
+                (queueAvailability[i].queueCount > 0))
             {
-                // if only one GFX and one compute queue are available try to avoid them
-                if (queueAvailability[i].queueCount > 0)
-                {
-                    families.familyIndices[RequestedQueue::FIPresent]      = i;
-                    families.properties[RequestedQueue::FIPresent]         = queueProps[i];
-                    families.familyIndices[RequestedQueue::FIImageAcquire] = i;
-                    families.properties[RequestedQueue::FIImageAcquire]    = queueProps[i];
-                    break;
-                }
+                families.queues[RequestedQueue::Copy].family = i;
+                --queueAvailability[i].queueCount;
+                break;
             }
         }
+        CauldronAssert(ASSERT_CRITICAL, families.queues[RequestedQueue::Copy].family != UINT32_MAX, L"Unable to get a copy queue.");
 
-        // if we don't have a queue for FIPresent so far, try compute queue family and use GFX as last resort
-        if (families.familyIndices[RequestedQueue::FIPresent] == UINT32_MAX)
-        {
-            VkBool32 supportsPresent;
-            if (vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, (uint32_t)families.familyIndices[RequestedQueue::Compute], surface, &supportsPresent) == VK_SUCCESS)
-            {
-                families.familyIndices[RequestedQueue::FIPresent]      = families.familyIndices[RequestedQueue::Compute];
-                families.properties[RequestedQueue::FIPresent]         = queueProps[families.familyIndices[RequestedQueue::Compute]];
-                families.familyIndices[RequestedQueue::FIImageAcquire] = families.familyIndices[RequestedQueue::Compute];
-                families.properties[RequestedQueue::FIImageAcquire]    = queueProps[families.familyIndices[RequestedQueue::Compute]];
-            }
-            else if (vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, (uint32_t)families.familyIndices[RequestedQueue::Graphics], surface, &supportsPresent) == VK_SUCCESS)
-            {
-                // since RequestedQueue::Graphics supports present we should always at the very least have one now
-                families.familyIndices[RequestedQueue::FIPresent]      = families.familyIndices[RequestedQueue::Graphics];
-                families.properties[RequestedQueue::FIPresent]         = queueProps[families.familyIndices[RequestedQueue::Graphics]];
-                families.familyIndices[RequestedQueue::FIImageAcquire] = families.familyIndices[RequestedQueue::Graphics];
-                families.properties[RequestedQueue::FIImageAcquire]    = queueProps[families.familyIndices[RequestedQueue::Graphics]];
-            }
-        }
+        // Queues for frame interpolation
 
-        // Get a copy queue that isn't the graphics or compute one if possible
-        for (uint32_t i = 0; i < queueFamilyCount; ++i)
-        {
-            if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) || HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT))
-                continue;
-
-            if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_TRANSFER_BIT) && (queueAvailability[i].queueCount > 0))
-            {
-                if (families.familyIndices[RequestedQueue::Copy] == UINT32_MAX)
-                {
-                    families.familyIndices[RequestedQueue::Copy] = i;
-                    families.properties[RequestedQueue::Copy]    = queueProps[i];
-                }
-            }
-        }
-        // if no dedicated copy queue is available we use any queue that can copy
-        if (families.familyIndices[RequestedQueue::Copy] == UINT32_MAX)
-        {
-            for (uint32_t i = 0; i < queueFamilyCount; ++i)
-            {
-                if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_TRANSFER_BIT))
-                {
-                    if (families.familyIndices[RequestedQueue::Copy] == UINT32_MAX)
-                    {
-                        families.familyIndices[RequestedQueue::Copy] = i;
-                        families.properties[RequestedQueue::Copy]    = queueProps[i];
-                    }
-                }
-            }
-        }
-/*
-        // NOTE: we might want to choose the queue index in a given family to present overlapping queues.
-        // for example, if we only have one queue family with graphics, compute and copy, we should take the index 0, 1, 2 from this family for each queue.
-        // (providing this family has at least 3 queues)
-
-        // Choose the queue with the following criterias in this order:
-        //   - the queue hasn't been found yet
-        //   - compatible family should has less important capabilities. Capabilities are in the order of importance: Graphics, Compute, Transfer, Video Decode, Video Encode (as of Vulkan 1.3)
-        //   - compatible family should minimize the number of capabilities.
-        //   - the family has more queues
-        //   - importance of capabilities is in their VkQueueFlagBits order. So the lower the queueFlags value is, the more important the capabilities are.
-        auto canChoose = [&queueProps, &families](RequestedQueue requestedQueue, uint32_t tentative) {
-            bool chooseThisQueue = (families.familyIndices[requestedQueue] == UINT32_MAX)                                                              // queue not found yet
-                                   || (GetLowestBit(queueProps[tentative].queueFlags) > GetLowestBit(families.properties[requestedQueue].queueFlags))  // lower importance capabilities
-                                   || (CountBits(queueProps[tentative].queueFlags) < CountBits(families.properties[requestedQueue].queueFlags))        // less capabilities
-                                   || (queueProps[tentative].queueFlags == families.properties[requestedQueue].queueFlags &&
-                                       queueProps[tentative].queueCount > families.properties[requestedQueue].queueCount);                             // if they have the same capabilities, more queues
-
-            if (chooseThisQueue)
-            {
-                families.familyIndices[requestedQueue] = tentative;
-                families.properties[requestedQueue]    = queueProps[tentative];
-            }
-        };
-
-        // TODO: choose better queues
+        // frame interpolation present queue should have transfer capabilities and support present
         for (uint32_t i = 0; i < queueFamilyCount; ++i)
         {
             if (queueProps[i].queueCount == 0)
                 continue;
+            VkBool32 supportsPresent;
+            VkResult res = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent);
 
-            // check compute & transfer
-            if (HAS_QUEUE_FAMILY_FLAG((VK_QUEUE_COMPUTE_BIT)))  // VK_QUEUE_TRANSFER_BIT is implied
+            if (HAS_QUEUE_FAMILY_FLAG((VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) &&  // VK_QUEUE_TRANSFER_BIT is implied
+                res == VK_SUCCESS && supportsPresent && queueAvailability[i].queueCount > 0)
             {
-                canChoose(RequestedQueue::FIAsyncCompute, i);
-            }
-
-            // Present queue will only do present and some copies. Hence it needs at least one of the following capabilities
-            // VK_QUEUE_GRAPHICS_BIT, VK_QUEUE_COMPUTE_BIT, VK_QUEUE_TRANSFER_BIT
-            if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) || HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) || HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_TRANSFER_BIT))
-            {
-                VkBool32 supportsPresent;
-                if (vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, (uint32_t)i, surface, &supportsPresent) == VK_SUCCESS)
-                {
-                    if (supportsPresent == VK_TRUE)
-                    {
-                        canChoose(RequestedQueue::FIPresent, i);
-                    }
-                }
-            }
-
-            // image acquire queue doesn't need any capability
-            {
-                canChoose(RequestedQueue::FIImageAcquire, i);
+                families.queues[RequestedQueue::FIPresent].family = i;
+                --queueAvailability[i].queueCount;
+                break;
             }
         }
-*/
-        CauldronAssert(ASSERT_CRITICAL, families.familyIndices[RequestedQueue::FIAsyncCompute] != UINT32_MAX, L"Couldn't find an async compute queue for frame interpolation");
-        CauldronAssert(ASSERT_CRITICAL, families.familyIndices[RequestedQueue::FIPresent] != UINT32_MAX, L"Couldn't find a present queue for frame interpolation");
-        CauldronAssert(ASSERT_CRITICAL, families.familyIndices[RequestedQueue::FIImageAcquire] != UINT32_MAX, L"Couldn't find an image acquire queue");
+
+        // image acquire queue doesn't need any capability
+        for (uint32_t i = 0; i < queueFamilyCount; ++i)
+        {
+            if (!HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) && !HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) &&
+                !HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_TRANSFER_BIT) &&
+                (queueAvailability[i].queueCount > 0))
+            {
+                families.queues[RequestedQueue::FIImageAcquire].family = i;
+                --queueAvailability[i].queueCount;
+                break;
+            }
+        }
+        if (families.queues[RequestedQueue::FIImageAcquire].family == UINT32_MAX)
+        {
+            // no image acquire queue was found, look for a more general queue
+            for (uint32_t i = 0; i < queueFamilyCount; ++i)
+            {
+                if (!HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) && !HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) &&
+                    (queueAvailability[i].queueCount > 0))
+                {
+                    families.queues[RequestedQueue::FIImageAcquire].family = i;
+                    --queueAvailability[i].queueCount;
+                    break;
+                }
+            }
+        }
+        if (families.queues[RequestedQueue::FIImageAcquire].family == UINT32_MAX)
+        {
+            // no image acquire queue was found, look for a more general queue
+            for (uint32_t i = 0; i < queueFamilyCount; ++i)
+            {
+                if (!HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) && (queueAvailability[i].queueCount > 0))
+                {
+                    families.queues[RequestedQueue::FIImageAcquire].family = i;
+                    --queueAvailability[i].queueCount;
+                    break;
+                }
+            }
+        }
+
+        // frame interpolation async compute queue should have compute capabilities
+        for (uint32_t i = 0; i < queueFamilyCount; ++i)
+        {
+            if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) && !HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_GRAPHICS_BIT) &&
+                (queueAvailability[i].queueCount > 0))  // VK_QUEUE_TRANSFER_BIT is implied
+            {
+                families.queues[RequestedQueue::FIAsyncCompute].family = i;
+                --queueAvailability[i].queueCount;
+                break;
+            }
+        }
+        if (families.queues[RequestedQueue::FIAsyncCompute].family == UINT32_MAX)
+        {
+            // no async compute was found, look for a more general queue
+            for (uint32_t i = 0; i < queueFamilyCount; ++i)
+            {
+                if (HAS_QUEUE_FAMILY_FLAG(VK_QUEUE_COMPUTE_BIT) && (queueAvailability[i].queueCount > 0))  // VK_QUEUE_TRANSFER_BIT is implied
+                {
+                    families.queues[RequestedQueue::FIAsyncCompute].family = i;
+                    --queueAvailability[i].queueCount;
+                    break;
+                }
+            }
+        }
+
+        CauldronAssert(ASSERT_WARNING, families.queues[RequestedQueue::FIPresent].family != UINT32_MAX, L"Couldn't find a present queue for frame interpolation. Please update your driver.");
+        CauldronAssert(ASSERT_WARNING,
+                       families.queues[RequestedQueue::FIAsyncCompute].family != UINT32_MAX,
+                       L"Couldn't find an async compute queue for frame interpolation. Please update your driver.");
+        CauldronAssert(ASSERT_WARNING,
+                       families.queues[RequestedQueue::FIImageAcquire].family != UINT32_MAX,
+                       L"Couldn't find an image acquire queue for frame interpolation. Please update your driver.");
 
         return families;
     }
@@ -1101,7 +1083,7 @@ namespace cauldron
         }
 
         // Get all the queues we need
-        m_QueueFamilies = GetQueues(m_PhysicalDevice, m_Surface);
+        QueueFamilies queueFamilies = GetQueues(m_PhysicalDevice, m_Surface);
 
         float                   queuePriorities[RequestedQueue::Count][RequestedQueue::Count];
         VkDeviceQueueCreateInfo queueCreateInfos[RequestedQueue::Count];
@@ -1119,46 +1101,30 @@ namespace cauldron
         }
 
         // helper
-        auto addQueueToCreateInfo = [this, &queueCreateInfos, &queueCreateInfoCount, &queuePriorities](RequestedQueue requestedQueue, const float priority) {
-            for (uint32_t i = 0; i < RequestedQueue::Count; ++i)
+        auto addQueueToCreateInfo = [this, &queueCreateInfos, &queueCreateInfoCount, &queuePriorities, &queueFamilies](RequestedQueue requestedQueue,
+                                                                                                                      const float    priority) {
+            if (queueFamilies.queues[requestedQueue].family == UINT32_MAX)
+                return;
+
+            // find the index of the VkDeviceQueueCreateInfo
+            uint32_t infoIndex = 0;
+            for (; infoIndex < queueCreateInfoCount; ++infoIndex)
             {
-                // find the create info of the queue family
-                if (queueCreateInfos[i].queueFamilyIndex == m_QueueFamilies.familyIndices[requestedQueue] && queueCreateInfos[i].queueCount > 0)
-                {
-                    if (queueCreateInfos[i].queueCount < m_QueueFamilies.properties[requestedQueue].queueCount)
-                    {
-                        uint32_t queueIndex            = queueCreateInfos[i].queueCount;
-                        queuePriorities[i][queueIndex] = priority;
-                        ++queueCreateInfos[i].queueCount;
-                        m_QueueFamilies.queueIndices[requestedQueue] = queueIndex;
-                        return;
-                    }
-                    else
-                    {
-                        // check if there's a queue with the same priority
-                        for (uint32_t j = 0; j < queueCreateInfos[i].queueCount; ++j)
-                        {
-                            if (queuePriorities[i][j] == priority)
-                            {
-                                m_QueueFamilies.queueIndices[requestedQueue] = j;
-                                return;
-                            }
-                        }
-                            
-                        // priority cannot be set
-                        CauldronWarning(L"Cannot set the priority for the given queue as it is used elsewhere with another priority.");
-                        m_QueueFamilies.queueIndices[requestedQueue] = queueCreateInfos[i].queueCount - 1;
-                        return;
-                    }
-                }
+                if (queueCreateInfos[infoIndex].queueFamilyIndex == queueFamilies.queues[requestedQueue].family &&
+                    queueCreateInfos[infoIndex].queueCount > 0)
+                    break;
             }
 
-            // This queue family wasn't in the create info yet. Create a new entry
-            queueCreateInfos[queueCreateInfoCount].queueCount       = 1;
-            queueCreateInfos[queueCreateInfoCount].queueFamilyIndex = m_QueueFamilies.familyIndices[requestedQueue];
-            queuePriorities[queueCreateInfoCount][0]                = priority;
-            ++queueCreateInfoCount;
-            m_QueueFamilies.queueIndices[requestedQueue] = 0;
+            if (infoIndex == queueCreateInfoCount)
+            {
+                // first queue, initialize
+                ++queueCreateInfoCount;
+                queueCreateInfos[infoIndex].queueFamilyIndex = queueFamilies.queues[requestedQueue].family;
+            }
+
+            queuePriorities[infoIndex][queueCreateInfos[infoIndex].queueCount] = priority;
+            queueFamilies.queues[requestedQueue].index                         = queueCreateInfos[infoIndex].queueCount;
+            ++queueCreateInfos[infoIndex].queueCount;
         };
 
         addQueueToCreateInfo(RequestedQueue::Graphics, 1.0f);
@@ -1166,9 +1132,21 @@ namespace cauldron
         addQueueToCreateInfo(RequestedQueue::Copy, 0.5f);
 
         // For frame interpolation
-        addQueueToCreateInfo(RequestedQueue::FIAsyncCompute, 1.0f);
-        addQueueToCreateInfo(RequestedQueue::FIPresent, 1.0f);
-        addQueueToCreateInfo(RequestedQueue::FIImageAcquire, 0.9f);
+        bool canRunFrameInterpolation =
+            queueFamilies.queues[RequestedQueue::FIPresent].family != UINT32_MAX && queueFamilies.queues[RequestedQueue::FIImageAcquire].family != UINT32_MAX;
+        if (canRunFrameInterpolation)
+        {
+            // no need to query the queues if frame interpolation cannot run
+            addQueueToCreateInfo(RequestedQueue::FIPresent, 1.0f);
+            addQueueToCreateInfo(RequestedQueue::FIImageAcquire, 0.9f);
+            addQueueToCreateInfo(RequestedQueue::FIAsyncCompute, 1.0f);
+        }
+        else
+        {
+            queueFamilies.queues[RequestedQueue::FIPresent].family      = UINT32_MAX;
+            queueFamilies.queues[RequestedQueue::FIImageAcquire].family = UINT32_MAX;
+            queueFamilies.queues[RequestedQueue::FIAsyncCompute].family = UINT32_MAX;
+        }
 
         // Create device
         m_Device = deviceCreator.Create(queueCreateInfos, queueCreateInfoCount);
@@ -1232,41 +1210,28 @@ namespace cauldron
         SetResourceName(VK_OBJECT_TYPE_DEVICE, (uint64_t)m_Device, "CauldronDevice");
 
         // create the queues
-        auto queueBuilder = [this](CommandQueue queueType, RequestedQueue requestedQueue, uint32_t numFramesInFlight, const char* name)
+        auto queueBuilder = [this, &queueFamilies](CommandQueue queueType, RequestedQueue requestedQueue, uint32_t numFramesInFlight, const char* name)
         {
             m_QueueSyncPrims[static_cast<uint32_t>(queueType)].Init(
-                this, queueType, m_QueueFamilies.familyIndices[requestedQueue], m_QueueFamilies.queueIndices[requestedQueue], numFramesInFlight, name);
+                this, queueType, queueFamilies.queues[requestedQueue].family, queueFamilies.queues[requestedQueue].index, numFramesInFlight, name);
         };
         queueBuilder(CommandQueue::Graphics, RequestedQueue::Graphics, pConfig->BackBufferCount, "CauldronGraphicsQueue");
         queueBuilder(CommandQueue::Compute,  RequestedQueue::Compute,  pConfig->BackBufferCount, "CauldronComputeQueue" );
         queueBuilder(CommandQueue::Copy,     RequestedQueue::Copy,     pConfig->BackBufferCount, "CauldronCopyQueue"    );
 
         // frame interpolation
-        auto getFIQueue = [this](FIQueue& fiQueue, RequestedQueue requestedQueue, const char* name) {
-            vkGetDeviceQueue(m_Device, m_QueueFamilies.familyIndices[requestedQueue], m_QueueFamilies.queueIndices[requestedQueue], &fiQueue.queue);
-            CauldronAssert(ASSERT_CRITICAL, fiQueue.queue != VK_NULL_HANDLE, L"Couldn't get the frame interpolation queue");
-            SetResourceName(VK_OBJECT_TYPE_QUEUE, (uint64_t)fiQueue.queue, name);
-            fiQueue.family = m_QueueFamilies.familyIndices[requestedQueue];
-            fiQueue.index  = m_QueueFamilies.queueIndices[requestedQueue];
-
-            fiQueue.shared = false;
-            fiQueue.sharedWith = requestedQueue;
-            for (uint32_t i = 0; i < RequestedQueue::Count; ++i)
+        auto getFIQueue = [this, &queueFamilies](FIQueue& fiQueue, RequestedQueue requestedQueue, const char* name) {
+            if (queueFamilies.queues[requestedQueue].family != UINT32_MAX)
             {
-                if (i == requestedQueue)
-                    continue;
-                if (m_QueueFamilies.familyIndices[requestedQueue] == m_QueueFamilies.familyIndices[i] &&
-                    m_QueueFamilies.queueIndices[requestedQueue] == m_QueueFamilies.queueIndices[i])
-                {
-                    fiQueue.shared = true;
-                    if (i < requestedQueue)  // only keeps the lowest requested queue
-                        fiQueue.sharedWith = static_cast<RequestedQueue>(i);
-                    break;
-                }
+                vkGetDeviceQueue(m_Device, queueFamilies.queues[requestedQueue].family, queueFamilies.queues[requestedQueue].index, &fiQueue.queue);
+                CauldronAssert(ASSERT_CRITICAL, fiQueue.queue != VK_NULL_HANDLE, L"Couldn't get the frame interpolation queue");
+                SetResourceName(VK_OBJECT_TYPE_QUEUE, (uint64_t)fiQueue.queue, name);
+                fiQueue.family = queueFamilies.queues[requestedQueue].family;
+                fiQueue.index  = queueFamilies.queues[requestedQueue].index;
             }
         };
+        getFIQueue(m_FIPresentQueue, RequestedQueue::FIPresent, "FrameInterpolationPresentQueue");
         getFIQueue(m_FIAsyncComputeQueue, RequestedQueue::FIAsyncCompute, "FrameInterpolationAsyncComputeQueue");
-        getFIQueue(m_FIPresentQueue,      RequestedQueue::FIPresent,      "FrameInterpolationPresentQueue");
         getFIQueue(m_FIImageAcquireQueue, RequestedQueue::FIImageAcquire, "FrameInterpolationImageAcquireQueue");
 
         m_DeviceName = StringToWString(physicalDeviceProperties.deviceName);
@@ -1898,17 +1863,6 @@ namespace cauldron
         return m_LatestSemaphoreValue;
     }
 
-    VkResult DeviceInternal::QueueSyncPrimitive::SubmitPassthrough(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence, DeviceRemovedCallback deviceRemovedCallback, void* deviceRemovedCustomData)
-    {
-        std::lock_guard<std::recursive_mutex> lock(m_SubmitMutex);
-        VkResult res = vkQueueSubmit(m_Queue, submitCount, pSubmits, fence);
-        if (res == VK_ERROR_DEVICE_LOST && deviceRemovedCallback) 
-        {
-            deviceRemovedCallback(deviceRemovedCustomData);
-        }
-        return res;
-    }
-
     uint64_t DeviceInternal::QueueSyncPrimitive::Present(const DeviceInternal* pDevice, VkSwapchainKHR swapchain, uint32_t imageIndex, DeviceRemovedCallback deviceRemovedCallback, void* deviceRemovedCustomData) // only valid on the present queue
     {
         VkPresentInfoKHR presentInfo = {};
@@ -2092,56 +2046,6 @@ namespace cauldron
             return m_getLastPresentCountFFX(swapchain);
         return 0;
     }
-
-    VkResult DeviceInternal::SubmitPassthrough(RequestedQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
-    {
-        RequestedQueue realRequestedQueue = queue;
-        switch (queue)
-        {
-        case RequestedQueue::Graphics:
-        case RequestedQueue::Compute:
-        case RequestedQueue::Copy:
-            break;
-
-        case RequestedQueue::FIPresent:
-            realRequestedQueue = m_FIPresentQueue.sharedWith;
-            break;
-        case RequestedQueue::FIAsyncCompute:
-            realRequestedQueue = m_FIAsyncComputeQueue.sharedWith;
-            break;
-        case RequestedQueue::FIImageAcquire:
-            realRequestedQueue = m_FIImageAcquireQueue.sharedWith;
-            break;
-        default:
-            return VK_INCOMPLETE;
-        }
-
-        switch (realRequestedQueue)
-        {
-        case RequestedQueue::Graphics:
-            return m_QueueSyncPrims[static_cast<int32_t>(CommandQueue::Graphics)].SubmitPassthrough(submitCount, pSubmits, fence, m_DeviceRemovedCallback, m_DeviceRemovedCustomData);
-        case RequestedQueue::Compute:
-            return m_QueueSyncPrims[static_cast<int32_t>(CommandQueue::Compute)].SubmitPassthrough(submitCount, pSubmits, fence, m_DeviceRemovedCallback, m_DeviceRemovedCustomData);
-        case RequestedQueue::Copy:
-            return m_QueueSyncPrims[static_cast<int32_t>(CommandQueue::Copy)].SubmitPassthrough(submitCount, pSubmits, fence, m_DeviceRemovedCallback, m_DeviceRemovedCustomData);
-
-        case RequestedQueue::FIPresent:
-            return m_FIPresentQueue.SubmitPassthrough(submitCount, pSubmits, fence);
-        case RequestedQueue::FIAsyncCompute:
-            return m_FIAsyncComputeQueue.SubmitPassthrough(submitCount, pSubmits, fence);
-        case RequestedQueue::FIImageAcquire:
-            return m_FIImageAcquireQueue.SubmitPassthrough(submitCount, pSubmits, fence);
-        default:
-            return VK_INCOMPLETE;
-        }
-    }
-
-    VkResult FIQueue::SubmitPassthrough(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
-    {
-        std::lock_guard<std::mutex> lock(submitMutex);
-        return vkQueueSubmit(queue, submitCount, pSubmits, fence);
-    }
-
 } // namespace cauldron
 
 #endif // #if defined(_VK)

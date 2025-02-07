@@ -25,11 +25,16 @@
 #include "utils.h"
 
 #include <Windows.h>
+#include <pathcch.h>
 #include <vector>
 #include <string_view>
 #include <filesystem>
 #include <unordered_set>
 #include <locale>
+#include <stdexcept>
+
+
+#pragma comment(lib, "pathcch.lib")
 
 static const wchar_t* const APP_NAME    = L"FidelityFX-SC";
 static const wchar_t* const EXE_NAME    = L"FidelityFX_SC";
@@ -119,6 +124,7 @@ private:
     static void ParsePermutationOption(PermutationOption& outPermutationOption, const std::wstring arg);
     static void ParseString(std::wstring& outCompilerArg, const wchar_t* arg);
     static void ParseNumThreads(int& outNumThreads, const wchar_t* arg);
+    static void EnsureOutputPathExistsAndMakeCanonical(std::wstring & inoutOutputPath);
 };
 
 class Application
@@ -144,6 +150,7 @@ public:
     void Process();
 
 private:
+    static std::wstring MakeFullPath(const std::wstring& outputPath, const std::wstring& fileName);
     void GenerateMacroPermutations(std::deque<Permutation>& permutations);
     void GenerateMacroPermutations(Permutation current, std::deque<Permutation>& permutations, int idx, int curBit);
     void OpenSourceFile();
@@ -187,7 +194,7 @@ void LaunchParameters::PrintCommandLineSyntax()
         L"-disable-logs\n"
         L"  Prevent logging of compile warnings and errors.\n"
         L"-compiler=<Compiler>\n"
-        L"  Select the compiler to generate permutations from (dxc, gdk.desktop.x64, gdk.scarlett.x64, fxc or glslang).\n"
+        L"  Select the compiler to generate permutations from (dxc, gdk.scarlett.x64, gdk.xboxone.x64, fxc, or glslang).\n"
         L"-dxcdll=<DXC DLL Path>\n"
         L"  Path to the dxccompiler dll to use.\n"
         L"-d3ddll=<D3D DLL Path>\n"
@@ -297,6 +304,44 @@ void LaunchParameters::ParseCommandLine(int argCount, const wchar_t* const* args
         else
             inputFile = args[i];
     }
+    EnsureOutputPathExistsAndMakeCanonical(ouputPath);
+}
+
+void LaunchParameters::EnsureOutputPathExistsAndMakeCanonical(std::wstring& inoutOutputPath)
+{
+    std::replace(inoutOutputPath.begin(), inoutOutputPath.end(), L'/', L'\\');
+
+    PWSTR canonicalOutputPath = NULL;
+
+    // Make the path canonical, convert to long path if needed and add the trailing slash
+    HRESULT hr = PathAllocCanonicalize(inoutOutputPath.c_str(), PATHCCH_ALLOW_LONG_PATHS | PATHCCH_ENSURE_TRAILING_SLASH, &canonicalOutputPath);
+    if (hr == S_OK)
+    {
+        PWSTR componentStart = NULL;
+
+        // Find the first character after "root" indicator -- which means a folder (path component) or file
+        hr = PathCchSkipRoot(canonicalOutputPath, &componentStart);
+        if (hr == S_OK)
+        {
+            // Try search for the next delimiter
+            wchar_t* componentEnd = wcsstr(componentStart, L"\\");
+
+            // If the delimiter is found, make sure the folder is created
+            while (componentEnd != NULL)
+            {
+                // Temporally replace delimiter '\\' with null-terminator, create directory, and restore the delimiter
+                *componentEnd = L'\0';
+                CreateDirectoryW(canonicalOutputPath, NULL);
+                *componentEnd = L'\\';
+
+                // advance to the next component (file or folder) and try to find the next delimiter (meaning -- it's folder), and repeat the loop.
+                componentStart = componentEnd + 1;
+                componentEnd = wcsstr(componentStart, L"\\");
+            }
+        }
+        inoutOutputPath = canonicalOutputPath;
+        LocalFree(canonicalOutputPath);
+    }
 }
 
 void LaunchParameters::ParsePermutationOption(PermutationOption& outPermutationOption, const std::wstring arg)
@@ -388,6 +433,21 @@ void Application::Process()
     {
         printf("\nERROR: Predicted %llu duplicates\n\n\n", predictedDuplicates);
     }
+}
+
+std::wstring Application::MakeFullPath(const std::wstring & outputPath, const std::wstring & fileName)
+{
+    // Append file name, optionally converting to long path again, because the outputPath alone could be normal path, but when filename is added -- it could become a long path
+    PWSTR canonicalFileNameRaw = NULL;
+    HRESULT hr = PathAllocCombine(outputPath.c_str(), fileName.c_str(), PATHCCH_ALLOW_LONG_PATHS, &canonicalFileNameRaw);
+
+    if (S_OK == hr)
+    {
+        std::wstring canonicalFileName(canonicalFileNameRaw);
+        LocalFree(canonicalFileNameRaw);
+        return canonicalFileName;
+    }
+    return fileName;
 }
 
 void Application::GenerateMacroPermutations(std::deque<Permutation>& permutations)
@@ -510,12 +570,12 @@ void Application::OpenSourceFile()
         if (m_Params.compiler == L"dxc")
             m_Compiler = std::unique_ptr<HLSLCompiler>(
                 new HLSLCompiler(HLSLCompiler::DXC, dxcDll, shaderPath, shaderName, shaderFileName, outputPath, m_Params.disableLogs, m_Params.debugCompile));
-        else if (m_Params.compiler == L"gdk.desktop.x64")
-            m_Compiler = std::unique_ptr<HLSLCompiler>(new HLSLCompiler(
-                HLSLCompiler::GDK_DESKTOP_X64, dxcDll, shaderPath, shaderName, shaderFileName, outputPath, m_Params.disableLogs, m_Params.debugCompile));
         else if (m_Params.compiler == L"gdk.scarlett.x64")
             m_Compiler = std::unique_ptr<HLSLCompiler>(new HLSLCompiler(
                 HLSLCompiler::GDK_SCARLETT_X64, dxcDll, shaderPath, shaderName, shaderFileName, outputPath, m_Params.disableLogs, m_Params.debugCompile));
+        else if (m_Params.compiler == L"gdk.xboxone.x64")
+            m_Compiler = std::unique_ptr<HLSLCompiler>(new HLSLCompiler(
+                HLSLCompiler::GDK_XBOXONE_X64, dxcDll, shaderPath, shaderName, shaderFileName, outputPath, m_Params.disableLogs, m_Params.debugCompile));
         else if (m_Params.compiler == L"fxc")
             m_Compiler = std::unique_ptr<HLSLCompiler>(
                 new HLSLCompiler(HLSLCompiler::FXC, d3dDll, shaderPath, shaderName, shaderFileName, outputPath, m_Params.disableLogs, m_Params.debugCompile));
@@ -668,7 +728,11 @@ void Application::CompilePermutation(Permutation& permutation)
     // Compile it with specified arguments.
     // ------------------------------------------------------------------------------------------------
     if (!m_Compiler->Compile(permutation, args, m_WriteMutex))
-        return;
+    {   
+        fprintf(stderr, "failed to compile shader : %s\n", permutation.sourcePath.generic_string().c_str());
+        throw std::runtime_error("failed to compile shader: " + permutation.sourcePath.generic_string());
+    }
+        
 
     // ------------------------------------------------------------------------------------------------
     // Retrieve reflection data
@@ -716,7 +780,7 @@ void Application::WriteShaderBinaryHeader(Permutation& permutation)
 
     FILE* fp = NULL;
 
-    std::wstring outputPath = m_Params.ouputPath + L"/" + headerFileName;
+    std::wstring outputPath = MakeFullPath(m_Params.ouputPath, headerFileName);
 
     _wfopen_s(&fp, outputPath.c_str(), L"wb");
 
@@ -853,7 +917,7 @@ void Application::WriteShaderPermutationsHeader()
 
     FILE* fp = NULL;
 
-    std::wstring outputPath = m_Params.ouputPath + L"/" + m_ShaderName + L"_permutations.h";
+    std::wstring outputPath = MakeFullPath(m_Params.ouputPath, m_ShaderName + L"_permutations.h");
 
     _wfopen_s(&fp, outputPath.c_str(), L"wb");
 
@@ -994,7 +1058,7 @@ void Application::DumpDepfileGCC()
 
     FILE* fp = NULL;
 
-    std::wstring outputFilename = m_Params.ouputPath + L"/" + m_ShaderName + L"_permutations.h";
+    std::wstring outputFilename = MakeFullPath(m_Params.ouputPath, m_ShaderName + L"_permutations.h");
     std::wstring depfilePath = outputFilename + L".d";
 
     _wfopen_s(&fp, depfilePath.c_str(), L"wb");
@@ -1039,8 +1103,9 @@ int wmain(int argc, wchar_t** argv)
         return 0;
     }
     catch (const std::exception& ex)
-    {
+    {   
         fprintf(stderr, "ffx_sc failed: %s\n", ex.what());
+        fflush(stderr);
         return -1;
     }
 }

@@ -91,13 +91,13 @@ bool ffxProvider_FrameGenerationSwapChain_VK::CanProvide(uint64_t type) const
 
 uint64_t ffxProvider_FrameGenerationSwapChain_VK::GetId() const
 {
-    // FG SwapChain VK, version 1.0.0
-    return 0xF65D'564B'01'000'000ui64;
+    // FG SwapChain VK, version 1.1.2
+    return 0xF65D'564B'01'001'002ui64;
 }
 
 const char* ffxProvider_FrameGenerationSwapChain_VK::GetVersionName() const
 {
-    return "1.0";
+    return "1.1.2";
 }
 
 inline VkQueueInfoFFX convertQueueInfo(VkQueueInfoFFXAPI queueInfo)
@@ -124,6 +124,21 @@ ffxReturnCode_t ffxProvider_FrameGenerationSwapChain_VK::CreateContext(ffxContex
         internal_context->frameInterpolationInfo.presentQueue      = convertQueueInfo(desc->presentQueue);
         internal_context->frameInterpolationInfo.imageAcquireQueue = convertQueueInfo(desc->imageAcquireQueue);
         internal_context->frameInterpolationInfo.pAllocator        = desc->allocator;
+
+        // set the default values
+        internal_context->frameInterpolationInfo.compositionMode = VK_COMPOSITION_MODE_NOT_FORCED_FFX;
+
+        // get the extensions
+        for (auto it = header->pNext; it != nullptr; it = it->pNext)
+        {
+            if (auto mode = ffx::DynamicCast<ffxCreateContextDescFrameGenerationSwapChainModeVK>(it))
+            {
+                if (mode->composeOnPresentQueue)
+                    internal_context->frameInterpolationInfo.compositionMode = VK_COMPOSITION_MODE_PRESENT_QUEUE_FFX;
+                else
+                    internal_context->frameInterpolationInfo.compositionMode = VK_COMPOSITION_MODE_GAME_QUEUE_FFX;
+            }
+        }
 
         FfxSwapchain swapChain = ffxGetSwapchainVK(*desc->swapchain);
         TRY2(ffxReplaceSwapchainForFrameinterpolationVK(desc->gameQueue.queue, swapChain, &desc->createInfo, &internal_context->frameInterpolationInfo));
@@ -184,6 +199,12 @@ ffxReturnCode_t ffxProvider_FrameGenerationSwapChain_VK::Configure(ffxContext* c
 
         return FFX_API_RETURN_OK;
     }
+    else if (auto desc = ffx::DynamicCast<ffxConfigureDescFrameGenerationSwapChainKeyValueVK>(header))
+    {
+        TRY2(ffxConfigureFrameInterpolationSwapchainVK(ffxGetSwapchainVK(internal_context->fiSwapChain), static_cast <FfxFrameInterpolationSwapchainConfigureKey> (desc->key), desc->ptr));
+
+        return FFX_API_RETURN_OK;
+    }
     else
     {
         return FFX_API_RETURN_ERROR_PARAMETER;
@@ -209,6 +230,11 @@ ffxReturnCode_t ffxProvider_FrameGenerationSwapChain_VK::Query(ffxContext* conte
     {
         *desc->pOutTexture = Convert(ffxGetFrameinterpolationTextureVK(ffxGetSwapchainVK(internal_context->fiSwapChain)));
         
+        return FFX_API_RETURN_OK;
+    }
+    else if (auto desc = ffx::DynamicCast<ffxQueryFrameGenerationSwapChainGetGPUMemoryUsageVK>(header))
+    {
+        TRY2(ffxFrameInterpolationSwapchainGetGpuMemoryUsageVK(ffxGetSwapchainVK(internal_context->fiSwapChain), reinterpret_cast <FfxEffectMemoryUsage*> (desc->gpuMemoryUsageFrameGenerationSwapchain)));
         return FFX_API_RETURN_OK;
     }
     else if (auto desc = ffx::DynamicCast<ffxQueryDescSwapchainReplacementFunctionsVK>(header))

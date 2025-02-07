@@ -57,7 +57,7 @@
 #include "render/rendermodules/ui/uirendermodule.h"
 #include "render/rendermodules/skinning/skinningrendermodule.h"
 #include "render/rendermodules/raytracing/raytracingrendermodule.h"
-#include "render/rendermodules/runtimeshaderrecompiler/runtimeshaderrecompilerrendermodule.h"
+#include "render/rendermodules/rsr/runtimeshaderrecompilerrendermodule.h"
 #include "render/shaderbuilder.h"
 
 #include <fstream>
@@ -88,23 +88,51 @@ namespace cauldron
     NLOHMANN_JSON_SERIALIZE_ENUM(cauldron::ResourceFormat,
     {
         {ResourceFormat::Unknown, "Unknown"},
+        {ResourceFormat::R8_TYPELESS, "R8_TYPELESS"},
         {ResourceFormat::R8_UNORM, "R8_UNORM"},
         {ResourceFormat::R8_UINT, "R8_UINT"},
+
+        // 16-bit
+        {ResourceFormat::R16_TYPELESS, "R16_TYPELESS"},
         {ResourceFormat::R16_FLOAT, "R16_FLOAT"},
+        {ResourceFormat::RG8_TYPELESS, "RG8_TYPELESS"},
+        {ResourceFormat::RG8_UNORM, "RG8_UNORM"},
+
+
+        // 32-bit
         {ResourceFormat::RGBA8_UNORM, "RGBA8_UNORM"},
+        {ResourceFormat::BGRA8_UNORM, "BGRA8_UNORM"},
         {ResourceFormat::RGBA8_SNORM, "RGBA8_SNORM"},
         {ResourceFormat::RGBA8_SRGB, "RGBA8_SRGB"},
+        {ResourceFormat::BGRA8_SRGB, "BGRA8_SRGB"},
+        {ResourceFormat::RGBA8_TYPELESS, "RGBA8_TYPELESS"},
+        {ResourceFormat::BGRA8_TYPELESS, "BGRA8_TYPELESS"},
+        {ResourceFormat::RGB10A2_TYPELESS, "RGB10A2_TYPELESS"},
         {ResourceFormat::RGB10A2_UNORM, "RGB10A2_UNORM"},
         {ResourceFormat::RG11B10_FLOAT, "RG11B10_FLOAT"},
+        {ResourceFormat::RGB9E5_SHAREDEXP, "RGB9E5_SHAREDEXP"},
+        {ResourceFormat::RG16_TYPELESS, "RG16_TYPELESS"},
         {ResourceFormat::RG16_FLOAT, "RG16_FLOAT"},
+        {ResourceFormat::R32_TYPELESS, "R32_TYPELESS"},
         {ResourceFormat::R32_FLOAT, "R32_FLOAT"},
+
+        // 64-bit
         {ResourceFormat::RGBA16_UNORM, "RGBA16_UNORM"},
-        {ResourceFormat::RGBA16_SNORM, "RGBA16_SNORM"},
+        {ResourceFormat::RGBA16_TYPELESS, "RGBA16_TYPELESS"},
         {ResourceFormat::RGBA16_FLOAT, "RGBA16_FLOAT"},
+        {ResourceFormat::RG32_TYPELESS, "RG32_TYPELESS"},
         {ResourceFormat::RG32_FLOAT, "RG32_FLOAT"},
+        
+        // 96-bit
+        {ResourceFormat::RGB32_FLOAT, "RGB32_FLOAT"},
+
+        //128-bit
+        {ResourceFormat::RGBA32_TYPELESS, "RGBA32_TYPELESS"},
         {ResourceFormat::RGBA32_FLOAT, "RGBA32_FLOAT"},
+        
+        //Depth
         {ResourceFormat::D16_UNORM, "D16_UNORM"},
-        {ResourceFormat::D32_FLOAT, "D32_FLOAT"},
+        {ResourceFormat::D32_FLOAT, "D32_FLOAT"}
     })
 
     // map ShaderModel values to JSON as strings
@@ -770,6 +798,8 @@ namespace cauldron
             m_Config.Width              = presentationConfig.value<uint32_t>("Width", m_Config.Width);
             m_Config.Height             = presentationConfig.value<uint32_t>("Height", m_Config.Height);
             m_Config.CurrentDisplayMode = presentationConfig.value<DisplayMode>("Mode", m_Config.CurrentDisplayMode);
+            if (presentationConfig.find("SwapchainFormat") != presentationConfig.end())
+                m_Config.SwapChainFormat = presentationConfig.value<ResourceFormat>("SwapchainFormat", m_Config.SwapChainFormat);
         }
 
         // Initialize allocation configuration
@@ -833,6 +863,7 @@ namespace cauldron
         // Initialize other settings
         m_Config.FontSize              = configData.value("FontSize", m_Config.FontSize);
         m_Config.AGSEnabled            = configData.value("AGSEnabled", m_Config.AGSEnabled);
+        m_Config.AntiLag2              = configData.value("AntiLag2", m_Config.AntiLag2);
         m_Config.StablePowerState      = configData.value("StablePowerState", m_Config.StablePowerState);
         m_Config.InvertedDepth         = configData.value("InvertedDepth", m_Config.InvertedDepth);
         m_Config.OverrideSceneSamplers = configData.value("OverrideSceneSamplers", m_Config.OverrideSceneSamplers);
@@ -1097,7 +1128,8 @@ namespace cauldron
                                 m_ResolutionInfo.DisplayHeight};
 
         // Flush the GPU as this may have implications on resource creations
-        if (oldResolutionInfo.DisplayHeight != m_ResolutionInfo.DisplayHeight || oldResolutionInfo.DisplayWidth != m_ResolutionInfo.DisplayWidth)
+        if (oldResolutionInfo.DisplayHeight != m_ResolutionInfo.DisplayHeight || oldResolutionInfo.DisplayWidth != m_ResolutionInfo.DisplayWidth ||
+            oldResolutionInfo.RenderHeight != m_ResolutionInfo.RenderHeight || oldResolutionInfo.RenderWidth != m_ResolutionInfo.RenderWidth)
         {
             ResizeEvent();
         }
@@ -2087,7 +2119,7 @@ namespace cauldron
             desc.Height = displayHeight;
             };
 
-        std::vector<std::wstring> uiTexNames = { L"SwapChainProxy",L"UITarget0", L"UITarget1", L"HudlessTarget0", L"HudlessTarget1" };
+        std::vector<std::wstring> uiTexNames = { L"SwapChainProxy", L"UITarget0", L"UITarget1" };
         for (auto texName : uiTexNames)
         {
             uiTextureDesc.Name = texName;

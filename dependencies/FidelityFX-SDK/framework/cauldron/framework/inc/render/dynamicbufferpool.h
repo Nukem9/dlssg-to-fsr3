@@ -60,6 +60,18 @@ namespace cauldron
         virtual BufferAddressInfo AllocConstantBuffer(uint32_t size, const void* pInitData) = 0;
 
         /**
+         * @brief   Allocates a batch of temporary constant buffers without initializing.
+         *          Sets the BufferAddressInfo for the buffers at the location specified in pBufferAddressInfos.
+         */
+        virtual void BatchAllocateConstantBuffer(uint32_t size, uint32_t count, BufferAddressInfo* pBufferAddressInfos) = 0;
+
+        /*
+         * @brief   Initializes the provided temporary constant buffer with the provided data.
+         */
+        virtual void InitializeConstantBuffer(const BufferAddressInfo& bufferAddressInfo, uint32_t size, const void* pInitData) = 0;
+
+
+        /**
          * @brief   Allocates a temporary vertex buffer and maps the provided pointer to the backing memory.
          *          Returns the BufferAddressInfo for the buffer.
          */

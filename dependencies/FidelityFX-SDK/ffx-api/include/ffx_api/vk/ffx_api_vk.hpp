@@ -41,6 +41,11 @@ struct struct_type<ffxCreateContextDescFrameGenerationSwapChainVK> : std::integr
 struct CreateContextDescFrameGenerationSwapChainVK : public InitHelper<ffxCreateContextDescFrameGenerationSwapChainVK> {};
 
 template<>
+struct struct_type<ffxCreateContextDescFrameGenerationSwapChainModeVK> : std::integral_constant<uint64_t, FFX_API_CREATE_CONTEXT_DESC_TYPE_FGSWAPCHAIN_MODE_VK> {};
+
+struct CreateContextDescFrameGenerationSwapChainModeVK : public InitHelper<ffxCreateContextDescFrameGenerationSwapChainModeVK> {};
+
+template<>
 struct struct_type<ffxConfigureDescFrameGenerationSwapChainRegisterUiResourceVK> : std::integral_constant<uint64_t, FFX_API_CONFIGURE_DESC_TYPE_FGSWAPCHAIN_REGISTERUIRESOURCE_VK> {};
 
 struct ConfigureDescFrameGenerationSwapChainRegisterUiResourceVK : public InitHelper<ffxConfigureDescFrameGenerationSwapChainRegisterUiResourceVK> {};
@@ -69,5 +74,10 @@ template<>
 struct struct_type<ffxConfigureDescFrameGenerationSwapChainKeyValueVK> : std::integral_constant<uint64_t, FFX_API_CONFIGURE_DESC_TYPE_FRAMEGENERATIONSWAPCHAIN_KEYVALUE_VK> {};
 
 struct ConfigureDescFrameGenerationSwapChainKeyValueVK : public InitHelper<ffxConfigureDescFrameGenerationSwapChainKeyValueVK> {};
+
+template<>
+struct struct_type<ffxQueryFrameGenerationSwapChainGetGPUMemoryUsageVK> : std::integral_constant<uint64_t, FFX_API_QUERY_DESC_TYPE_FRAMEGENERATIONSWAPCHAIN_GPU_MEMORY_USAGE_VK> {};
+
+struct QueryFrameGenerationSwapChainGetGPUMemoryUsageVK : public InitHelper<ffxQueryFrameGenerationSwapChainGetGPUMemoryUsageVK> {};
 
 }

@@ -1,7 +1,7 @@
 :: This file is part of the FidelityFX SDK.
 ::
 :: Copyright (C) 2024 Advanced Micro Devices, Inc.
-:: 
+::
 :: Permission is hereby granted, free of charge, to any person obtaining a copy
 :: of this software and associated documentation files(the "Software"), to deal
 :: in the Software without restriction, including without limitation the rights
@@ -31,7 +31,7 @@ echo ===============================================================
 echo.
 
 set build_as_dll=
-set /P build_as_dll=Build the SDK as DLL [y/n]? 
+set /P build_as_dll=Build the SDK as DLL [y/n]?
 
 set sdk_build_options=
 if /i "%build_as_dll%" == "Y" (
@@ -39,7 +39,7 @@ if /i "%build_as_dll%" == "Y" (
 )
 
 set auto_compile_shaders=
-set /P auto_compile_shaders=Auto-compile shaders [y/n]? 
+set /P auto_compile_shaders=Auto-compile shaders [y/n]?
 if /i "%auto_compile_shaders%" == "N" (
     set auto_compile_shaders=-DFFX_AUTO_COMPILE_SHADERS=0
 ) else (
@@ -66,7 +66,7 @@ ECHO 17. SSSR
 ECHO 18. VRS
 ECHO.
 
-set /P samples=Enter numbers of which effects to build [space delimitted]: 
+set /P samples=Enter numbers of which effects to build [space delimitted]:
 :loop
 for /f "tokens=1*" %%a in ("%samples%") do (
    if %%a == 1 set sdk_build_options=-DFFX_ALL=ON %sdk_build_options%
@@ -91,7 +91,7 @@ for /f "tokens=1*" %%a in ("%samples%") do (
 )
 if defined samples goto :loop
 
-echo Checking pre-requisites... 
+echo Checking pre-requisites...
 
 :: Check if cmake is installed
 cmake --version > nul 2>&1
@@ -108,7 +108,7 @@ echo.
 
 :: Check directories exist and create if not
 if not exist build\ (
-	mkdir build 
+	mkdir build
 )
 
 cd build
@@ -121,7 +121,17 @@ if exist CMakeCache.txt (
     del /S /Q CMakeCache.txt
 )
 
-cmake .. -DFFX_API_BACKEND=DX12_X64 %sdk_build_options% %auto_compile_shaders%
+:: determine architecture
+echo.
+echo architecture %PROCESSOR_ARCHITECTURE% detected
+echo.
+if /i "%PROCESSOR_ARCHITECTURE%" == "ARM64" (
+    set arch=ARM64
+) else (
+    set arch=X64
+)
+
+cmake .. -DFFX_API_BACKEND=DX12_%arch% %sdk_build_options% %auto_compile_shaders%
 
 cd..
 

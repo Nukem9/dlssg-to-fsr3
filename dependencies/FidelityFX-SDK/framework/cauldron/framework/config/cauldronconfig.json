@@ -32,11 +32,32 @@
             },
             "DepthTarget": {
                 "Format": "D32_FLOAT"
+            },
+            "DistortionField0": {
+                "Format": "RG16_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": false
+            },
+            "DistortionField1": {
+                "Format": "RG16_FLOAT",
+                "AllowUAV": true,
+                "RenderResolution": false
+            },
+            "HudlessTarget0": {
+                "Format": "RGBA8_UNORM",
+                "AllowUAV": true,
+                "RenderResolution": false
+            },
+            "HudlessTarget1": {
+                "Format": "RGBA8_UNORM",
+                "AllowUAV": true,
+                "RenderResolution": false
             }
         },
 
         "FontSize": 13,
         "AGSEnabled": false,
+        "AntiLag2": true,
         "StablePowerState": false,
         "InvertedDepth": true,
         "MotionVectorGeneration": "",

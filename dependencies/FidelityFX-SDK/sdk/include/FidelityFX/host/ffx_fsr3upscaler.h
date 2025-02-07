@@ -43,7 +43,7 @@
 /// FidelityFX Super Resolution 3 patch version.
 ///
 /// @ingroup ffxFsr3Upscaler
-#define FFX_FSR3UPSCALER_VERSION_PATCH      (0)
+#define FFX_FSR3UPSCALER_VERSION_PATCH      (3)
 
 /// FidelityFX Super Resolution 3 context count
 /// 
@@ -173,6 +173,11 @@ typedef enum FfxFsr3UpscalerDispatchFlags
     FFX_FSR3UPSCALER_DISPATCH_DRAW_DEBUG_VIEW = (1 << 0),  ///< A bit indicating that the interpolated output resource will contain debug views with relevant information.
 } FfxFsr3UpscalerDispatchFlags;
 
+typedef enum FfxFsr3UpscalerConfigureKey
+{
+    FFX_FSR3UPSCALER_CONFIGURE_UPSCALE_KEY_FVELOCITYFACTOR = 0 //Override constant buffer fVelocityFactor (from 1.0f at context creation) to floating point value casted from void * valuePtr. Value of 0.0f can improve temporal stability of bright pixels. Value is clamped to [0.0f, 1.0f].
+} FfxFsr3UpscalerConfigureKey;
+
 /// A structure encapsulating the parameters for dispatching the various passes
 /// of FidelityFX Super Resolution 3.
 ///
@@ -186,6 +191,9 @@ typedef struct FfxFsr3UpscalerDispatchDescription {
     FfxResource                 exposure;                           ///< A optional <c><i>FfxResource</i></c> containing a 1x1 exposure value.
     FfxResource                 reactive;                           ///< A optional <c><i>FfxResource</i></c> containing alpha value of reactive objects in the scene.
     FfxResource                 transparencyAndComposition;         ///< A optional <c><i>FfxResource</i></c> containing alpha value of special objects in the scene.
+    FfxResource                 dilatedDepth;                       ///< A <c><i>FfxResource</i></c> allocated as described in <c><i>FfxFsr3UpscalerSharedResourceDescriptions</i></c> that is used to emit dilated depth and share with following effects.
+    FfxResource                 dilatedMotionVectors;               ///< A <c><i>FfxResource</i></c> allocated as described in <c><i>FfxFsr3UpscalerSharedResourceDescriptions</i></c> that is used to emit dilated motion vectors and share with following effects.
+    FfxResource                 reconstructedPrevNearestDepth;      ///< A <c><i>FfxResource</i></c> allocated as described in <c><i>FfxFsr3UpscalerSharedResourceDescriptions</i></c> that is used to emit reconstructed previous nearest depth and share with following effects.
     FfxResource                 output;                             ///< A <c><i>FfxResource</i></c> containing the output color buffer for the current frame (at presentation resolution).
     FfxFloatCoords2D            jitterOffset;                       ///< The subpixel jitter offset applied to the camera.
     FfxFloatCoords2D            motionVectorScale;                  ///< The scale factor to apply to motion vectors.
@@ -292,6 +300,19 @@ typedef struct FfxFsr3UpscalerContext
 ///
 /// @ingroup ffxFsr3Upscaler
 FFX_API FfxErrorCode ffxFsr3UpscalerContextCreate(FfxFsr3UpscalerContext* pContext, const FfxFsr3UpscalerContextDescription* pContextDescription);
+
+/// Provides the descriptions for shared resources that must be allocated for this effect.
+///
+/// @param [in] context					A pointer to a <c><i>FfxFsr3UpscalerContext</i></c> structure.
+/// @param [out] SharedResources		A pointer to a <c><i>FfxFsr3UpscalerSharedResourceDescriptions</i></c> to populate.
+///
+/// @returns
+/// FFX_OK								The operation completed successfully.
+/// @returns
+/// Anything else						The operation failed.
+///
+/// @ingroup ffxFsr3Upscaler
+FFX_API FfxErrorCode ffxFsr3UpscalerGetSharedResourceDescriptions(FfxFsr3UpscalerContext* context, FfxFsr3UpscalerSharedResourceDescriptions* SharedResources);
 
 /// Get GPU memory usage of the FidelityFX Super Resolution context.
 ///
@@ -535,6 +556,22 @@ FFX_API bool ffxFsr3UpscalerResourceIsNull(FfxResource resource);
 ///
 /// @ingroup ffxFsr3Upscaler
 FFX_API FfxVersionNumber ffxFsr3UpscalerGetEffectVersion();
+
+/// Override upscaler constant buffer value after upscaler context creation.
+///
+/// @param [in] context                  A pointer to a <c><i>FfxFsr3UpscalerContext</i></c> structure.
+/// @param [in] key                      A key from <c><i>FfxFsr3UpscalerConfigureKey</i></c> enum
+/// @param [in] valuePtr                 A pointer to value to pass to shader in Constant Buffer. See Fsr3UpscalerConstants
+///
+/// @retval
+/// FFX_OK                              The operation completed successfully.
+/// @retval
+/// FFX_ERROR_INVALID_ENUM              An invalid FfxFsr3UpscalerConfigureKey was specified.
+/// @retval
+/// FFX_ERROR_INVALID_POINTER           <c><i>pContext</c></i> was NULL.
+///
+/// @ingroup ffxFsr3Upscaler
+FFX_API FfxErrorCode ffxFsr3UpscalerSetConstant(FfxFsr3UpscalerContext* context, FfxFsr3UpscalerConfigureKey key, void* valuePtr);
 
 #if defined(__cplusplus)
 }

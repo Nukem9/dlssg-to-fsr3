@@ -1,7 +1,7 @@
 :: This file is part of the FidelityFX SDK.
 ::
 :: Copyright (C) 2024 Advanced Micro Devices, Inc.
-:: 
+::
 :: Permission is hereby granted, free of charge, to any person obtaining a copy
 :: of this software and associated documentation files(the "Software"), to deal
 :: in the Software without restriction, including without limitation the rights
@@ -34,7 +34,7 @@ if exist CMakeFiles\ (
 if exist CMakeCache.txt (
 	del /S /Q CMakeCache.txt
 )
-cmake -A x64 .. %*%
+cmake .. %*%
 cmake --build ./ --config Debug --parallel 4 -- /p:CL_MPcount=16
 cmake --build ./ --config Release --parallel 4 -- /p:CL_MPcount=16
 cmake --build ./ --config RelWithDebInfo --parallel 4 -- /p:CL_MPcount=16

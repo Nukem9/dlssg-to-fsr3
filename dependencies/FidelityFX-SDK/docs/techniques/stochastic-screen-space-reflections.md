@@ -1,6 +1,6 @@
-<!-- @page page_techniques_stochastic-screen-space-reflections FidelityFX Stochastic Screen-Space Reflections 1.4 -->
+<!-- @page page_techniques_stochastic-screen-space-reflections FidelityFX Stochastic Screen-Space Reflections 1.5 -->
 
-<h1>FidelityFX Stochastic Screen-Space Reflections 1.4</h1>
+<h1>FidelityFX Stochastic Screen-Space Reflections 1.5</h1>
 
 ![alt text](media/stochastic-screen-space-reflections/sssr-sample.jpg "A screenshot showing the final composite of the SSSR reflections into a scene.")
 

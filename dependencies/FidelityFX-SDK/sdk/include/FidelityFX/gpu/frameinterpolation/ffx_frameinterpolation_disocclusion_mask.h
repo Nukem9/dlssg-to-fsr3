@@ -46,13 +46,17 @@ FfxFloat32 ComputeSampleDepthClip(FfxInt32x2 iPxSamplePos, FfxFloat32 fPreviousD
 
 FfxFloat32 LoadEstimatedDepth(FfxUInt32 estimatedIndex, FfxInt32x2 iSamplePos)
 {
+    const FfxFloat32x2 fUv = FfxFloat32x2(iSamplePos + 0.5f) / RenderSize();
+    const FfxFloat32x2 fDistortionFieldUv = SampleDistortionField(fUv);
+    FfxInt32x2 iDistortionPixelOffset = FfxInt32x2(fDistortionFieldUv.xy * RenderSize());
+
     if (estimatedIndex == 0)
     {
-        return LoadReconstructedDepthPreviousFrame(iSamplePos);
+        return LoadReconstructedDepthPreviousFrame(iSamplePos + iDistortionPixelOffset);
     }
     else if (estimatedIndex == 1)
     {
-        return LoadDilatedDepth(iSamplePos);
+        return LoadDilatedDepth(iSamplePos + iDistortionPixelOffset);
     }
 
     return 0;

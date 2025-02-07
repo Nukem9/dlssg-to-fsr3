@@ -11,8 +11,8 @@
 #error D3DX12 requires C++
 #endif
 
-#include "d3d12.h"
 #include "d3dx12_default.h"
+#include "d3d12.h"
 #include "d3dx12_core.h"
 
 //================================================================================================
@@ -2151,3 +2151,4 @@ private:
 #undef D3DX12_COM_PTR
 #undef D3DX12_COM_PTR_GET
 #undef D3DX12_COM_PTR_ADDRESSOF
+

@@ -147,7 +147,16 @@ namespace cauldron
         viewInfo.viewType = GetViewType(dimension);
         viewInfo.image = pResource->GetImpl()->GetImage();
         viewInfo.format = imageInfo.format;
-        viewInfo.subresourceRange.aspectMask = GetImageAspectMask(imageInfo.format);
+        if (IsDepthFormat(imageInfo.format) && HasStencilComponent(imageInfo.format) && type != ResourceViewType::DSV)
+        {
+            // a SRV/UAV cannot have both depth and stencil aspect
+            // by default, we choose the depth aspect as cauldron doesn't made use of stencil SRV/UAV.
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        }
+        else
+        {
+            viewInfo.subresourceRange.aspectMask = GetImageAspectMask(imageInfo.format);
+        }
 
         if (mip == -1)
         {

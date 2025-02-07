@@ -27,13 +27,49 @@
 
 #include <FidelityFX/host/ffx_assert.h>
 
-// enable manually what is needed
-// this mode will compose the UI on the graphics queue in the present call on the main thread
-#define FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD  0
-#define FFX_COMPOSE_IN_PRESENTTHREAD                            1
-
-#define FFX_COMPOSITION_MODE FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-
+///////////////////////////////////////////////////////////////////
+//                    MODES EXPLAINED
+///////////////////////////////////////////////////////////////////
+//
+// 1. FGSwapchainCompositionMode::eComposeOnPresentQueue
+//    - closest mode to DX12
+//    - the present queue needs to have graphics and compute capabilities
+//    - in FrameInterpolationSwapChainVK::queuePresent:
+//      - game queue signals the game semaphore
+//      - dispatches the interpolation on the interpolation queue (can be the game queue). This waits for the game semaphore. Signals the interpolation semaphore
+//    - interpolation thread:
+//      - computes the execution time of the interpolation by waiting on the interpolation semaphore
+//      - computes when the second present should be called
+//    - present thread (composeAndPresent_presenterThread):
+//      - acquires a new backbuffer image.
+//      - Present queue waits for the interpolation and image available semaphores then executes the UI composition of the interpolated image. Signals the composition and frame rendered semaphores.
+//      - presents the interpolated image (waiting on the frame rendered semaphore).
+//      - acquires a new backbuffer image.
+//      - Present queue waits for the image available semaphore then executes the UI composition of the real image. Signals the composition, frame rendered and the present semaphores.
+//      - thread waits for a given time
+//      - presents the real image (waiting on the frame rendered semaphore).
+//
+//
+// 2. FGSwapchainCompositionMode::eComposeOnGameQueue
+//    - legacy vulkan mode
+//    - the present queue needs to have transfer capability
+//    - in FrameInterpolationSwapChainVK::queuePresent:
+//      - game queue signals the game semaphore
+//      - dispatches the interpolation on the interpolation queue (can be the game queue). This waits for the game semaphore. Signals the interpolation semaphore.
+//      - game queue waits for the interpolation semaphore then executes the composition of the interpolated image into an intermediate texture. Copies this texture back into the interpolation buffer. Signals the composition semaphore.
+//      - game queue executes the composition of the real image on the game queue into an intermediate texture. Copies this texture back into the replacement buffer. Signals the composition semaphore.
+//    - interpolation thread:
+//      - computes the execution time of the interpolation by waiting on the interpolation semaphore
+//      - computes when the second present should be called
+//    - present thread (copyAndPresent_presenterThread):
+//      - acquires a new backbuffer image.
+//      - present queue waits for composition and image available semaphores then copies the interpolated image (composed with UI) into the backbuffer image. Signals frame rendered and present semaphores.
+//      - presents the interpolated image (waiting on the frame rendered semaphore).
+//      - acquires a new backbuffer image.
+//      - present queue waits for composition and image available semaphores then copies the replacement image (composed with UI) into the backbuffer image. Signals frame rendered and present semaphores.
+//      - thread waits for a given time
+//      - presents the real image (waiting on the frame rendered semaphore).
+//
 
 //////////////////////////////////////////////
 /// Helper functions and classes
@@ -50,6 +86,7 @@
 
 #define GET_DEVICE_PROC_ADDR(name)       name##Proc = (PFN_##name)vkGetDeviceProcAddr(device, #name);
 
+#define HAS_FLAG(options, flags) (((options) & (flags)) == (flags))
 
 // Some known states during queue family ownership transfer
 struct ImageState
@@ -272,7 +309,7 @@ uint32_t findMemoryType(const VkPhysicalDeviceMemoryProperties& memProperties, u
     return 0u;
 };
 
-bool waitForSemaphoreValue(VkDevice device, VkSemaphore semaphore, uint64_t value, uint64_t nanoseconds = UINT64_MAX)
+bool waitForSemaphoreValue(VkDevice device, VkSemaphore semaphore, uint64_t value, uint64_t nanoseconds = UINT64_MAX, FfxWaitCallbackFunc waitCallback = nullptr)
 {
     if (semaphore != VK_NULL_HANDLE)
     {
@@ -283,7 +320,28 @@ bool waitForSemaphoreValue(VkDevice device, VkSemaphore semaphore, uint64_t valu
         waitInfo.semaphoreCount      = 1;
         waitInfo.pSemaphores         = &semaphore;
         waitInfo.pValues             = &value;
-        VkResult res                 = vkWaitSemaphores(device, &waitInfo, nanoseconds);
+        VkResult res = VK_TIMEOUT;
+        if (nanoseconds == UINT64_MAX)
+        {
+            if (waitCallback)
+            {
+                uint64_t waitIntervalInNanoSeconds = 1000000; //1ms
+                res = vkWaitSemaphores(device, &waitInfo, waitIntervalInNanoSeconds);
+                while (res == VK_TIMEOUT)
+                {
+                    res = vkWaitSemaphores(device, &waitInfo, waitIntervalInNanoSeconds);
+                    waitCallback(L"FenceName", value);
+                }
+            }
+            else
+            {
+                res = vkWaitSemaphores(device, &waitInfo, nanoseconds);
+            }
+        }
+        else
+        {
+            res = vkWaitSemaphores(device, &waitInfo, nanoseconds);
+        }
 
         return (res == VK_SUCCESS);
     }
@@ -344,34 +402,19 @@ void deleteFrameInterpolationSwapChain(FrameInterpolationSwapChainVK* pSwapChain
     }
 }
 
-inline void destroyImage(VkDevice device, ReplacementResource& resource, const VkAllocationCallbacks* pAllocator)
+VkResult FrameInterpolationSwapChainVK::createImage(ReplacementResource&                    resource,
+                                                    VkImageCreateInfo&                      info,
+                                                    FfxSurfaceFormat                        format,
+                                                    const char*                             name,
+                                                    const VkPhysicalDeviceMemoryProperties& memProperties,
+                                                    const VkAllocationCallbacks*            pAllocator)
 {
-    if (resource.image != VK_NULL_HANDLE)
-    {
-        vkDestroyImage(device, resource.image, pAllocator);
-        resource.image = VK_NULL_HANDLE;
-    }
-    if (resource.memory != VK_NULL_HANDLE)
-    {
-        vkFreeMemory(device, resource.memory, pAllocator);
-        resource.memory = VK_NULL_HANDLE;
-    }
-}
-
-inline VkResult createImage(VkDevice                                device,
-                            ReplacementResource&                    resource,
-                            VkImageCreateInfo&                      info,
-                            FfxSurfaceFormat                        format,
-                            const char*                             name,
-                            const VkPhysicalDeviceMemoryProperties& memProperties,
-                            const VkAllocationCallbacks*            pAllocator)
-{
-    VkResult res = vkCreateImage(device, &info, pAllocator, &resource.image);
+    VkResult res = vkCreateImage(presentInfo.device, &info, pAllocator, &resource.image);
     EXIT_ON_VKRESULT_NOT_SUCCESS(res);
 
     if (res == VK_SUCCESS)
     {
-        DebugNameSetter debugNameSetter(device);
+        DebugNameSetter debugNameSetter(presentInfo.device);
         debugNameSetter.setDebugName(resource.image, VK_OBJECT_TYPE_IMAGE, name);  // it's fine if this fails
 
         resource.description.type     = FFX_RESOURCE_TYPE_TEXTURE2D;
@@ -384,38 +427,59 @@ inline VkResult createImage(VkDevice                                device,
         resource.description.usage    = static_cast<FfxResourceUsage>(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV);
 
         VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(device, resource.image, &memRequirements);
+        vkGetImageMemoryRequirements(presentInfo.device, resource.image, &memRequirements);
 
         VkMemoryAllocateInfo allocateInfo = {};
         allocateInfo.sType                = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocateInfo.pNext                = nullptr;
         allocateInfo.allocationSize       = memRequirements.size;
         allocateInfo.memoryTypeIndex      = findMemoryType(memProperties, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        res                               = vkAllocateMemory(device, &allocateInfo, pAllocator, &resource.memory);
+        res                               = vkAllocateMemory(presentInfo.device, &allocateInfo, pAllocator, &resource.memory);
+
+        if (res == VK_SUCCESS)
+        {
+            resource.allocationSize = allocateInfo.allocationSize;
+            totalUsageInBytes += resource.allocationSize;
+        }
     }
 
     if (res == VK_SUCCESS)
-        res = vkBindImageMemory(device, resource.image, resource.memory, 0);
+        res = vkBindImageMemory(presentInfo.device, resource.image, resource.memory, 0);
 
     if (res != VK_SUCCESS)
-        destroyImage(device, resource, pAllocator);
+        destroyImage(resource, pAllocator);
 
     return res;
 }
 
-inline VkResult createImage(VkDevice                                device,
-                            ReplacementResource&                    resource,
-                            VkImageCreateInfo&                      info,
-                            FfxSurfaceFormat                        format,
-                            const char*                             name,
-                            uint32_t                                index,
-                            const VkPhysicalDeviceMemoryProperties& memProperties,
-                            const VkAllocationCallbacks*            pAllocator)
+VkResult FrameInterpolationSwapChainVK::createImage(ReplacementResource&                    resource,
+                                                    VkImageCreateInfo&                      info,
+                                                    FfxSurfaceFormat                        format,
+                                                    const char*                             name,
+                                                    uint32_t                                index,
+                                                    const VkPhysicalDeviceMemoryProperties& memProperties,
+                                                    const VkAllocationCallbacks*            pAllocator)
 {
     constexpr size_t cBufferSize = 64;
     char             finalName[cBufferSize];
     snprintf(finalName, cBufferSize, name, index);
-    return createImage(device, resource, info, format, finalName, memProperties, pAllocator);
+    return createImage(resource, info, format, finalName, memProperties, pAllocator);
+}
+
+void FrameInterpolationSwapChainVK::destroyImage(ReplacementResource& resource, const VkAllocationCallbacks* pAllocator)
+{
+    if (resource.image != VK_NULL_HANDLE)
+    {
+        vkDestroyImage(presentInfo.device, resource.image, pAllocator);
+        resource.image = VK_NULL_HANDLE;
+    }
+    if (resource.memory != VK_NULL_HANDLE)
+    {
+        vkFreeMemory(presentInfo.device, resource.memory, pAllocator);
+        resource.memory = VK_NULL_HANDLE;
+        totalUsageInBytes -= resource.allocationSize;
+        resource.allocationSize = 0;
+    }
 }
 
 
@@ -583,6 +647,29 @@ FFX_API FfxErrorCode ffxSetFrameGenerationConfigToSwapchainVK(FfxFrameGeneration
     return result;
 }
 
+FfxErrorCode ffxConfigureFrameInterpolationSwapchainVK(FfxSwapchain gameSwapChain, FfxFrameInterpolationSwapchainConfigureKey key, void* valuePtr)
+{
+    if (gameSwapChain)
+    {
+        FrameInterpolationSwapChainVK* pSwapChainVK = reinterpret_cast<FrameInterpolationSwapChainVK*>(gameSwapChain);
+        switch (key)
+        {
+            case FFX_FI_SWAPCHAIN_CONFIGURE_KEY_WAITCALLBACK:
+                pSwapChainVK->setWaitCallback(static_cast<FfxWaitCallbackFunc>(valuePtr));
+            break;
+            case FFX_FI_SWAPCHAIN_CONFIGURE_KEY_FRAMEPACINGTUNING:
+                if (valuePtr != nullptr)
+                {
+                    pSwapChainVK->setFramePacingTuning(static_cast<FfxSwapchainFramePacingTuning*>(valuePtr));
+                }
+            break;
+            return FFX_OK;
+        }
+    }
+
+    return FFX_ERROR_INVALID_ARGUMENT;
+}
+
 FfxResource ffxGetFrameinterpolationTextureVK(FfxSwapchain gameSwapChain)
 {
     FrameInterpolationSwapChainVK* pSwapChainVK = reinterpret_cast<FrameInterpolationSwapChainVK*>(gameSwapChain);
@@ -654,6 +741,17 @@ FfxErrorCode ffxWaitForPresents(FfxSwapchain gameSwapChain)
     return FFX_OK;
 }
 
+FfxErrorCode ffxFrameInterpolationSwapchainGetGpuMemoryUsageVK(FfxSwapchain gameSwapChain, FfxEffectMemoryUsage* vramUsage)
+{
+    FFX_RETURN_ON_ERROR(vramUsage, FFX_ERROR_INVALID_POINTER);
+    FrameInterpolationSwapChainVK* pSwapChainVK = reinterpret_cast<FrameInterpolationSwapChainVK*>(gameSwapChain);
+
+    pSwapChainVK->getGpuMemoryUsage(vramUsage);
+
+    return FFX_OK;
+    
+}
+
 //////////////////////////////////////////////
 /// Present
 //////////////////////////////////////////////
@@ -700,14 +798,16 @@ VkResult compositeSwapChainFrame(FrameinterpolationPresentInfo* pPresenter,
         desc.commandList           = ffxGetCommandListVK(compositeCommandBuffer);
         desc.device                = pPresenter->device;
         desc.isInterpolatedFrame   = frameType != PacingData::FrameType::Real;
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_PRESENTTHREAD
-        desc.outputSwapChainBuffer = ffxGetResourceVK(pPresenter->realSwapchainImages[realSwapchainImageIndex],
-                                                      pPresenter->realSwapchainImageDescription,
-                                                      nullptr,
-                                                      FFX_RESOURCE_STATE_PRESENT);
-#elif FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-        desc.outputSwapChainBuffer = ffxGetResourceVK(pPresenter->compositionOutput.image, pPresenter->compositionOutput.description, nullptr, FFX_RESOURCE_STATE_COPY_SRC);
-#endif
+        if (pPresenter->compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+        {
+            desc.outputSwapChainBuffer = ffxGetResourceVK(
+                pPresenter->realSwapchainImages[realSwapchainImageIndex], pPresenter->realSwapchainImageDescription, nullptr, FFX_RESOURCE_STATE_PRESENT);
+        }
+        if (pPresenter->compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+        {
+            desc.outputSwapChainBuffer =
+                ffxGetResourceVK(pPresenter->compositionOutput.image, pPresenter->compositionOutput.description, nullptr, FFX_RESOURCE_STATE_COPY_SRC);
+        }
         desc.currentBackBuffer     = frameInfo.resource;
         desc.currentUI             = pPacingEntry->uiSurface;
         desc.usePremulAlpha        = pPacingEntry->usePremulAlphaComposite;
@@ -747,51 +847,55 @@ VkResult compositeSwapChainFrame(FrameinterpolationPresentInfo* pPresenter,
             uiSurfaceTransfered = true;
         }
 
-
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_PRESENTTHREAD
-        // change real image to present layout
-        preCallbackBarriers.add(pPresenter->realSwapchainImages[realSwapchainImageIndex], 0, 0, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-#elif FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-        // prepare for copy
-        preCallbackBarriers.add(
-            pPresenter->compositionOutput.image, 0, VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-#endif
+        if (pPresenter->compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+        {
+            // change real image to present layout
+            preCallbackBarriers.add(pPresenter->realSwapchainImages[realSwapchainImageIndex], 0, 0, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        }
+        else if (pPresenter->compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+        {
+            // prepare for copy
+            preCallbackBarriers.add(
+                pPresenter->compositionOutput.image, 0, VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        }
 
         preCallbackBarriers.record(compositeCommandBuffer);
 
         pPacingEntry->presentCallback(&desc, pPacingEntry->presentCallbackContext);
 
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-        ImageBarrierHelper preCopyBarriers;
+        if (pPresenter->compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+        {
+            // copy back the content of the composition in the replacement or the interpolation output buffer
+            ImageBarrierHelper preCopyBarriers;
 
-        // composition output buffer is already in a VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL layout on the compose queue
-        // just set resource to copy dest layout
-        preCopyBarriers.add(static_cast<VkImage>(frameInfo.resource.resource),
-                            0,
-                            VK_ACCESS_TRANSFER_WRITE_BIT,
-                            VK_IMAGE_LAYOUT_UNDEFINED,
-                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        preCopyBarriers.record(compositeCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+            // composition output buffer is already in a VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL layout on the compose queue
+            // just set resource to copy dest layout
+            preCopyBarriers.add(static_cast<VkImage>(frameInfo.resource.resource),
+                                0,
+                                VK_ACCESS_TRANSFER_WRITE_BIT,
+                                VK_IMAGE_LAYOUT_UNDEFINED,
+                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            preCopyBarriers.record(compositeCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
-        recordCopy(compositeCommandBuffer,
-                   pPresenter->compositionOutput.image,
-                   static_cast<VkImage>(frameInfo.resource.resource),
-                   pPresenter->realSwapchainImageDescription.width,
-                   pPresenter->realSwapchainImageDescription.height);
+            recordCopy(compositeCommandBuffer,
+                       pPresenter->compositionOutput.image,
+                       static_cast<VkImage>(frameInfo.resource.resource),
+                       pPresenter->realSwapchainImageDescription.width,
+                       pPresenter->realSwapchainImageDescription.height);
 
-        ImageBarrierHelper postCopyBarriers;
+            ImageBarrierHelper postCopyBarriers;
 
-        postCopyBarriers.add(static_cast<VkImage>(frameInfo.resource.resource),
-                             VK_ACCESS_TRANSFER_WRITE_BIT,
-                             VK_ACCESS_TRANSFER_READ_BIT,
-                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                             // this will handle the queue family ownership transfer if any
-                             compositionQueue.familyIndex,
-                             pPresenter->presentQueue.familyIndex);
+            postCopyBarriers.add(static_cast<VkImage>(frameInfo.resource.resource),
+                                 VK_ACCESS_TRANSFER_WRITE_BIT,
+                                 VK_ACCESS_TRANSFER_READ_BIT,
+                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                 // this will handle the queue family ownership transfer if any
+                                 compositionQueue.familyIndex,
+                                 pPresenter->presentQueue.familyIndex);
 
-        postCopyBarriers.record(compositeCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-#endif
+            postCopyBarriers.record(compositeCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+        }
 
         return compositeCommandList->execute(semaphoresToWait, semaphoresToSignal);
     }
@@ -840,58 +944,14 @@ DWORD WINAPI copyAndPresent_presenterThread(LPVOID pParam)
                         {
                             uint32_t    imageIndex              = 0;
                             VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
-                            VkResult res = presenter->acquireNextRealImage(imageIndex, imageAvailableSemaphore);
-                            FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR, "[copyAndPresent_presenterThread] failed to acquire swapchain image");
-
-                            auto            presentCommandList   = presenter->commandPool.get(presenter->device, presenter->presentQueue, "presentCommandList");
-                            VkCommandBuffer presentCommandBuffer = presentCommandList->reset();
-
-                            ImageBarrierHelper preCopyBarriers;
-
-                            // newly acquired image transition
-                            preCopyBarriers.add(presenter->realSwapchainImages[imageIndex],
-                                                0,
-                                                VK_ACCESS_TRANSFER_WRITE_BIT,
-                                                VK_IMAGE_LAYOUT_UNDEFINED,
-                                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-                            
-                            // queue family ownership transfer for the texture containing the final image
-                            if (presenter->gameQueue.familyIndex != presenter->presentQueue.familyIndex)
-                            {
-                                preCopyBarriers.add(static_cast<VkImage>(frameInfo.resource.resource),
-                                                    VK_ACCESS_TRANSFER_WRITE_BIT,
-                                                    VK_ACCESS_TRANSFER_READ_BIT,
-                                                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                                                    presenter->gameQueue.familyIndex,
-                                                    presenter->presentQueue.familyIndex);
-                            }
-
-                            preCopyBarriers.record(presentCommandBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-
-                            // copy from resource to the swapchain image
-                            recordCopy(presentCommandBuffer,
-                                       static_cast<VkImage>(frameInfo.resource.resource),
-                                       presenter->realSwapchainImages[imageIndex],
-                                       presenter->realSwapchainImageDescription.width,
-                                       presenter->realSwapchainImageDescription.height);
-
-                            ImageBarrierHelper postCopyBarriers;
-                            // transition to present
-                            postCopyBarriers.add(presenter->realSwapchainImages[imageIndex],
-                                                VK_ACCESS_TRANSFER_WRITE_BIT,
-                                                0,
-                                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                                VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-
-                            postCopyBarriers.record(presentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
-                            SubmissionSemaphores toWait;
-                            toWait.add(presenter->compositionSemaphore, frameInfo.presentIndex);  // composition to finish
-                            toWait.add(imageAvailableSemaphore);  // swapchain image to be available
+                            VkResult    res                     = presenter->acquireNextRealImage(imageIndex, imageAvailableSemaphore);
+                            FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR, "[copyAndPresent_presenterThread] failed to acquire swapchain image");
 
                             SubmissionSemaphores toSignal;
-                            toSignal.add(presenter->frameRenderedSemaphores[imageIndex]);  // frame ready for present. Not a timeline semaphore
+                            SubmissionSemaphores toWait;
+                            toWait.add(presenter->compositionSemaphore, frameInfo.presentIndex);  // composition to finish
+
+                            // no image was acquired, just skip everything and signal the appropriate semaphores
 
                             // signal replacement buffer availability
                             // this is the last present of this entry
@@ -908,16 +968,72 @@ DWORD WINAPI copyAndPresent_presenterThread(LPVOID pParam)
                                 presenter->lastPresentSemaphoreValue = frameInfo.presentIndex;
                             }
 
-                            res = presentCommandList->execute(toWait, toSignal);
+                            if (res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR)
+                            {
+                                toWait.add(imageAvailableSemaphore);  // swapchain image to be available
 
-                            waitForPerformanceCount(previousPresentQpc + frameInfo.presentQpcDelta);
-                            QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&previousPresentQpc));
+                                auto presentCommandList = presenter->commandPool.get(presenter->device, presenter->presentQueue, "presentCommandList");
+                                VkCommandBuffer presentCommandBuffer = presentCommandList->reset();
 
-                            res = presentToSwapChain(presenter, imageIndex, imageIndex);
-                            // VK_SUBOPTIMAL_KHR & VK_ERROR_OUT_OF_DATE_KHR: the swapchain has been recreated
-                            FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR,
-                                                      "presentToSwapChain failed with error %d",
-                                                      res);
+                                ImageBarrierHelper preCopyBarriers;
+
+                                // newly acquired image transition
+                                preCopyBarriers.add(presenter->realSwapchainImages[imageIndex],
+                                                    0,
+                                                    VK_ACCESS_TRANSFER_WRITE_BIT,
+                                                    VK_IMAGE_LAYOUT_UNDEFINED,
+                                                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+                                // queue family ownership transfer for the texture containing the final image
+                                if (presenter->gameQueue.familyIndex != presenter->presentQueue.familyIndex)
+                                {
+                                    preCopyBarriers.add(static_cast<VkImage>(frameInfo.resource.resource),
+                                                        VK_ACCESS_TRANSFER_WRITE_BIT,
+                                                        VK_ACCESS_TRANSFER_READ_BIT,
+                                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                                        presenter->gameQueue.familyIndex,
+                                                        presenter->presentQueue.familyIndex);
+                                }
+
+                                preCopyBarriers.record(presentCommandBuffer, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+                                // copy from resource to the swapchain image
+                                recordCopy(presentCommandBuffer,
+                                           static_cast<VkImage>(frameInfo.resource.resource),
+                                           presenter->realSwapchainImages[imageIndex],
+                                           presenter->realSwapchainImageDescription.width,
+                                           presenter->realSwapchainImageDescription.height);
+
+                                ImageBarrierHelper postCopyBarriers;
+                                // transition to present
+                                postCopyBarriers.add(presenter->realSwapchainImages[imageIndex],
+                                                     VK_ACCESS_TRANSFER_WRITE_BIT,
+                                                     0,
+                                                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                                     VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+                                postCopyBarriers.record(presentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+                                res = presentCommandList->execute(toWait, toSignal);
+
+                                waitForPerformanceCount(previousPresentQpc + frameInfo.presentQpcDelta);
+                                QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&previousPresentQpc));
+
+                                res = presentToSwapChain(presenter, imageIndex, imageIndex);
+                                // VK_SUBOPTIMAL_KHR & VK_ERROR_OUT_OF_DATE_KHR: the swapchain has been recreated
+                                FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR,
+                                                          "presentToSwapChain failed with error %d",
+                                                          res);
+                            }
+                            else
+                            {
+                                // no image has been acquired, just wait on and signal the semaphores
+                                presenter->presentQueue.submit(VK_NULL_HANDLE, toWait, toSignal);
+                            }
+
+                            // store result to send it back to next queuePresent call
+                            presenter->lastPresentResult.store(res);
                         }
                     }
 
@@ -997,19 +1113,40 @@ DWORD WINAPI composeAndPresent_presenterThread(LPVOID pParam)
                             uint32_t    realSwapchainImageIndex = 0;
                             VkSemaphore acquireSemaphore        = VK_NULL_HANDLE;
                             VkResult    res                     = presenter->acquireNextRealImage(realSwapchainImageIndex, acquireSemaphore);
-                            toWait.add(acquireSemaphore);
+                            FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR, "[composeAndPresent_presenterThread] failed to acquire swapchain image");
 
-                            res = compositeSwapChainFrame(presenter, &entry, (PacingData::FrameType)frameType, realSwapchainImageIndex, presenter->presentQueue, toWait, toSignal, uiSurfaceTransfered);
-                            FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS, "compositeSwapChainFrame failed with error %d", res);
+                            if (res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR)
+                            {
+                                toWait.add(acquireSemaphore);
 
-                            waitForPerformanceCount(previousPresentQpc + frameInfo.presentQpcDelta);
-                            QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&previousPresentQpc));
-                            
-                            res = presentToSwapChain(presenter, realSwapchainImageIndex);
-                            // VK_SUBOPTIMAL_KHR & VK_ERROR_OUT_OF_DATE_KHR: the swapchain has been recreated
-                            FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR,
-                                                      "presentToSwapChain failed with error %d",
-                                                      res);
+                                res = compositeSwapChainFrame(presenter,
+                                                              &entry,
+                                                              (PacingData::FrameType)frameType,
+                                                              realSwapchainImageIndex,
+                                                              presenter->presentQueue,
+                                                              toWait,
+                                                              toSignal,
+                                                              uiSurfaceTransfered);
+                                FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS, "compositeSwapChainFrame failed with error %d", res);
+
+                                waitForPerformanceCount(previousPresentQpc + frameInfo.presentQpcDelta);
+                                QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&previousPresentQpc));
+
+                                res = presentToSwapChain(presenter, realSwapchainImageIndex);
+                                // VK_SUBOPTIMAL_KHR & VK_ERROR_OUT_OF_DATE_KHR: the swapchain has been recreated
+                                FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR,
+                                                          "presentToSwapChain failed with error %d",
+                                                          res);
+                            }
+                            else
+                            {
+                                // no image has been acquired, just wait on and signal the semaphores
+                                // just signal the composition semaphore as if composition has been executed
+                                toSignal.add(presenter->compositionSemaphore, frameInfo.presentIndex);
+                                presenter->presentQueue.submit(VK_NULL_HANDLE, toWait, toSignal);
+                            }
+                            // store result to send it back to next queuePresent call
+                            presenter->lastPresentResult.store(res);
                         }
                     }
 
@@ -1036,13 +1173,16 @@ DWORD WINAPI interpolationThread(LPVOID param)
 
     if (presenter)
     {
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-        HANDLE presenterThreadHandle = CreateThread(nullptr, 0, copyAndPresent_presenterThread, param, 0, nullptr);
-#elif FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_PRESENTTHREAD
-        HANDLE presenterThreadHandle = CreateThread(nullptr, 0, composeAndPresent_presenterThread, param, 0, nullptr);
-#else
         HANDLE presenterThreadHandle = NULL;
-#endif
+        if (presenter->compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+        {
+            presenterThreadHandle = CreateThread(nullptr, 0, composeAndPresent_presenterThread, param, 0, nullptr);
+        }
+        else if (presenter->compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+        {
+            presenterThreadHandle = CreateThread(nullptr, 0, copyAndPresent_presenterThread, param, 0, nullptr);
+        }
+        
         FFX_ASSERT(presenterThreadHandle != NULL);
 
         if (presenterThreadHandle != 0)
@@ -1091,11 +1231,10 @@ DWORD WINAPI interpolationThread(LPVOID param)
                         frameTime.update(deltaQpc);
                     }
 
-                    // set presentation time for the real frame
-                    double  safetyMarginInSec       = 0.0001; // = 0.1ms
-                    int64_t       qpcSafetyMargin = int64_t(qpcFrequency * safetyMarginInSec);
-                    const int64_t conservativeAvg = int64_t(frameTime.getAverage() * 0.5 - frameTime.getVariance() * 0.1);
-                    const int64_t deltaToUse      = conservativeAvg > qpcSafetyMargin ? (conservativeAvg - qpcSafetyMargin) : 0;
+                    // set presentation time: reduce based on variance and subract safety margin so we don't lock on a framerate lower than necessary
+                    int64_t qpcSafetyMargin         = int64_t(qpcFrequency * presenter->safetyMarginInSec);
+                    const int64_t conservativeAvg   = int64_t(frameTime.getAverage() * 0.5 - frameTime.getVariance() * presenter->varianceFactor);
+                    const int64_t deltaToUse        = conservativeAvg > qpcSafetyMargin ? (conservativeAvg - qpcSafetyMargin) : 0;
                     entry.frames[PacingData::FrameType::Interpolated_1].presentQpcDelta = deltaToUse;
                     entry.frames[PacingData::FrameType::Real].presentQpcDelta           = deltaToUse;
 
@@ -1330,9 +1469,86 @@ VkResult FrameInterpolationSwapChainVK::init(const VkSwapchainCreateInfoKHR* pCr
     presentInfo.presentQueue       = pFrameInterpolationInfo->presentQueue;
     imageAcquireQueue              = pFrameInterpolationInfo->imageAcquireQueue;
 
-    debugNameSetter.setDebugName(presentInfo.presentQueue.queue, VK_OBJECT_TYPE_QUEUE, "AMD FSR PresentQueue");
+    // check that the queues are separate
+    if (presentInfo.gameQueue.queue == presentInfo.asyncComputeQueue.queue || presentInfo.gameQueue.queue == presentInfo.presentQueue.queue ||
+        presentInfo.gameQueue.queue == imageAcquireQueue.queue || presentInfo.asyncComputeQueue.queue == presentInfo.presentQueue.queue ||
+        presentInfo.asyncComputeQueue.queue == imageAcquireQueue.queue ||
+        presentInfo.presentQueue.queue == imageAcquireQueue.queue)
+    {
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    if (presentInfo.presentQueue.queue != presentInfo.gameQueue.queue)
+        debugNameSetter.setDebugName(presentInfo.presentQueue.queue, VK_OBJECT_TYPE_QUEUE, "AMD FSR PresentQueue");
     debugNameSetter.setDebugName(presentInfo.asyncComputeQueue.queue, VK_OBJECT_TYPE_QUEUE, "AMD FSR AsyncComputeQueue");
     debugNameSetter.setDebugName(imageAcquireQueue.queue, VK_OBJECT_TYPE_QUEUE, "AMD FSR ImageAcquireQueue");
+
+    // check the mode
+    const uint32_t cMaxQueueFamilyCount = 16;
+    uint32_t       queueFamilyCount     = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+
+    uint32_t maxFamilyIndex = 0;
+    maxFamilyIndex          = maxFamilyIndex > presentInfo.presentQueue.familyIndex ? maxFamilyIndex : presentInfo.presentQueue.familyIndex;
+    maxFamilyIndex          = maxFamilyIndex > presentInfo.gameQueue.familyIndex ? maxFamilyIndex : presentInfo.gameQueue.familyIndex;
+    maxFamilyIndex          = maxFamilyIndex > presentInfo.asyncComputeQueue.familyIndex ? maxFamilyIndex : presentInfo.asyncComputeQueue.familyIndex;
+    maxFamilyIndex          = maxFamilyIndex > imageAcquireQueue.familyIndex ? maxFamilyIndex : imageAcquireQueue.familyIndex;
+
+    if (maxFamilyIndex >= queueFamilyCount || queueFamilyCount > cMaxQueueFamilyCount)
+        return VK_ERROR_INITIALIZATION_FAILED;
+
+    VkQueueFamilyProperties properties[cMaxQueueFamilyCount];
+    queueFamilyCount = maxFamilyIndex + 1;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, properties);
+
+    if (presentInfo.presentQueue.familyIndex >= queueFamilyCount)
+        return VK_ERROR_INITIALIZATION_FAILED;
+
+    const VkQueueFamilyProperties presentQueueProperties = properties[presentInfo.presentQueue.familyIndex];
+    VkBool32 supportsPresent = VK_FALSE;
+    res = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, presentInfo.presentQueue.familyIndex, pCreateInfo->surface, &supportsPresent);
+    EXIT_ON_VKRESULT_NOT_SUCCESS(res);
+
+    if (supportsPresent == VK_FALSE)
+        return VK_ERROR_INITIALIZATION_FAILED;
+
+    if (HAS_FLAG(presentQueueProperties.queueFlags, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
+    {
+        presentInfo.compositionMode = FGSwapchainCompositionMode::eComposeOnPresentQueue;
+    }
+    else if (HAS_FLAG(presentQueueProperties.queueFlags, VK_QUEUE_GRAPHICS_BIT) || HAS_FLAG(presentQueueProperties.queueFlags, VK_QUEUE_COMPUTE_BIT) ||
+             HAS_FLAG(presentQueueProperties.queueFlags, VK_QUEUE_TRANSFER_BIT))
+    {
+        presentInfo.compositionMode = FGSwapchainCompositionMode::eComposeOnGameQueue;
+    }
+    else
+    {
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    // force if there is an override
+    switch (pFrameInterpolationInfo->compositionMode)
+    {
+    case VK_COMPOSITION_MODE_GAME_QUEUE_FFX:
+        presentInfo.compositionMode = FGSwapchainCompositionMode::eComposeOnGameQueue;
+        break;
+    case VK_COMPOSITION_MODE_PRESENT_QUEUE_FFX:
+        presentInfo.compositionMode = FGSwapchainCompositionMode::eComposeOnPresentQueue;
+        break;
+    default:
+        break;
+    }
+
+    // check other queues
+    const VkQueueFamilyProperties gameQueueProperties = properties[presentInfo.gameQueue.familyIndex];
+    if (!HAS_FLAG(gameQueueProperties.queueFlags, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
+        return VK_ERROR_INITIALIZATION_FAILED;
+    if (presentInfo.asyncComputeQueue.queue != VK_NULL_HANDLE)
+    {
+        const VkQueueFamilyProperties asyncComputeQueueProperties = properties[presentInfo.asyncComputeQueue.familyIndex];
+        if (!HAS_FLAG(asyncComputeQueueProperties.queueFlags, VK_QUEUE_COMPUTE_BIT))
+            return VK_ERROR_INITIALIZATION_FAILED;
+    }
 
     InitializeCriticalSection(&criticalSection);
     InitializeCriticalSection(&criticalSectionUpdateConfig);
@@ -1430,8 +1646,7 @@ VkResult FrameInterpolationSwapChainVK::init(const VkSwapchainCreateInfoKHR* pCr
 
     for (uint32_t i = 0; i < gameBufferCount; ++i)
     {
-        res = createImage(device,
-                          replacementSwapBuffers[i],
+        res = createImage(replacementSwapBuffers[i],
                           info,
                           presentInfo.realSwapchainImageDescription.format,
                           "AMD FSR Replacement BackBuffer %d",
@@ -1444,8 +1659,7 @@ VkResult FrameInterpolationSwapChainVK::init(const VkSwapchainCreateInfoKHR* pCr
 
     for (uint32_t i = 0; i < _countof(interpolationOutputs); ++i)
     {
-        res = createImage(device,
-                          interpolationOutputs[i],
+        res = createImage(interpolationOutputs[i],
                           info,
                           presentInfo.realSwapchainImageDescription.format,
                           "AMD FSR Interpolation Output %d",
@@ -1455,15 +1669,16 @@ VkResult FrameInterpolationSwapChainVK::init(const VkSwapchainCreateInfoKHR* pCr
         EXIT_ON_VKRESULT_NOT_SUCCESS(res);
     }
 
-    res = createImage(device,
-                      presentInfo.compositionOutput,
-                      info,
-                      presentInfo.realSwapchainImageDescription.format,
-                      "AMD FSR Composition Output",
-                      memProperties,
-                      pAllocator);
-    EXIT_ON_VKRESULT_NOT_SUCCESS(res);
-    
+    if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+    {
+        res = createImage(presentInfo.compositionOutput,
+                          info,
+                          presentInfo.realSwapchainImageDescription.format,
+                          "AMD FSR Composition Output",
+                          memProperties,
+                          pAllocator);
+        EXIT_ON_VKRESULT_NOT_SUCCESS(res);
+    }
 
     GET_DEVICE_PROC_ADDR(vkSetHdrMetadataEXT);
 
@@ -1527,14 +1742,18 @@ void FrameInterpolationSwapChainVK::destroySwapchain(VkDevice device, const VkAl
 
     // destroy replacement buffers & interpolation outputs
     for (uint32_t i = 0; i < FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_BUFFER_COUNT; ++i)
-        destroyImage(device, replacementSwapBuffers[i], pAllocator);
-    
+    {
+        destroyImage(replacementSwapBuffers[i], pAllocator);
+    }
+
     for (uint32_t i = 0; i < _countof(interpolationOutputs); ++i)
-        destroyImage(device, interpolationOutputs[i], pAllocator);
+    {
+        destroyImage(interpolationOutputs[i], pAllocator);
+    }
 
-    destroyImage(device, presentInfo.compositionOutput, pAllocator);
+    destroyImage(presentInfo.compositionOutput, pAllocator);
 
-    destroyImage(device, uiReplacementBuffer, pAllocator);
+    destroyImage(uiReplacementBuffer, pAllocator);
 }
 
 VkResult FrameInterpolationSwapChainVK::getSwapchainImages(VkDevice device, uint32_t* pSwapchainImageCount, VkImage* pSwapchainImages)
@@ -1586,11 +1805,12 @@ void FrameInterpolationSwapChainVK::setFrameGenerationConfig(FfxFrameGenerationC
     {
         nextFrameGenerationConfig = *config;
 
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-        // since we compose on gameQueue anyway we should run interpolation on it too, to avoid semaphores
-        nextFrameGenerationConfig.allowAsyncWorkloads = false;
-        inputInterpolationQueue                       = presentInfo.gameQueue;
-#endif
+        if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+        {
+            // since we compose on gameQueue anyway we should run interpolation on it too, to avoid semaphores
+            nextFrameGenerationConfig.allowAsyncWorkloads = false;
+            inputInterpolationQueue                       = presentInfo.gameQueue;
+        }
 
         // in case of actual reconfiguration: apply the changes immediately
         if ( presentInfo.interpolationQueue.queue != inputInterpolationQueue.queue
@@ -1608,6 +1828,7 @@ void FrameInterpolationSwapChainVK::setFrameGenerationConfig(FfxFrameGenerationC
 
         currentFrameID          = config->frameID;
         presentInterpolatedOnly = config->onlyPresentInterpolated;
+        interpolationRect       = config->interpolationRect;
 
         if (presentInfo.interpolationQueue.queue != inputInterpolationQueue.queue)
         {
@@ -1654,9 +1875,9 @@ void FrameInterpolationSwapChainVK::setFrameGenerationConfig(FfxFrameGenerationC
 bool FrameInterpolationSwapChainVK::waitForPresents()
 {
     // wait for interpolation to finish
-    bool waitRes = waitForSemaphoreValue(presentInfo.device, presentInfo.gameSemaphore, gameSemaphoreValue);
-    waitRes &= waitForSemaphoreValue(presentInfo.device, presentInfo.interpolationSemaphore, interpolationSemaphoreValue);
-    waitRes &= waitForSemaphoreValue(presentInfo.device, presentInfo.presentSemaphore, framesSentForPresentation);
+    bool waitRes = waitForSemaphoreValue(presentInfo.device, presentInfo.gameSemaphore, gameSemaphoreValue, UINT64_MAX, presentInfo.waitCallback);
+    waitRes &= waitForSemaphoreValue(presentInfo.device, presentInfo.interpolationSemaphore, interpolationSemaphoreValue, UINT64_MAX, presentInfo.waitCallback);
+    waitRes &= waitForSemaphoreValue(presentInfo.device, presentInfo.presentSemaphore, framesSentForPresentation, UINT64_MAX, presentInfo.waitCallback);
 
     FFX_ASSERT(waitRes);
 
@@ -1700,13 +1921,16 @@ void FrameInterpolationSwapChainVK::dispatchInterpolationCommands(uint32_t      
     *pRealFrame = backbuffer;
 
     // interpolation queue must wait for output resource to become available
- #if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_PRESENTTHREAD
-    // in those cases, interpolation output is available after composition
-    semaphoresToWait.add(presentInfo.compositionSemaphore, interpolationOutputs[interpolationBufferIndex].availabilitySemaphoreValue);
-#elif FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-    // when there is a copy on the present queue from the present thread, the interpolation output will be available when the present semaphore is signaled
-    semaphoresToWait.add(presentInfo.presentSemaphore, interpolationOutputs[interpolationBufferIndex].availabilitySemaphoreValue);
-#endif
+    if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+    {
+        // in those cases, interpolation output is available after composition
+        semaphoresToWait.add(presentInfo.compositionSemaphore, interpolationOutputs[interpolationBufferIndex].availabilitySemaphoreValue);
+    }
+    else if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+    {
+        // when there is a copy on the present queue from the present thread, the interpolation output will be available when the present semaphore is signaled
+        semaphoresToWait.add(presentInfo.presentSemaphore, interpolationOutputs[interpolationBufferIndex].availabilitySemaphoreValue);
+    }
 
     // check necessary transitions
     ImageBarrierHelper preInterpolationBarriers;
@@ -1770,6 +1994,7 @@ void FrameInterpolationSwapChainVK::dispatchInterpolationCommands(uint32_t      
         desc.backBufferTransferFunction = static_cast<FfxBackbufferTransferFunction>(backBufferTransferFunction);
         desc.minMaxLuminance[0]         = minLuminance;
         desc.minMaxLuminance[1]         = maxLuminance;
+        desc.interpolationRect          = interpolationRect;
         desc.frameID                    = currentFrameID;
 
         // execute the necessary transitions
@@ -1781,11 +2006,15 @@ void FrameInterpolationSwapChainVK::dispatchInterpolationCommands(uint32_t      
 
             ImageBarrierHelper postInterpolationBarriers;
 
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-            uint32_t compositionQueueFamily = presentInfo.gameQueue.familyIndex;
-#else
-            uint32_t compositionQueueFamily = presentInfo.presentQueue.familyIndex;
-#endif
+            uint32_t compositionQueueFamily = 0xffffffff;
+            if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+            {
+                compositionQueueFamily = presentInfo.presentQueue.familyIndex;
+            }
+            else if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+            {
+                compositionQueueFamily = presentInfo.gameQueue.familyIndex;
+            }
 
             if (presentInfo.interpolationQueue.familyIndex != compositionQueueFamily)
             {
@@ -1835,7 +2064,7 @@ VkImageMemoryBarrier FrameinterpolationPresentInfo::queueFamilyOwnershipTransfer
         static_cast<VkImage>(resource.resource), accessMask, accessMask, imageLayout, imageLayout, gameQueue.familyIndex, presentQueue.familyIndex);
 }
 
-void FrameInterpolationSwapChainVK::presentInterpolated(const VkPresentInfoKHR* pPresentInfo, uint32_t currentBackBufferIndex, bool needUICopy)
+VkResult FrameInterpolationSwapChainVK::presentInterpolated(const VkPresentInfoKHR* pPresentInfo, uint32_t currentBackBufferIndex, bool needUICopy)
 {
     SubmissionSemaphores ToWaitGameQueue;
 
@@ -1845,14 +2074,14 @@ void FrameInterpolationSwapChainVK::presentInterpolated(const VkPresentInfoKHR* 
     // wait on the provided semaphores on the game queue
     addPresentInfoSemaphores(pPresentInfo, ToWaitGameQueue);  // we need to wait on the semaphores the user provided
 
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-    // everything on the game queue
-    bool replacementBufferNeedsOwnershipTransfer = (presentInfo.gameQueue.familyIndex != presentInfo.interpolationQueue.familyIndex);
-    bool uiSurfaceNeedsOwnershipTransfer         = false;  // assumes UI texture is already on the game queue
-#else
-    bool replacementBufferNeedsOwnershipTransfer = (presentInfo.gameQueue.familyIndex != presentInfo.interpolationQueue.familyIndex);
-    bool uiSurfaceNeedsOwnershipTransfer         = (presentInfo.gameQueue.familyIndex != presentInfo.presentQueue.familyIndex) && (presentInfo.currentUiSurface.resource != VK_NULL_HANDLE);
-#endif
+    // transfer the replacement buffer from game queue to interpolation queue
+    const bool replacementBufferNeedsOwnershipTransfer = (presentInfo.gameQueue.familyIndex != presentInfo.interpolationQueue.familyIndex);
+    bool       uiSurfaceNeedsOwnershipTransfer         = false;
+    if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+    {
+        uiSurfaceNeedsOwnershipTransfer =
+            (presentInfo.gameQueue.familyIndex != presentInfo.presentQueue.familyIndex) && (presentInfo.currentUiSurface.resource != VK_NULL_HANDLE);
+    }
 
     if (replacementBufferNeedsOwnershipTransfer || uiSurfaceNeedsOwnershipTransfer || needUICopy)
     {
@@ -1909,12 +2138,7 @@ void FrameInterpolationSwapChainVK::presentInterpolated(const VkPresentInfoKHR* 
     entry.presentCallbackContext           = presentCallbackContext;
     if (presentInfo.uiCompositionFlags & FFX_UI_COMPOSITION_FLAG_ENABLE_INTERNAL_UI_DOUBLE_BUFFERING)
     {
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
         entry.uiSurface = ffxGetResourceVK(uiReplacementBuffer.image, uiReplacementBuffer.description, nullptr, FFX_RESOURCE_STATE_PIXEL_COMPUTE_READ);
-#else
-        // by putting FFX_RESOURCE_STATE_COPY_DEST, the queue family ownership transfer from the game queue to the present queue will also include the layout change
-        entry.uiSurface = ffxGetResourceVK(uiReplacementBuffer.image, uiReplacementBuffer.description, nullptr, FFX_RESOURCE_STATE_COPY_DEST);
-#endif
     }
     else
     {
@@ -1954,10 +2178,11 @@ void FrameInterpolationSwapChainVK::presentInterpolated(const VkPresentInfoKHR* 
 
     interpolationOutputs[interpolationBufferIndex].availabilitySemaphoreValue = entry.numFramesSentForPresentationBase + fiInterpolated.doPresent;
 
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-    // launch composition now that PacingData has been set
-    submitCompositionOnGameQueue(entry);
-#endif
+    if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+    {
+        // launch composition now that PacingData has been set
+        submitCompositionOnGameQueue(entry);
+    }
 
     presentInfo.resetTimer              = frameInterpolationResetCondition;
     presentInfo.scheduledInterpolations = entry;
@@ -1965,6 +2190,8 @@ void FrameInterpolationSwapChainVK::presentInterpolated(const VkPresentInfoKHR* 
 
     // Set event to kick off async CPU present thread
     SetEvent(presentInfo.presentEvent);
+
+    return presentInfo.lastPresentResult.load();
 }
 
 void FrameInterpolationSwapChainVK::registerUiResource(FfxResource uiResource, uint32_t flags)
@@ -1979,6 +2206,24 @@ void FrameInterpolationSwapChainVK::registerUiResource(FfxResource uiResource, u
     LeaveCriticalSection(&criticalSection);
 }
 
+void FrameInterpolationSwapChainVK::setWaitCallback(FfxWaitCallbackFunc waitCallbackFunc)
+{
+    presentInfo.waitCallback = waitCallbackFunc;
+}
+
+
+void FrameInterpolationSwapChainVK::getGpuMemoryUsage(FfxEffectMemoryUsage* vramUsage)
+{
+    vramUsage->totalUsageInBytes     = totalUsageInBytes;
+    vramUsage->aliasableUsageInBytes = aliasableUsageInBytes;
+}
+
+void FrameInterpolationSwapChainVK::setFramePacingTuning(const FfxSwapchainFramePacingTuning* framePacingTuning)
+{
+    presentInfo.safetyMarginInSec = static_cast<double> (framePacingTuning->safetyMarginInMs) / 1000.0;
+    presentInfo.varianceFactor = static_cast<double> (framePacingTuning->varianceFactor);
+}
+
 VkResult FrameInterpolationSwapChainVK::queuePresentNonInterpolated(VkCommands* pCommands, uint32_t imageIndex, SubmissionSemaphores& semaphoresToWait)
 {
     SubmissionSemaphores semaphoresToSignal;
@@ -1990,14 +2235,16 @@ VkResult FrameInterpolationSwapChainVK::queuePresentNonInterpolated(VkCommands* 
 
     pCommands->execute(semaphoresToWait, semaphoresToSignal);
 
-    VkResult res = presentToSwapChain(&presentInfo, imageIndex, imageIndex);
-    FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR, "[queuePresentNonInterpolated] present failed with error %d", res);
+    VkResult presentRes = presentToSwapChain(&presentInfo, imageIndex, imageIndex);
+    FFX_ASSERT_MESSAGE_FORMAT(presentRes == VK_SUCCESS || presentRes == VK_SUBOPTIMAL_KHR || presentRes == VK_ERROR_OUT_OF_DATE_KHR,
+                              "[queuePresentNonInterpolated] present failed with error %d",
+                              presentRes);
 
     semaphoresToWait.add(presentInfo.presentSemaphore, framesSentForPresentation);
-    res = presentInfo.gameQueue.submit(VK_NULL_HANDLE, semaphoresToWait, semaphoresToSignal);
+    VkResult res = presentInfo.gameQueue.submit(VK_NULL_HANDLE, semaphoresToWait, semaphoresToSignal);
     FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS, "[queuePresentNonInterpolated] game queue submit failed with error %d", res);
 
-    return res;
+    return presentRes;
 }
 
 VkResult FrameInterpolationSwapChainVK::presentPassthrough(uint32_t              imageIndex,
@@ -2257,8 +2504,10 @@ VkResult FrameInterpolationSwapChainVK::presentNonInterpolatedWithUiCompositionO
         FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS, "[queuePresentNonInterpolated] queue family ownership transfer to present queue failed with error %d", res);
     }
 
-    res = presentToSwapChain(&presentInfo, imageIndex, imageIndex);
-    FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR, "[queuePresentNonInterpolated] present failed with error %d", res);
+    VkResult presentRes = presentToSwapChain(&presentInfo, imageIndex, imageIndex);
+    FFX_ASSERT_MESSAGE_FORMAT(presentRes == VK_SUCCESS || presentRes == VK_SUBOPTIMAL_KHR || presentRes == VK_ERROR_OUT_OF_DATE_KHR,
+                              "[queuePresentNonInterpolated] present failed with error %d",
+                              presentRes);
 
     SubmissionSemaphores semaphoresToWait;
     SubmissionSemaphores semaphoresToSignal;
@@ -2266,7 +2515,7 @@ VkResult FrameInterpolationSwapChainVK::presentNonInterpolatedWithUiCompositionO
     res = presentInfo.gameQueue.submit(VK_NULL_HANDLE, semaphoresToWait, semaphoresToSignal);
     FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS, "[queuePresentNonInterpolated] game queue submit failed with error %d", res);
 
-    return res;
+    return presentRes;
 }
 
 VkResult FrameinterpolationPresentInfo::acquireNextRealImage(uint32_t& imageIndex, VkSemaphore& acquireSemaphore)
@@ -2275,9 +2524,14 @@ VkResult FrameinterpolationPresentInfo::acquireNextRealImage(uint32_t& imageInde
     EnterCriticalSection(&swapchainCriticalSection);
     VkResult res = vkAcquireNextImageKHR(device, realSwapchain, UINT64_MAX, acquireSemaphore, VK_NULL_HANDLE, &imageIndex);
     LeaveCriticalSection(&swapchainCriticalSection);
-    EXIT_ON_VKRESULT_NOT_SUCCESS(res);
+    
+    // only increment on success
+    // no need to handle VK_NOT_READY or VK_TIMEOUT as timeout is UINT64_MAX
+    if (res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR)
+    {
+        nextAcquireSemaphoreIndex = (nextAcquireSemaphoreIndex + 1) % FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_ACQUIRE_SEMAPHORE_COUNT;
+    }
 
-    nextAcquireSemaphoreIndex = (nextAcquireSemaphoreIndex + 1) % FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_ACQUIRE_SEMAPHORE_COUNT;
     return res;
 }
 
@@ -2287,6 +2541,8 @@ VkResult FrameInterpolationSwapChainVK::queuePresent(VkQueue queue, const VkPres
     {
         return VK_INCOMPLETE;
     }
+
+    VkResult res = VK_SUCCESS;
 
     setFrameGenerationConfig(&nextFrameGenerationConfig);
 
@@ -2318,7 +2574,7 @@ VkResult FrameInterpolationSwapChainVK::queuePresent(VkQueue queue, const VkPres
     {
         WaitForSingleObject(presentInfo.interpolationEvent, INFINITE);
 
-        presentInterpolated(pPresentInfo, currentBackBufferIndex, needUICopy);
+        res = presentInterpolated(pPresentInfo, currentBackBufferIndex, needUICopy);
     }
     else
     {
@@ -2345,30 +2601,40 @@ VkResult FrameInterpolationSwapChainVK::queuePresent(VkQueue queue, const VkPres
         VkSemaphore acquireSemaphore = VK_NULL_HANDLE;
         
         VkResult res = presentInfo.acquireNextRealImage(imageIndex, acquireSemaphore);
-        FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR, "[queuePresent] acquiring next image failed with error %d", res);
+        FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR || res == VK_ERROR_OUT_OF_DATE_KHR, "[queuePresent] acquiring next image failed with error %d", res);
         if (res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR)
         {
             // composition queue should wait until the image is available to render into it
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-            gameQueueWait.add(acquireSemaphore);
-#else
-            presentQueueWait.add(acquireSemaphore);
-#endif
+            if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+            {
+                presentQueueWait.add(acquireSemaphore);
+            }
+            else if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+            {
+                gameQueueWait.add(acquireSemaphore);
+            }
 
             if (presentCallback != nullptr)
             {
-#if FFX_COMPOSITION_MODE == FFX_COMPOSE_IN_VKQUEUEPRESENT_ACQUIRE_IN_PRESENTTHREAD
-                res = presentNonInterpolatedWithUiCompositionOnGameQueue(imageIndex, gameQueueWait, gameQueueSignal, presentQueueWait, needUICopy);
-#else
-                res = presentNonInterpolatedWithUiCompositionOnPresentQueue(imageIndex, gameQueueWait, gameQueueSignal, presentQueueWait, needUICopy);
-#endif
-                FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS, "[queuePresent] presentWithUiComposition failed with error %d", res);
+                if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnPresentQueue)
+                {
+                    res = presentNonInterpolatedWithUiCompositionOnPresentQueue(imageIndex, gameQueueWait, gameQueueSignal, presentQueueWait, needUICopy);
+                }
+                else if (presentInfo.compositionMode == FGSwapchainCompositionMode::eComposeOnGameQueue)
+                {
+                    res = presentNonInterpolatedWithUiCompositionOnGameQueue(imageIndex, gameQueueWait, gameQueueSignal, presentQueueWait, needUICopy);
+                }
             }
             else
             {
                 res = presentPassthrough(imageIndex, gameQueueWait, gameQueueSignal, presentQueueWait);
-                FFX_ASSERT_MESSAGE_FORMAT(res == VK_SUCCESS, "[queuePresent] presentPassthrough failed with error %d", res);
             }
+        }
+        else
+        {
+            // no image was acquired. Skip present. Just signal the replacement buffer semaphore for it to be used at a later point
+            gameQueueSignal.add(presentInfo.replacementBufferSemaphore, ++framesSentForPresentation);
+            presentInfo.gameQueue.submit(VK_NULL_HANDLE, gameQueueWait, gameQueueSignal);
         }
     }
 
@@ -2387,9 +2653,9 @@ VkResult FrameInterpolationSwapChainVK::queuePresent(VkQueue queue, const VkPres
     LeaveCriticalSection(&criticalSection);
 
     waitForSemaphoreValue(
-        presentInfo.device, presentInfo.replacementBufferSemaphore, replacementSwapBuffers[replacementSwapBufferIndex].availabilitySemaphoreValue);
+        presentInfo.device, presentInfo.replacementBufferSemaphore, replacementSwapBuffers[replacementSwapBufferIndex].availabilitySemaphoreValue, UINT64_MAX, presentInfo.waitCallback);
     
-    return VK_SUCCESS;
+    return res;
 }
 
 bool FrameInterpolationSwapChainVK::spawnPresenterThread()
@@ -2527,8 +2793,8 @@ bool FrameInterpolationSwapChainVK::verifyUiDuplicateResource()
     {
         if (uiReplacementBuffer.image != VK_NULL_HANDLE)
         {
-            waitForSemaphoreValue(presentInfo.device, presentInfo.compositionSemaphore, framesSentForPresentation);
-            destroyImage(presentInfo.device, uiReplacementBuffer, pAllocator);
+            waitForSemaphoreValue(presentInfo.device, presentInfo.compositionSemaphore, framesSentForPresentation, UINT64_MAX, presentInfo.waitCallback);
+            destroyImage(uiReplacementBuffer, pAllocator);
             uiReplacementBuffer = {};
         }
     }
@@ -2540,8 +2806,8 @@ bool FrameInterpolationSwapChainVK::verifyUiDuplicateResource()
 
             if (uiResourceDesc.format != internalDesc.format || uiResourceDesc.width != internalDesc.width || uiResourceDesc.height != internalDesc.height)
             {
-                waitForSemaphoreValue(presentInfo.device, presentInfo.compositionSemaphore, framesSentForPresentation);
-                destroyImage(presentInfo.device, uiReplacementBuffer, pAllocator);
+                waitForSemaphoreValue(presentInfo.device, presentInfo.compositionSemaphore, framesSentForPresentation, UINT64_MAX, presentInfo.waitCallback);
+                destroyImage(uiReplacementBuffer, pAllocator);
                 uiReplacementBuffer = {};
             }
         }
@@ -2569,8 +2835,7 @@ bool FrameInterpolationSwapChainVK::verifyUiDuplicateResource()
             VkPhysicalDeviceMemoryProperties memProperties;
             vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
-            res = createImage(presentInfo.device,
-                              uiReplacementBuffer,
+            res = createImage(uiReplacementBuffer,
                               info,
                               uiResourceDesc.format,
                               "AMD FSR Ui Doublebuffer Resource",
@@ -2630,17 +2895,24 @@ VkImageMemoryBarrier FrameInterpolationSwapChainVK::copyUiResource(VkCommandBuff
     dstBarrier = getImageMemoryBarrier(
         imageDst, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    // if we are composing on the present queue, we need a queue family ownership transfer
-    if (transferToPresentQueue)
-    {
-        dstBarrier.srcQueueFamilyIndex = presentInfo.gameQueue.familyIndex;
-        dstBarrier.dstQueueFamilyIndex = presentInfo.presentQueue.familyIndex;
-    }
-    
     ImageBarrierHelper postCopyBarriers;
     postCopyBarriers.add(srcBarrier);
     postCopyBarriers.add(dstBarrier);
+
+    if (transferToPresentQueue)
+    {
+        // NOTE: it might be possible to merge this barrier with dstBarrier above but it needs to be tracked
+        VkImageMemoryBarrier owwnershipBarrier = getImageMemoryBarrier(imageDst,
+                                                                       VK_ACCESS_SHADER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
+                                                                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                                                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        owwnershipBarrier.srcQueueFamilyIndex = presentInfo.gameQueue.familyIndex;
+        owwnershipBarrier.dstQueueFamilyIndex = presentInfo.presentQueue.familyIndex;
+        postCopyBarriers.add(owwnershipBarrier);
+    }
+
     postCopyBarriers.record(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
+    presentInfo.currentUiSurface.resource = nullptr;
     return dstBarrier;
 }

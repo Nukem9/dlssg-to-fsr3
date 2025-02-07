@@ -134,8 +134,9 @@ namespace cauldron
 
         static const json* LoadVertexBuffer(const json& attributes, const char* attributeName, const json& accessors, const json& bufferViews, const json& buffers, const GLTFBufferLoadParams& params, VertexBufferInformation& info, bool forceConversionToFloat);
         static void LoadIndexBuffer(const json& primitive, const json& accessors, const json& bufferViews, const json& buffers, const GLTFBufferLoadParams& params, IndexBufferInformation& info);
-        static void LoadAnimInterpolants(AnimChannel* pAnimChannel, AnimChannel::ComponentSampler samplerType, int32_t samplerIndex, GLTFBufferLoadParams* pBufferLoadParams);
-        static void GetBufferDetails(int accessor, AnimInterpolants* pAccessor, GLTFBufferLoadParams* pBufferLoadParams);
+        static void LoadAnimInterpolant(AnimInterpolants& animInterpolant, const json& gltfData, int32_t interpAccessorID, const GLTFBufferLoadParams* pBufferLoadParams);
+        static void LoadAnimInterpolants(AnimChannel* pAnimChannel, AnimChannel::ComponentSampler samplerType, int32_t samplerIndex, const GLTFBufferLoadParams* pBufferLoadParams);
+        static void GetBufferDetails(int accessor, AnimInterpolants* pAccessor, const GLTFBufferLoadParams* pBufferLoadParams);
         static void BuildBLAS(std::vector<Mesh*> meshes);
 
         void PostGLTFContentLoadCompleted(void* pParam);

@@ -35,10 +35,11 @@
 #define FFX_FRAMEINTERPOLATION_BIND_SRV_PRESENT_BACKBUFFER                      5
 #define FFX_FRAMEINTERPOLATION_BIND_SRV_INPAINTING_PYRAMID                      6
 #define FFX_FRAMEINTERPOLATION_BIND_SRV_CURRENT_INTERPOLATION_SOURCE            7
+#define FFX_FRAMEINTERPOLATION_BIND_SRV_DISTORTION_FIELD                        8
 
-#define FFX_FRAMEINTERPOLATION_BIND_UAV_OUTPUT                                  8
+#define FFX_FRAMEINTERPOLATION_BIND_UAV_OUTPUT                                  9
 
-#define FFX_FRAMEINTERPOLATION_BIND_CB_FRAMEINTERPOLATION                       9
+#define FFX_FRAMEINTERPOLATION_BIND_CB_FRAMEINTERPOLATION                       10
 
 #include "frameinterpolation/ffx_frameinterpolation_callbacks_glsl.h"
 #include "frameinterpolation/ffx_frameinterpolation_common.h"

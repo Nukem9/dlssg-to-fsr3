@@ -99,7 +99,7 @@ FfxFloat32 SceneAverageLuma()
 #endif
 
 // Auto exposure
-FFX_STATIC const FfxFloat32 resetAutoExposureAverageSmoothing = 1e8f;
+FFX_STATIC const FfxFloat32 resetAutoExposureAverageSmoothing = 1e4f;
 
 struct AccumulationPassCommonParams
 {

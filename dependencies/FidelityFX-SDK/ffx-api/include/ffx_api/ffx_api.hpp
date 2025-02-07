@@ -75,6 +75,7 @@ First* LinkHeaders(First& first, Second& second)
 template<class Header>
 Header* LinkHeaders(Header& hdr)
 {
+    hdr.pNext = nullptr;
     return &hdr;
 }
 
@@ -140,7 +141,7 @@ struct struct_type<ffxQueryDescGetVersions> : std::integral_constant<uint64_t, F
 template <class Inner, uint64_t type = struct_type<Inner>::value>
 struct InitHelper : public Inner
 {
-    InitHelper()
+    InitHelper() : Inner()
     {
         this->header.pNext = nullptr;
         this->header.type = type;

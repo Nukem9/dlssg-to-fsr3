@@ -32,11 +32,13 @@
 namespace cauldron
 {
     DXGI_FORMAT GetDXGIFormat(ResourceFormat format);
+    DXGI_FORMAT ConvertTypelessDXGIFormat(DXGI_FORMAT format);
     DXGI_FORMAT DXGIToGamma(DXGI_FORMAT format);
     DXGI_FORMAT DXGIFromGamma(DXGI_FORMAT format);
     uint32_t GetDXGIFormatStride(ResourceFormat format);
     D3D12_RESOURCE_STATES GetDXResourceState(ResourceState state);
     D3D12_RESOURCE_FLAGS GetDXResourceFlags(ResourceFlags flags);
+    bool IsTypelessDXGIFormat(DXGI_FORMAT format);
 
     struct GPUResourceInitParams
     {

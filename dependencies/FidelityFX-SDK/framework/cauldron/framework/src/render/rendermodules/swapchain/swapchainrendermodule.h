@@ -37,7 +37,10 @@ namespace cauldron
     class SwapChainRenderModule : public RenderModule
     {
     public:
-        SwapChainRenderModule() : RenderModule(L"SwapChainRenderModule") {}
+        SwapChainRenderModule() 
+            : RenderModule(L"SwapChainRenderModule"),
+              m_pBackbufferClearColor{0.f,0.f,0.f,1.0f}
+        {}
         virtual ~SwapChainRenderModule();
 
         virtual void Init(const json& initData) override;
@@ -58,6 +61,7 @@ namespace cauldron
         ParameterSet*                   m_pParameters    = nullptr;
         const SwapChainRenderTarget*    m_pRenderTarget  = nullptr;
         const Texture*                  m_pTexture       = nullptr;
+        float                           m_pBackbufferClearColor[4];
     };
 
 } // namespace cauldron

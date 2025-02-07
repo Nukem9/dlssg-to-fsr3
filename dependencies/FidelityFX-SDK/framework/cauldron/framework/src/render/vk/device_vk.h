@@ -38,36 +38,11 @@
 
 namespace cauldron
 {
-    enum RequestedQueue : uint32_t
-    {
-        Graphics = 0,
-        Compute,
-        Copy,
-
-        // frame interpolation
-        FIAsyncCompute,
-        FIPresent,
-        FIImageAcquire,
-
-        Count
-    };
-    struct QueueFamilies
-    {
-        uint32_t                familyIndices[RequestedQueue::Count];
-        VkQueueFamilyProperties properties[RequestedQueue::Count];
-        uint32_t                queueIndices[RequestedQueue::Count];
-    };
-
     struct FIQueue
     {
         VkQueue        queue      = VK_NULL_HANDLE;
         uint32_t       family     = 0;
         uint32_t       index      = 0;
-        bool           shared     = false;
-        RequestedQueue sharedWith = RequestedQueue::Count;
-        std::mutex     submitMutex;
-
-        VkResult SubmitPassthrough(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
     };
 
     struct SwapChainCreationParams
@@ -122,13 +97,15 @@ namespace cauldron
 
         const VkQueue VKCmdQueue(CommandQueue queueType) const { return m_QueueSyncPrims[static_cast<int32_t>(queueType)].GetQueue(); }
         VkQueue VKCmdQueue(CommandQueue queueType) { return m_QueueSyncPrims[static_cast<int32_t>(queueType)].GetQueue(); }
+        const uint32_t VKCmdQueueFamily(CommandQueue queueType) const
+        {
+            return m_QueueSyncPrims[static_cast<int32_t>(queueType)].GetQueueFamily();
+        }
 
         VkSurfaceKHR GetSurface() { return m_Surface; }
 
         void SetResourceName(VkObjectType objectType, uint64_t handle, const char* name);
         void SetResourceName(VkObjectType objectType, uint64_t handle, const wchar_t* name);
-
-        QueueFamilies GetQueueFamilies() const { return m_QueueFamilies; }
 
         const uint32_t GetMinAccelerationStructureScratchOffsetAlignment() { return m_MinAccelerationStructureScratchOffsetAlignment; }
         const uint32_t GetBreadcrumbsMemoryIndex() { return m_BreadcrumbsMemoryIndex; }
@@ -200,11 +177,11 @@ namespace cauldron
             return &m_FIImageAcquireQueue;
         }
 
-        VkResult SubmitPassthrough(RequestedQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
-
     private:
         friend class Device;
         DeviceInternal();
+
+        virtual void UpdateAntiLag2() override {}
 
         class QueueSyncPrimitive
         {
@@ -216,10 +193,10 @@ namespace cauldron
             void ReleaseCommandPool(VkCommandPool commandPool);
 
             const VkQueue GetQueue() const { return m_Queue; }
+            const uint32_t GetQueueFamily() const { return m_FamilyIndex; }
 
             // thread safe
             uint64_t Submit(const std::vector<CommandList*>& cmdLists, const VkSemaphore signalSemaphore, const VkSemaphore waitSemaphore, bool waitForSwapchainImage, bool useEndOfFrameSemaphore, DeviceRemovedCallback deviceRemovedCallback, void* deviceRemovedCustomData);
-            VkResult SubmitPassthrough(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence, DeviceRemovedCallback deviceRemovedCallback, void* deviceRemovedCustomData);
             uint64_t Present(const DeviceInternal* pDevice, VkSwapchainKHR swapchain, uint32_t imageIndex, DeviceRemovedCallback deviceRemovedCallback, void* deviceRemovedCustomData);  // only valid on the present queue
 
             void Wait(VkDevice device, uint64_t waitValue) const;
@@ -254,8 +231,6 @@ namespace cauldron
         VkDevice         m_Device = VK_NULL_HANDLE;
         VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
         VkSurfaceKHR     m_Surface = VK_NULL_HANDLE;
-
-        QueueFamilies    m_QueueFamilies;
 
         VmaAllocator     m_VmaAllocator = nullptr;
 

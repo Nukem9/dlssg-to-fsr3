@@ -52,21 +52,20 @@ void RectifyHistory(
     const FfxFloat32 fReactiveFactor        = ffxPow(params.fReactiveMask, 1.0f / 2.0f);
     const FfxFloat32 fShadingChangeFactor   = params.fShadingChange;
     const FfxFloat32 fBoxScaleT             = ffxMax(fVecolityFactor, ffxMax(fDistanceFactor, ffxMax(fAccumulationFactor, ffxMax(fReactiveFactor, fShadingChangeFactor))));
+    
+    const FfxFloat32   fBoxScale     = ffxLerp(3.0f, 1.0f, fBoxScaleT);
+    const FfxFloat32x3 fScaledBoxVec = data.clippingBox.boxVec * FfxFloat32x3(1.7f, 1.0f, 1.0f) * fBoxScale;
 
-    const FfxFloat32 fBoxScale = ffxLerp(3.0f, 1.0f, fBoxScaleT);
+    const FfxFloat32x3 fClampedScaledBoxVec     = ffxMax(fScaledBoxVec, FfxFloat32x3(1.193e-7f, 1.193e-7f, 1.193e-7f));
+    const FfxFloat32x3 fTransformedHistoryColor = (data.fHistoryColor - data.clippingBox.boxCenter) / fClampedScaledBoxVec;
 
-    const FfxFloat32x3 fScaledBoxVec = data.clippingBox.boxVec * fBoxScale;
-    const FfxFloat32x3 fBoxMin = data.clippingBox.boxCenter - fScaledBoxVec;
-    const FfxFloat32x3 fBoxMax = data.clippingBox.boxCenter + fScaledBoxVec;
-
-    if (any(FFX_GREATER_THAN(fBoxMin, data.fHistoryColor)) || any(FFX_GREATER_THAN(data.fHistoryColor, fBoxMax))) {
-
-        const FfxFloat32x3 fClampedHistoryColor = clamp(data.fHistoryColor, fBoxMin, fBoxMax);
-
-        const FfxFloat32 fHistoryContribution = ffxMax(params.fLumaInstabilityFactor, data.fLockContributionThisFrame) * params.fAccumulation * (1 - params.fDisocclusion);
+    if (length(fTransformedHistoryColor)>1.f) {
+        const FfxFloat32x3 fClampedHistoryColor = normalize(fTransformedHistoryColor);
+        const FfxFloat32x3 fFinalClampedHistoryColor = (fClampedHistoryColor * fScaledBoxVec) + data.clippingBox.boxCenter;
 
         // Scale history color using rectification info, also using accumulation mask to avoid potential invalid color protection
-        data.fHistoryColor = ffxLerp(fClampedHistoryColor, data.fHistoryColor, ffxSaturate(fHistoryContribution));
+        const FfxFloat32 fHistoryContribution = ffxMax(params.fLumaInstabilityFactor, data.fLockContributionThisFrame) * params.fAccumulation * (1 - params.fDisocclusion);
+        data.fHistoryColor = ffxLerp(fFinalClampedHistoryColor, data.fHistoryColor, ffxSaturate(fHistoryContribution));
     }
 }
 
@@ -97,7 +96,7 @@ void ComputeBaseAccumulationWeight(const AccumulationPassCommonParams params, FF
 {
     FfxFloat32 fBaseAccumulation = params.fAccumulation;
 
-    fBaseAccumulation = ffxMin(fBaseAccumulation, ffxLerp(fBaseAccumulation, 0.15f, ffxSaturate(ffxMax(0.0f, params.f4KVelocity / 0.5f))));
+    fBaseAccumulation = ffxMin(fBaseAccumulation, ffxLerp(fBaseAccumulation, 0.15f, ffxSaturate(ffxMax(0.0f, (params.f4KVelocity * VelocityFactor()) / 0.5f))));
 
     data.fHistoryWeight = fBaseAccumulation;
 }
@@ -160,6 +159,8 @@ void Accumulate(FfxInt32x2 iPxHrPos)
     Accumulate(params, data);
 
     data.fHistoryColor /= Exposure();
+
+    data.fHistoryColor = ffxMax(data.fHistoryColor, FfxFloat32x3(0.0f, 0.0f, 0.0f));
 
     StoreInternalColorAndWeight(iPxHrPos, FfxFloat32x4(data.fHistoryColor, data.fLock));
 

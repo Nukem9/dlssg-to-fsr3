@@ -361,3 +361,15 @@ MigrationBackup/
 # Folders created by the media delivery tool
 /media/
 /media-cache/
+
+sdk/src/components/frameinterpolation/FrameInterpolation_GDK/Gaming.Xbox.Scarlett.x64/
+
+sdk/src/components/fsr1/FSR1_GDK/Gaming.Xbox.Scarlett.x64/
+
+sdk/src/components/fsr2/FSR2_GDK/Gaming.Xbox.Scarlett.x64/
+
+sdk/src/components/fsr3/FSR3_GDK/Gaming.Xbox.Scarlett.x64/
+
+sdk/src/components/fsr3upscaler/FSR3Upscaler_GDK/Gaming.Xbox.Scarlett.x64/
+
+sdk/src/components/opticalflow/OpticalFlow_GDK/Gaming.Xbox.Scarlett.x64/

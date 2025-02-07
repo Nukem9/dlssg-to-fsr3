@@ -24,6 +24,11 @@
 #include <stdlib.h>  // for _countof
 #include <cmath>     // for fabs, abs, sinf, sqrt, etc.
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wsign-compare"
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
+
 #include <FidelityFX/host/ffx_cas.h>
 #include <FidelityFX/gpu/ffx_core.h>
 #include <FidelityFX/gpu/cas/ffx_cas.h>
@@ -97,7 +102,7 @@ static FfxErrorCode patchResourceBindings(FfxPipelineState* inoutPipeline)
     return FFX_OK;
 }
 
-static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxCasPass passId, FfxCasColorSpaceConversion colorSpaceConversion, bool fp16, bool force64)
+static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxCasPass, FfxCasColorSpaceConversion colorSpaceConversion, bool fp16, bool force64)
 {
     // work out what permutation to load.
     uint32_t flags = 0;
@@ -180,7 +185,7 @@ static FfxErrorCode createPipelineStates(FfxCasContext_Private* context)
 }
 
 static void scheduleDispatch(
-    FfxCasContext_Private* context, const FfxCasDispatchDescription* params, const FfxPipelineState* pipeline, uint32_t dispatchX, uint32_t dispatchY)
+    FfxCasContext_Private* context, const FfxCasDispatchDescription*, const FfxPipelineState* pipeline, uint32_t dispatchX, uint32_t dispatchY)
 {
     FfxGpuJobDescription dispatchJob = {FFX_GPU_JOB_COMPUTE};
     wcscpy_s(dispatchJob.jobLabel, pipeline->name);
@@ -274,13 +279,13 @@ static FfxErrorCode casCreate(FfxCasContext_Private* context, const FfxCasContex
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
 
     context->constantBuffer.num32BitEntries = sizeof(CasConstants) / sizeof(uint32_t);
 
     // Create the context.
     FfxErrorCode errorCode =
-        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId);
+        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_CAS, nullptr, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     // Call out for device caps.

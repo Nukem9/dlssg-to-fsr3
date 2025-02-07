@@ -147,15 +147,13 @@ layout (set = 0, binding = 1000) uniform sampler s_LinearClamp;
 #endif // defined(FSR1_BIND_UAV_INTERNAL_UPSCALED_COLOR)
 
 #if defined(FSR1_BIND_UAV_UPSCALED_OUTPUT)
-        void StoreRCasOutput(FfxInt16x2 iPxPos, FfxFloat16x4 fColor)
+        void StoreRCasOutputHx2(FfxInt16x2 iPxPos, FfxFloat16x2 fColorR, FfxFloat16x2 fColorG, FfxFloat16x2 fColorB, FfxFloat16x2 fColorA)
         {
-            imageStore(rw_upscaled_output, FfxInt32x2(iPxPos), FfxFloat32x4(fColor));
+            imageStore(rw_upscaled_output, FfxInt32x2(iPxPos), FfxFloat32x4(fColorR.x, fColorG.x, fColorB.x, fColorA.x));
+            iPxPos.x += FfxInt16(8);
+            imageStore(rw_upscaled_output, FfxInt32x2(iPxPos), FfxFloat32x4(fColorR.y, fColorG.y, fColorB.y, fColorA.y));
         }
 
-        void StoreRCasOutput(FfxInt16x2 iPxPos, FfxFloat16x3 fColor)
-        {
-            StoreRCasOutput(iPxPos, FfxFloat16x4(fColor, 1.f));
-        }
 #endif // defined(FSR1_BIND_UAV_UPSCALED_OUTPUT)
 
 #else // FFX_HALF

@@ -31,6 +31,7 @@
 #include <memoryapi.h> // for VirtualAlloc
 #include <mutex>
 #include <tuple> // std::ignore
+#include <limits> // std::numeric_limits
 
 // Disable this to remove the dll load of PIX and PIX tracing
 #define ENABLE_PIX_CAPTURES 1
@@ -41,7 +42,18 @@
 #ifndef USE_PIX
 #define USE_PIX  // Should enable it at anytime, as we already have a runtime switch for this purpose
 #endif           // #ifndef USE_PIX
-#include "pix/pix3.h"
+
+#ifdef _GAMING_DESKTOP
+	#include <pix3.h>
+#else
+	#include "pix/pix3.h"
+#endif // _GAMING_DESKTOP
+
+
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic ignored "-Wpointer-bool-conversion"
+#endif
 
 static bool s_PIXDLLLoaded = false;
 
@@ -56,7 +68,7 @@ EndEventOnCommandList   pixEndEventOnCommandList;
 // DX12 prototypes for functions in the backend interface
 FfxVersionNumber GetSDKVersionDX12(FfxInterface* backendInterface);
 FfxErrorCode GetEffectGpuMemoryUsageDX12(FfxInterface* backendInterface, FfxUInt32 effectContextId, FfxEffectMemoryUsage* outVramUsage);
-FfxErrorCode CreateBackendContextDX12(FfxInterface* backendInterface, FfxEffectBindlessConfig* bindlessConfig, FfxUInt32* effectContextId);
+FfxErrorCode CreateBackendContextDX12(FfxInterface* backendInterface, FfxEffect effect, FfxEffectBindlessConfig* bindlessConfig, FfxUInt32* effectContextId);
 FfxErrorCode GetDeviceCapabilitiesDX12(FfxInterface* backendInterface, FfxDeviceCapabilities* deviceCapabilities);
 FfxErrorCode DestroyBackendContextDX12(FfxInterface* backendInterface, FfxUInt32 effectContextId);
 FfxErrorCode CreateResourceDX12(FfxInterface* backendInterface, const FfxCreateResourceDescription* desc, FfxUInt32 effectContextId, FfxResourceInternal* outTexture);
@@ -132,6 +144,9 @@ typedef struct BackendContext_DX12 {
     IDXGIFactory*           dxgiFactory = nullptr;
 
     typedef struct alignas(32) EffectContext {
+
+        // Effect identifier -- used for various resource callbacks to application
+        FfxEffect           effectId;
 
         // Resource allocation
         uint32_t            nextStaticResource;
@@ -258,7 +273,11 @@ FfxErrorCode ffxGetInterfaceDX12(
     backendInterface->fpBreadcrumbsFreeBlock = BreadcrumbsFreeBlockDX12;
     backendInterface->fpBreadcrumbsWrite = BreadcrumbsWriteDX12;
     backendInterface->fpBreadcrumbsPrintDeviceInfo = BreadcrumbsPrintDeviceInfoDX12;
+#if defined(FFX_FI) || defined(FFX_ALL)
     backendInterface->fpSwapChainConfigureFrameGeneration = ffxSetFrameGenerationConfigToSwapchainDX12;
+#else
+    backendInterface->fpSwapChainConfigureFrameGeneration = 0;
+#endif // defined(FFX_FI) || defined(FFX_ALL)
     backendInterface->fpRegisterConstantBufferAllocator = RegisterConstantBufferAllocatorDX12;
 
     // Memory assignments
@@ -463,29 +482,50 @@ static DXGI_FORMAT convertFormatUav(DXGI_FORMAT format)
 // fix up format in case resource passed for SRV cannot be mapped
 static DXGI_FORMAT convertFormatSrv(DXGI_FORMAT format)
 {
-    switch (format) {
+    switch (format) 
+    {
         // Handle Depth
-    case DXGI_FORMAT_R32G8X24_TYPELESS:
-    case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
-        return DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
-    case DXGI_FORMAT_D32_FLOAT:
-        return DXGI_FORMAT_R32_FLOAT;
-    case DXGI_FORMAT_R24G8_TYPELESS:
-    case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
-    case DXGI_FORMAT_D24_UNORM_S8_UINT:
-        return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-    case DXGI_FORMAT_D16_UNORM:
-        return DXGI_FORMAT_R16_UNORM;
+        case DXGI_FORMAT_R32G8X24_TYPELESS:
+        case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
+            return DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+        case DXGI_FORMAT_D32_FLOAT:
+            return DXGI_FORMAT_R32_FLOAT;
+        case DXGI_FORMAT_R24G8_TYPELESS:
+        case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
+        case DXGI_FORMAT_D24_UNORM_S8_UINT:
+            return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+        case DXGI_FORMAT_D16_UNORM:
+            return DXGI_FORMAT_R16_UNORM;
 
-        // Handle Color
-    case DXGI_FORMAT_B8G8R8A8_TYPELESS:
-        return DXGI_FORMAT_B8G8R8A8_UNORM;
-    case DXGI_FORMAT_R8G8B8A8_TYPELESS:
-        return DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        // Others can map as is
-    default:
-        return format;
+        // Handle color: assume FLOAT for 16 and 32 bit channels, else UNORM
+        case DXGI_FORMAT_R32G32B32A32_TYPELESS:
+            return DXGI_FORMAT_R32G32B32A32_FLOAT;
+        case DXGI_FORMAT_R32G32B32_TYPELESS:
+            return DXGI_FORMAT_R32G32B32_FLOAT;
+        case DXGI_FORMAT_R16G16B16A16_TYPELESS:
+            return DXGI_FORMAT_R16G16B16A16_FLOAT;
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+            return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case DXGI_FORMAT_R32G32_TYPELESS:
+            return DXGI_FORMAT_R32G32_FLOAT;
+        case DXGI_FORMAT_R16G16_TYPELESS:
+            return DXGI_FORMAT_R16G16_FLOAT;
+        case DXGI_FORMAT_R10G10B10A2_TYPELESS:
+            return DXGI_FORMAT_R10G10B10A2_UNORM;
+        case DXGI_FORMAT_B8G8R8A8_TYPELESS:
+            return DXGI_FORMAT_B8G8R8A8_UNORM;
+        case DXGI_FORMAT_B8G8R8X8_TYPELESS:
+            return DXGI_FORMAT_B8G8R8X8_UNORM_SRGB;
+        case DXGI_FORMAT_R32_TYPELESS:
+            return DXGI_FORMAT_R32_FLOAT;
+        case DXGI_FORMAT_R8G8_TYPELESS:
+            return DXGI_FORMAT_R8G8_UNORM;
+        case DXGI_FORMAT_R16_TYPELESS:
+            return DXGI_FORMAT_R16_FLOAT;
+        case DXGI_FORMAT_R8_TYPELESS:
+            return DXGI_FORMAT_R8_UNORM;
+        default:
+            return format;
     }
 }
 
@@ -523,22 +563,28 @@ D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state)
 
 DXGI_FORMAT ffxGetDX12FormatFromSurfaceFormat(FfxSurfaceFormat surfaceFormat)
 {
-    switch (surfaceFormat) {
-
+    switch (surfaceFormat) 
+    {
         case (FFX_SURFACE_FORMAT_R32G32B32A32_TYPELESS):
             return DXGI_FORMAT_R32G32B32A32_TYPELESS;
         case (FFX_SURFACE_FORMAT_R32G32B32A32_UINT):
             return DXGI_FORMAT_R32G32B32A32_UINT;
         case (FFX_SURFACE_FORMAT_R32G32B32A32_FLOAT):
             return DXGI_FORMAT_R32G32B32A32_FLOAT;
+        case (FFX_SURFACE_FORMAT_R16G16B16A16_TYPELESS):
+            return DXGI_FORMAT_R16G16B16A16_TYPELESS;
         case (FFX_SURFACE_FORMAT_R16G16B16A16_FLOAT):
             return DXGI_FORMAT_R16G16B16A16_FLOAT;
         case (FFX_SURFACE_FORMAT_R32G32B32_FLOAT):
             return DXGI_FORMAT_R32G32B32_FLOAT;
+        case (FFX_SURFACE_FORMAT_R32G32_TYPELESS):
+            return DXGI_FORMAT_R32G32_TYPELESS;
         case (FFX_SURFACE_FORMAT_R32G32_FLOAT):
             return DXGI_FORMAT_R32G32_FLOAT;
         case (FFX_SURFACE_FORMAT_R32_UINT):
             return DXGI_FORMAT_R32_UINT;
+        case(FFX_SURFACE_FORMAT_R10G10B10A2_TYPELESS):
+            return DXGI_FORMAT_R10G10B10A2_TYPELESS;
         case(FFX_SURFACE_FORMAT_R10G10B10A2_UNORM):
             return DXGI_FORMAT_R10G10B10A2_UNORM;
         case (FFX_SURFACE_FORMAT_R8G8B8A8_TYPELESS):
@@ -557,12 +603,16 @@ DXGI_FORMAT ffxGetDX12FormatFromSurfaceFormat(FfxSurfaceFormat surfaceFormat)
             return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
         case (FFX_SURFACE_FORMAT_R11G11B10_FLOAT):
             return DXGI_FORMAT_R11G11B10_FLOAT;
+        case (FFX_SURFACE_FORMAT_R16G16_TYPELESS):
+            return DXGI_FORMAT_R16G16_TYPELESS;
         case (FFX_SURFACE_FORMAT_R16G16_FLOAT):
             return DXGI_FORMAT_R16G16_FLOAT;
         case (FFX_SURFACE_FORMAT_R16G16_UINT):
             return DXGI_FORMAT_R16G16_UINT;
         case (FFX_SURFACE_FORMAT_R16G16_SINT):
             return DXGI_FORMAT_R16G16_SINT;
+        case (FFX_SURFACE_FORMAT_R16_TYPELESS):
+            return DXGI_FORMAT_R16_TYPELESS;
         case (FFX_SURFACE_FORMAT_R16_FLOAT):
             return DXGI_FORMAT_R16_FLOAT;
         case (FFX_SURFACE_FORMAT_R16_UINT):
@@ -571,16 +621,24 @@ DXGI_FORMAT ffxGetDX12FormatFromSurfaceFormat(FfxSurfaceFormat surfaceFormat)
             return DXGI_FORMAT_R16_UNORM;
         case (FFX_SURFACE_FORMAT_R16_SNORM):
             return DXGI_FORMAT_R16_SNORM;
+        case (FFX_SURFACE_FORMAT_R8_TYPELESS):
+            return DXGI_FORMAT_R8_TYPELESS;
         case (FFX_SURFACE_FORMAT_R8_UNORM):
             return DXGI_FORMAT_R8_UNORM;
         case (FFX_SURFACE_FORMAT_R8_UINT):
             return DXGI_FORMAT_R8_UINT;
         case (FFX_SURFACE_FORMAT_R8G8_UINT):
             return DXGI_FORMAT_R8G8_UINT;
+        case (FFX_SURFACE_FORMAT_R8G8_TYPELESS):
+            return DXGI_FORMAT_R8G8_TYPELESS;
         case (FFX_SURFACE_FORMAT_R8G8_UNORM):
             return DXGI_FORMAT_R8G8_UNORM;
+        case (FFX_SURFACE_FORMAT_R32_TYPELESS):
+            return DXGI_FORMAT_R32_TYPELESS;
         case (FFX_SURFACE_FORMAT_R32_FLOAT):
             return DXGI_FORMAT_R32_FLOAT;
+        case (FFX_SURFACE_FORMAT_R9G9B9E5_SHAREDEXP):
+            return DXGI_FORMAT_R9G9B9E5_SHAREDEXP;
         case (FFX_SURFACE_FORMAT_UNKNOWN):
             return DXGI_FORMAT_UNKNOWN;
 
@@ -694,6 +752,9 @@ FfxSurfaceFormat ffxGetSurfaceFormatDX12(DXGI_FORMAT format)
         case DXGI_FORMAT_R8_UINT:
             return FFX_SURFACE_FORMAT_R8_UINT;
 
+        case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
+            return FFX_SURFACE_FORMAT_R9G9B9E5_SHAREDEXP;
+
         case DXGI_FORMAT_UNKNOWN:
             return FFX_SURFACE_FORMAT_UNKNOWN;
         default:
@@ -708,6 +769,11 @@ bool IsDepthDX12(DXGI_FORMAT format)
            (format == DXGI_FORMAT_D32_FLOAT) || 
            (format == DXGI_FORMAT_D24_UNORM_S8_UINT) ||
            (format == DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
+}
+
+bool IsStencilDX12(DXGI_FORMAT format)
+{
+    return (format == DXGI_FORMAT_D24_UNORM_S8_UINT) || (format == DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
 }
 
 FfxResourceDescription ffxGetResourceDescriptionDX12(const ID3D12Resource* pResource, FfxResourceUsage additionalUsages /*=FFX_RESOURCE_USAGE_READ_ONLY*/)
@@ -745,6 +811,9 @@ FfxResourceDescription ffxGetResourceDescriptionDX12(const ID3D12Resource* pReso
             // Check for depth use
             resourceDescription.usage     = IsDepthDX12(desc.Format) ? FFX_RESOURCE_USAGE_DEPTHTARGET : FFX_RESOURCE_USAGE_READ_ONLY;
             
+            if (IsStencilDX12(desc.Format))
+                resourceDescription.usage = (FfxResourceUsage)(resourceDescription.usage | FFX_RESOURCE_USAGE_STENCILTARGET);
+
             // Unordered access use
             if ((desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS) == D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)
                 resourceDescription.usage = (FfxResourceUsage)(resourceDescription.usage | FFX_RESOURCE_USAGE_UAV);
@@ -871,44 +940,23 @@ FfxUInt32 GetSDKVersionDX12(FfxInterface*)
     return FFX_SDK_MAKE_VERSION(FFX_SDK_VERSION_MAJOR, FFX_SDK_VERSION_MINOR, FFX_SDK_VERSION_PATCH);
 }
 
-uint64_t GetCurrentGpuMemoryUsageDX12(FfxInterface* backendInterface)
+uint64_t GetResourceGpuMemorySizeDX12(ID3D12Resource* resource)
 {
-    FFX_ASSERT(NULL != backendInterface);
-    BackendContext_DX12* backendContext = (BackendContext_DX12*)backendInterface->scratchBuffer;
-
-    auto isLuidsEqual = [](LUID luid1, LUID luid2) {
-        return memcmp(&luid1, &luid2, sizeof(LUID)) == 0;
-    };
-
-    uint64_t      memoryUsage = 0;
-    IDXGIAdapter* pAdapter = nullptr;
-    UINT          i        = 0;
-    while (backendContext->dxgiFactory->EnumAdapters(i++, &pAdapter) != DXGI_ERROR_NOT_FOUND)
+    uint64_t      size = 0;
+    D3D12_RESOURCE_ALLOCATION_INFO allocInfo = {};
+    if (resource)
     {
-        DXGI_ADAPTER_DESC desc{};
-        if (SUCCEEDED(pAdapter->GetDesc(&desc)))
+        D3D12_RESOURCE_DESC desc = resource->GetDesc();
+        ID3D12Device4* pDevice4 = nullptr;
+        if (SUCCEEDED(resource->GetDevice(IID_PPV_ARGS(&pDevice4))))
         {
-            if (isLuidsEqual(desc.AdapterLuid, backendContext->device->GetAdapterLuid()))
-            {
-                IDXGIAdapter4* pAdapter4 = nullptr;
-
-                if (SUCCEEDED(pAdapter->QueryInterface(IID_PPV_ARGS(&pAdapter4))))
-                {
-                    DXGI_QUERY_VIDEO_MEMORY_INFO info{};
-                    if (SUCCEEDED(pAdapter4->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info)))
-                    {
-                        memoryUsage = info.CurrentUsage;
-                    }
-
-                    pAdapter4->Release();
-                }
-            }
-
-            pAdapter->Release();
+            allocInfo = pDevice4->GetResourceAllocationInfo(0, 1, &desc);
+            size = allocInfo.SizeInBytes;
+            pDevice4->Release();
         }
     }
 
-    return memoryUsage;
+    return size;
 }
 
 FfxErrorCode GetEffectGpuMemoryUsageDX12(FfxInterface* backendInterface, FfxUInt32 effectContextId, FfxEffectMemoryUsage* outVramUsage)
@@ -925,7 +973,7 @@ FfxErrorCode GetEffectGpuMemoryUsageDX12(FfxInterface* backendInterface, FfxUInt
 }
 
 // initialize the DX12 backend
-FfxErrorCode CreateBackendContextDX12(FfxInterface* backendInterface, FfxEffectBindlessConfig* bindlessConfig, FfxUInt32* effectContextId)
+FfxErrorCode CreateBackendContextDX12(FfxInterface* backendInterface, FfxEffect effect, FfxEffectBindlessConfig* bindlessConfig, FfxUInt32* effectContextId)
 {
     FFX_ASSERT(NULL != backendInterface);
     FFX_ASSERT(NULL != backendInterface->device);
@@ -1006,6 +1054,8 @@ FfxErrorCode CreateBackendContextDX12(FfxInterface* backendInterface, FfxEffectB
 
         // DXGI factory used for memory usage tracking
         result = CreateDXGIFactory2(0, IID_PPV_ARGS(&backendContext->dxgiFactory));
+
+        FFX_UNUSED(result);
     }
 
     // Increment the ref count
@@ -1019,6 +1069,8 @@ FfxErrorCode CreateBackendContextDX12(FfxInterface* backendInterface, FfxEffectB
             // Reset everything accordingly
             BackendContext_DX12::EffectContext& effectContext = backendContext->pEffectContexts[i];
             effectContext.active = true;
+            effectContext.effectId = effect;
+
             effectContext.nextStaticResource = (i * FFX_MAX_RESOURCE_COUNT) + 1;
             effectContext.nextDynamicResource = (i * FFX_MAX_RESOURCE_COUNT) + FFX_MAX_RESOURCE_COUNT - 1;
             effectContext.nextStaticUavDescriptor = (i * FFX_MAX_RESOURCE_COUNT);
@@ -1247,8 +1299,7 @@ FfxErrorCode CreateResourceDX12(
     BackendContext_DX12::EffectContext& effectContext = backendContext->pEffectContexts[effectContextId];
     ID3D12Device* dx12Device = backendContext->device;
 
-    uint64_t vramBefore = GetCurrentGpuMemoryUsageDX12(backendInterface);
-
+    uint64_t resourceSize = 0;
     FFX_ASSERT(NULL != dx12Device);
 
     D3D12_HEAP_PROPERTIES dx12HeapProperties = {};
@@ -1351,6 +1402,8 @@ FfxErrorCode CreateResourceDX12(
         dx12UploadBufferDescription.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
         TIF(dx12Device->CreateCommittedResource(&dx12HeapProperties, D3D12_HEAP_FLAG_NONE, &dx12UploadBufferDescription, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&dx12Resource)));
+        resourceSize = GetResourceGpuMemorySizeDX12(dx12Resource);
+
         backendResource->initialState = FFX_RESOURCE_STATE_GENERIC_READ;
         backendResource->currentState = FFX_RESOURCE_STATE_GENERIC_READ;
 
@@ -1394,6 +1447,7 @@ FfxErrorCode CreateResourceDX12(
         const D3D12_RESOURCE_STATES dx12ResourceStates = dx12ResourceDescription.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER ? D3D12_RESOURCE_STATE_COMMON : ffxGetDX12StateFromResourceState(resourceStates);
 
         TIF(dx12Device->CreateCommittedResource(&dx12HeapProperties, D3D12_HEAP_FLAG_NONE, &dx12ResourceDescription, dx12ResourceStates, nullptr, IID_PPV_ARGS(&dx12Resource)));
+        resourceSize = GetResourceGpuMemorySizeDX12(dx12Resource);
         backendResource->initialState = resourceStates;
         backendResource->currentState = resourceStates;
 
@@ -1586,12 +1640,10 @@ FfxErrorCode CreateResourceDX12(
         }
     }
     
-    uint64_t vramAfter = GetCurrentGpuMemoryUsageDX12(backendInterface);
-    uint64_t vramDelta = vramAfter - vramBefore;
-    effectContext.vramUsage.totalUsageInBytes += vramDelta;
+    effectContext.vramUsage.totalUsageInBytes += resourceSize;
     if ((createResourceDescription->resourceDescription.flags & FFX_RESOURCE_FLAGS_ALIASABLE) == FFX_RESOURCE_FLAGS_ALIASABLE)
     {
-        effectContext.vramUsage.aliasableUsageInBytes += vramDelta;
+        effectContext.vramUsage.aliasableUsageInBytes += resourceSize;
     }
 
     return FFX_OK;
@@ -1611,17 +1663,15 @@ FfxErrorCode DestroyResourceDX12(
 
 		if (dx12Resource) {
 
-            uint64_t vramBefore = GetCurrentGpuMemoryUsageDX12(backendInterface);
+            uint64_t resourceSize = GetResourceGpuMemorySizeDX12(dx12Resource);
 
 			dx12Resource->Release();
 
             // update effect memory usage
-            uint64_t vramAfter = GetCurrentGpuMemoryUsageDX12(backendInterface);
-            uint64_t vramDelta = vramBefore - vramAfter;
-            effectContext.vramUsage.totalUsageInBytes -= vramDelta;
+            effectContext.vramUsage.totalUsageInBytes -= resourceSize;
             if ((backendContext->pResources[resource.internalIndex].resourceDescription.flags & FFX_RESOURCE_FLAGS_ALIASABLE) == FFX_RESOURCE_FLAGS_ALIASABLE)
             {
-                effectContext.vramUsage.aliasableUsageInBytes -= vramDelta;
+                effectContext.vramUsage.aliasableUsageInBytes -= resourceSize;
             }
 
 			backendContext->pResources[resource.internalIndex].resourcePtr = nullptr;
@@ -1640,19 +1690,7 @@ DXGI_FORMAT patchDxgiFormatWithFfxUsage(DXGI_FORMAT dxResFmt, FfxSurfaceFormat f
 
     switch (fmt)
     {
-    // fixup typeless formats with what is passed in the ffxSurfaceFormat
     case DXGI_FORMAT_UNKNOWN:
-    case DXGI_FORMAT_R32G32B32A32_TYPELESS:
-    case DXGI_FORMAT_R32G32B32_TYPELESS:
-    case DXGI_FORMAT_R16G16B16A16_TYPELESS:
-    case DXGI_FORMAT_R32G32_TYPELESS:
-    case DXGI_FORMAT_R10G10B10A2_TYPELESS:
-    case DXGI_FORMAT_R16G16_TYPELESS:
-    case DXGI_FORMAT_R32_TYPELESS:
-    case DXGI_FORMAT_R8G8_TYPELESS:
-    case DXGI_FORMAT_R16_TYPELESS:
-    case DXGI_FORMAT_R8_TYPELESS:
-    case DXGI_FORMAT_R8G8B8A8_TYPELESS:
         return fromFfx;
 
     // fixup RGBA8 with SRGB flag passed in the ffxSurfaceFormat
@@ -2675,14 +2713,26 @@ FfxErrorCode CreatePipelineDX12(
             D3D12SerializeRootSignatureType dx12SerializeRootSignatureType = (D3D12SerializeRootSignatureType)GetProcAddress(d3d12ModuleHandle, "D3D12SerializeRootSignature");
 
             if (nullptr != dx12SerializeRootSignatureType) {
-
+                
                 HRESULT result = dx12SerializeRootSignatureType(&dx12RootSignatureDescription, D3D_ROOT_SIGNATURE_VERSION_1, &outBlob, &errorBlob);
+                if (errorBlob != nullptr) {
+
+                    errorBlob->Release();
+                } 
                 if (FAILED(result)) {
 
+                    if (outBlob != nullptr) {
+                        
+                        outBlob->Release();
+                    }  
                     return FFX_ERROR_BACKEND_API_ERROR;
                 }
 
                 result = dx12Device->CreateRootSignature(0, outBlob->GetBufferPointer(), outBlob->GetBufferSize(), IID_PPV_ARGS(reinterpret_cast<ID3D12RootSignature**>(&outPipeline->rootSignature)));
+                if (outBlob != nullptr) {
+                    
+                    outBlob->Release();
+                }  
                 if (FAILED(result)) {
 
                     return FFX_ERROR_BACKEND_API_ERROR;
@@ -3337,9 +3387,6 @@ static FfxErrorCode executeGpuJobCopy(BackendContext_DX12* backendContext, FfxGp
 
 static FfxErrorCode executeGpuJobBarrier(BackendContext_DX12* backendContext, FfxGpuJobDescription* job, ID3D12GraphicsCommandList* dx12CommandList)
 {
-    ID3D12Resource* dx12ResourceSrc = getDX12ResourcePtr(backendContext, job->barrierDescriptor.resource.internalIndex);
-    D3D12_RESOURCE_DESC dx12ResourceDescriptionSrc = dx12ResourceSrc->GetDesc();
-
     addBarrier(backendContext, &job->barrierDescriptor.resource, job->barrierDescriptor.newState);
     flushBarriers(backendContext, dx12CommandList);
 
@@ -3377,6 +3424,22 @@ static FfxErrorCode executeGpuJobClearFloat(BackendContext_DX12* backendContext,
     clearColorAsUint[2] = reinterpret_cast<uint32_t&> (job->clearJobDescriptor.color[2]);
     clearColorAsUint[3] = reinterpret_cast<uint32_t&> (job->clearJobDescriptor.color[3]);
     dx12CommandList->ClearUnorderedAccessViewUint(dx12GpuHandle, dx12CpuHandle, dx12Resource, clearColorAsUint, 0, nullptr);
+
+    return FFX_OK;
+}
+
+static FfxErrorCode executeGpuJobDiscard(BackendContext_DX12*       backendContext,
+                                         FfxGpuJobDescription*      job,
+                                         ID3D12GraphicsCommandList* dx12CommandList)
+{
+    uint32_t                            idx           = job->discardJobDescriptor.target.internalIndex;
+    BackendContext_DX12::Resource       ffxResource   = backendContext->pResources[idx];
+    ID3D12Resource*                     dx12Resource  = reinterpret_cast<ID3D12Resource*>(ffxResource.resourcePtr);
+
+    addBarrier(backendContext, &job->discardJobDescriptor.target, FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+    flushBarriers(backendContext, dx12CommandList);
+
+    dx12CommandList->DiscardResource(dx12Resource, nullptr);
 
     return FFX_OK;
 }
@@ -3420,6 +3483,10 @@ FfxErrorCode ExecuteGpuJobsDX12(
 
             case FFX_GPU_JOB_BARRIER:
                 errorCode = executeGpuJobBarrier(backendContext, GpuJob, dx12CommandList);
+                break;
+
+            case FFX_GPU_JOB_DISCARD:
+                errorCode = executeGpuJobDiscard(backendContext, GpuJob, dx12CommandList);
                 break;
 
             default:
@@ -4118,7 +4185,3 @@ IDXGISwapChain4* ffxGetDX12SwapchainPtr(FfxSwapchain ffxSwapchain)
 {
     return reinterpret_cast<IDXGISwapChain4*>(ffxSwapchain);
 }
-
-#include <FidelityFX/host/ffx_fsr2.h>
-#include <FidelityFX/host/ffx_fsr3.h>
-#include "FrameInterpolationSwapchain/FrameInterpolationSwapchainDX12.h"

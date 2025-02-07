@@ -1,6 +1,6 @@
-<!-- @page page_techniques_combined-adaptive-compute-ambient-occlusion FidelityFX Combined Adaptive Compute Ambient Occlusion 1.3 -->
+<!-- @page page_techniques_combined-adaptive-compute-ambient-occlusion FidelityFX Combined Adaptive Compute Ambient Occlusion 1.4 -->
 
-<h1>FidelityFX Combined Adaptive Compute Ambient Occlusion (CACAO) 1.3</h1>
+<h1>FidelityFX Combined Adaptive Compute Ambient Occlusion (CACAO) 1.4</h1>
 
 **Combined Adaptive Compute Ambient Occlusion** (or **CACAO** for short) is a highly optimised adaptation of the Intel(R) ASSAO screen space ambient occlusion implementation [[ASSAO-16](#references)]. 
 

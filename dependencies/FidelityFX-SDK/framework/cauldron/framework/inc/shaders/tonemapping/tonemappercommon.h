@@ -20,6 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifndef TONEMAPPERCOMMON_H
+#define TONEMAPPERCOMMON_H
+
 #if __cplusplus
     #pragma once
     #include <shaders/shadercommon.h>
@@ -42,10 +45,17 @@ struct TonemapperCBData
     mutable uint32_t    ToneMapper = 0;
     float               DisplayMaxLuminance;
     DisplayMode         MonitorDisplayMode;
+
     Mat4                ContentToMonitorRecMatrix;
+
     int32_t             LetterboxRectBase[2];
     int32_t             LetterboxRectSize[2];
+
     uint32_t            UseAutoExposure = 0;
+    uint32_t            LensDistortionEnabled = 0;
+    float               LensDistortionStrength = -0.2f;
+    float               LensDistortionZoom = 0.4f;
+
     
 };
 #else
@@ -67,5 +77,10 @@ cbuffer TonemapperCBData : register(b0)
     int2 LetterboxRectBase              : packoffset(c5.x);
     int2 LetterboxRectSize              : packoffset(c5.z);
     bool UseAutoExposure                : packoffset(c6.x);
+    bool LensDistortionEnabled          : packoffset(c6.y);
+    float LensDistortionStrength        : packoffset(c6.z);
+    float LensDistortionZoom            : packoffset(c6.w);
 }
 #endif // __cplusplus
+
+#endif // TONEMAPPERCOMMON_H

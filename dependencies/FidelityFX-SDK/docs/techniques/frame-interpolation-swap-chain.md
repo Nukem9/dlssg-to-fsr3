@@ -1,6 +1,6 @@
-<!-- @page page_techniques_frame-interpolation-swap-chain FidelityFX Frame Interpolation Swapchain 1.0 -->
+<!-- @page page_techniques_frame-interpolation-swap-chain FidelityFX Frame Interpolation Swapchain 1.1.2 -->
 
-<h1>FidelityFX Frame Interpolation Swapchain 1.0</h1>
+<h1>FidelityFX Frame Interpolation Swapchain 1.1.2</h1>
 
 <h2>Table of contents</h2>
 

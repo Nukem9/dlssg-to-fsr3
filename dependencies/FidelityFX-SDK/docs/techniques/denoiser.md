@@ -1,6 +1,6 @@
-<!-- @page page_techniques_denoiser FidelityFX Denoiser 1.2 -->
+<!-- @page page_techniques_denoiser FidelityFX Denoiser 1.3 -->
 
-<h1>FidelityFX Denoiser 1.2</h1>
+<h1>FidelityFX Denoiser 1.3</h1>
 
 **AMD FidelityFX Denoiser** includes specialized spatio-temporal denoisers optimized for specific workloads:
 

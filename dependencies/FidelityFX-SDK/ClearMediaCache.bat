@@ -22,7 +22,7 @@
 
 @echo off
 
-SET ffx_sdk_root=%~dp0
+SET ffx_sdk_root="%~dp0"
 
 echo Clearing media delivery cache for SDK root: %ffx_sdk_root%
 

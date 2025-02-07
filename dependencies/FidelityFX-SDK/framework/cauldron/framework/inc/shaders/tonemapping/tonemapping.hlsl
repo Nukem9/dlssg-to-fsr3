@@ -23,6 +23,7 @@
 #include "tonemappers.hlsl"
 #include "tonemappercommon.h"
 #include "transferfunction.h"
+#include "lensdistortion.h"
 
 //--------------------------------------------------------------------------------------
 // Texture definitions
@@ -48,7 +49,14 @@ void MainCS(uint3 dtID : SV_DispatchThreadID)
     }
     else
     {
-        const int2   coordInLetterbox = dtID.xy - LetterboxRectBase;
+        int2   coordInLetterbox = dtID.xy - LetterboxRectBase;
+
+        if (LensDistortionEnabled)
+        {
+            const float2 uvInLetterbox = (coordInLetterbox + 0.5f) / LetterboxRectSize;
+            const float2 distortedUvInLetterbox = ApplyLensDistortion(uvInLetterbox);
+            coordInLetterbox = distortedUvInLetterbox * LetterboxRectSize;
+        }
         const float4 texColor         = InputTexture[coordInLetterbox];
 
         const float2 autoExposure = AutomaticExposureValue[int2(0, 0)];

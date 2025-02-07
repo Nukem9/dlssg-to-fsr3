@@ -1,7 +1,7 @@
 // This file is part of the FidelityFX SDK.
 //
 // Copyright (C) 2024 Advanced Micro Devices, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -32,6 +32,7 @@
 
 namespace cauldron
 {
+#if !defined(_M_ARM64)
     // __m128 Matrix helper
     bool fneq128_b(__m128 const& a, __m128 const& b, float epsilon = 1.e-8f)
     {
@@ -44,11 +45,17 @@ namespace cauldron
         // epsilon
         return _mm_movemask_ps(_mm_cmplt_ps(abd, eps)) != 0xF;
     }
+#endif
+
     bool IsEqual(const Mat4& mat0, const Mat4& mat1)
     {
         for (int i = 0; i < 4; ++i)
         {
+#if defined(_M_ARM64)
+            if (mat0[i] != mat1[i])
+#else
             if (fneq128_b(mat0.getCol(i).get128(), mat1.getCol(i).get128()))
+#endif
                 return false;
         }
         return true;
@@ -383,7 +390,6 @@ namespace cauldron
 #else
         float sceneNearFarRange  = math::Scalar::dist(sceneMin, sceneMax);
 #endif
-
 
         Vec4 worldUnitsPerTexel = {0.0f, 0.0f, 0.0f, 0.0f};
 

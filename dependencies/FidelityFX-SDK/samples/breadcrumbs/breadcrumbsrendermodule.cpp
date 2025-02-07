@@ -77,8 +77,8 @@ void BreadcrumbsRenderModule::Init(const json& initData)
     FfxErrorCode errorCode = SDKWrapper::ffxGetInterface(&contextDesc.backendInterface, GetDevice(),
         m_BackendScratchBuffer, scratchBufferSize, FFX_BREADCRUMBS_CONTEXT_COUNT);
     CAULDRON_ASSERT(errorCode == FFX_OK);
-    CauldronAssert(ASSERT_CRITICAL, contextDesc.backendInterface.fpGetSDKVersion(&contextDesc.backendInterface) == FFX_SDK_MAKE_VERSION(1, 1, 0),
-        L"FidelityFX Breadcrumbs 1.0 sample requires linking with a 1.1 version SDK backend");
+    CauldronAssert(ASSERT_CRITICAL, contextDesc.backendInterface.fpGetSDKVersion(&contextDesc.backendInterface) == FFX_SDK_MAKE_VERSION(1, 1, 2),
+        L"FidelityFX Breadcrumbs 1.0 sample requires linking with a 1.1.2 version SDK backend");
     CauldronAssert(ASSERT_CRITICAL, ffxBreadcrumbsGetEffectVersion() == FFX_SDK_MAKE_VERSION(1, 0, 0),
                        L"FidelityFX Breadcrumbs 1.0 sample requires linking with a 1.0 version FidelityFX Breadcrumbs library");
                        

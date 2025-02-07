@@ -1,7 +1,7 @@
 :: This file is part of the FidelityFX SDK.
 ::
 :: Copyright (C) 2024 Advanced Micro Devices, Inc.
-:: 
+::
 :: Permission is hereby granted, free of charge, to any person obtaining a copy
 :: of this software and associated documentation files(the "Software"), to deal
 :: in the Software without restriction, including without limitation the rights
@@ -29,7 +29,7 @@ echo  FidelityFX Build System
 echo.
 echo ===============================================================
 
-echo Checking pre-requisites... 
+echo Checking pre-requisites...
 
 :: Check if cmake is installed
 cmake --version > nul 2>&1
@@ -46,7 +46,7 @@ echo.
 
 :: Check directories exist and create if not
 if not exist build\ (
-	mkdir build 
+	mkdir build
 )
 
 cd build
@@ -59,14 +59,23 @@ if exist CMakeCache.txt (
     del /S /Q CMakeCache.txt
 )
 
+:: determine architecture
+if /i "%PROCESSOR_ARCHITECTURE%" == "ARM64" (
+    set arch=ARM64
+) else (
+    set arch=X64
+)
+echo architecture %arch% detected
+echo.
+
 :: Check if any parameters were passed in and if not, default to DX12 build
 if "%~1"=="" (
-    echo CMake options: -DFFX_API_BACKEND=DX12_X64 -DFFX_ALL=ON -DFFX_AUTO_COMPILE_SHADERS=1
-    cmake .. -DFFX_API_BACKEND=DX12_X64 -DFFX_ALL=ON -DFFX_AUTO_COMPILE_SHADERS=1
+    set cmake_options=-DFFX_API_BACKEND=DX12_%arch% -DFFX_ALL=ON -DFFX_AUTO_COMPILE_SHADERS=1
 ) else (
-    echo CMake options: %*
-	cmake .. %*
+    set cmake_options=%*
 )
+echo CMake options: %cmake_options%
+cmake .. %cmake_options%
 
 cmake --build ./ --config Debug --parallel 4 -- /p:CL_MPcount=16
 cmake --build ./ --config Release --parallel 4 -- /p:CL_MPcount=16

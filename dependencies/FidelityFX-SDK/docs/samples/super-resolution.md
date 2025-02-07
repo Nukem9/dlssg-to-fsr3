@@ -4,7 +4,7 @@
 
 ![alt text](media/super-resolution/fsr-sample_resized.jpg "A screenshot of the FSR sample.")
 
-This sample demonstrates the use of FidelityFX Super Resolution 3.1 for upscaling and frame generation.
+This sample demonstrates the use of FidelityFX Super Resolution 3.1.3 for upscaling and frame generation.
 
 For details on the underlying algorithms you can refer to the per-technique documentation for [FSR3 upscaling](../techniques/super-resolution-upscaler.md) and [frame interpolation](../techniques/frame-interpolation.md).
 

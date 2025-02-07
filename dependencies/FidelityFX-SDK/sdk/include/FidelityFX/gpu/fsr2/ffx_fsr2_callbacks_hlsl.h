@@ -544,6 +544,14 @@ FfxFloat32x3 LoadPreparedInputColor(FfxUInt32x2 iPxPos)
 {
     return r_prepared_input_color[iPxPos].xyz;
 }
+
+#if FFX_HALF && defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+FFX_MIN16_F3 LoadPreparedInputColorHalf(FfxUInt32x2 iPxPos)
+{
+    return FFX_MIN16_F3(r_prepared_input_color[iPxPos].xyz);
+}
+#endif
+
 #endif
 
 #if defined(FSR2_BIND_SRV_INPUT_MOTION_VECTORS)
@@ -786,6 +794,27 @@ FfxFloat32 SampleLanczos2Weight(FfxFloat32 x)
     return 0.f;
 #endif
 }
+
+#if FFX_HALF && defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+
+FFX_MIN16_F SampleLanczos2Weight_NoValu(FFX_MIN16_F x)
+{
+#if defined(FSR2_BIND_SRV_LANCZOS_LUT)
+    return FFX_MIN16_F(r_lanczos_lut.SampleLevel(s_LinearClamp, __XB_AsHalf(__XB_V_PACK_B32_F16(x, 0.5)), 0));
+#else
+    return 0.0;
+#endif
+}
+
+FFX_MIN16_F SampleLanczos2Weight_NoValuNoA16(FfxFloat32 x)
+{
+#if defined(FSR2_BIND_SRV_LANCZOS_LUT)
+    return FFX_MIN16_F(r_lanczos_lut.SampleLevel(s_LinearClamp, FfxFloat32x2(x, 0.5), 0));
+#else
+    return 0.0;
+#endif
+}
+#endif
 
 #if defined(FSR2_BIND_SRV_UPSCALE_MAXIMUM_BIAS_LUT)
 FfxFloat32 SampleUpsampleMaximumBias(FfxFloat32x2 uv)

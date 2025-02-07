@@ -1,17 +1,17 @@
 # This file is part of the FidelityFX SDK.
-# 
+#
 # Copyright (C) 2024 Advanced Micro Devices, Inc.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files(the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and /or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions :
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -63,6 +63,25 @@ set(FFX_COMPONENTS_PATH ${SDK_ROOT}/src/components)
 set(FFX_HOST_BACKENDS_PATH ${FFX_HOST_PATH}/backends)
 set(FFX_SRC_BACKENDS_PATH ${SDK_ROOT}/src/backends)
 
+#Setup pathing to FFX_API objects
+if (FFX_DEV_API)
+	set(FFX_API_ROOTPATH ${API_ROOT}/bin)
+	set(FFX_API_PATHNAME_DX12D 		${FFX_API_ROOTPATH}/amd_fidelityfx_dx12d)
+	set(FFX_API_PATHNAME_DX12DREL 	${FFX_API_ROOTPATH}/amd_fidelityfx_dx12drel)
+	set(FFX_API_PATHNAME_DX12 		${FFX_API_ROOTPATH}/amd_fidelityfx_dx12)
+	set(FFX_API_PATHNAME_VKD 		${FFX_API_ROOTPATH}/amd_fidelityfx_vkd)
+	set(FFX_API_PATHNAME_VKDREL 	${FFX_API_ROOTPATH}/amd_fidelityfx_vkdrel)
+	set(FFX_API_PATHNAME_VK 		${FFX_API_ROOTPATH}/amd_fidelityfx_vk)
+else()
+	set(FFX_API_ROOTPATH ${PREBUILT_SIGNED_DLL_ROOT})
+	set(FFX_API_PATHNAME_DX12D 		${FFX_API_ROOTPATH}/amd_fidelityfx_dx12)
+	set(FFX_API_PATHNAME_DX12DREL 	${FFX_API_ROOTPATH}/amd_fidelityfx_dx12)
+	set(FFX_API_PATHNAME_DX12 		${FFX_API_ROOTPATH}/amd_fidelityfx_dx12)
+	set(FFX_API_PATHNAME_VKD 		${FFX_API_ROOTPATH}/amd_fidelityfx_vk)
+	set(FFX_API_PATHNAME_VKDREL 	${FFX_API_ROOTPATH}/amd_fidelityfx_vk)
+	set(FFX_API_PATHNAME_VK 		${FFX_API_ROOTPATH}/amd_fidelityfx_vk)
+endif()
+
 # Set top level includes (all projects will need these to some extent)
 include_directories(${CAULDRON_ROOT}/framework/inc)
 include_directories(${CAULDRON_ROOT}/framework/libs)
@@ -73,7 +92,9 @@ include_directories(${SAMPLE_ROOT})
 include_directories(${SDK_ROOT}/include)
 
 
-if (CMAKE_GENERATOR_PLATFORM STREQUAL x64)
+if (CMAKE_GENERATOR_PLATFORM STREQUAL x64 OR
+    CMAKE_GENERATOR_PLATFORM STREQUAL ARM64 OR
+    CMAKE_GENERATOR_PLATFORM STREQUAL ARM64EC)
 	#Set so taken by default when creating custom configs
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MD")

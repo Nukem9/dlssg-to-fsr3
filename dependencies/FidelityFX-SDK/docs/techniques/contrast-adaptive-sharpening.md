@@ -1,6 +1,6 @@
-<!-- @page page_techniques_contrast-adaptive-sharpening FidelityFX Contrast Adaptive Sharpening 1.1 -->
+<!-- @page page_techniques_contrast-adaptive-sharpening FidelityFX Contrast Adaptive Sharpening 1.2 -->
 
-<h1>FidelityFX Contrast Adaptive Sharpening 1.1</h1>
+<h1>FidelityFX Contrast Adaptive Sharpening 1.2</h1>
 
 FidelityFX Contrast Adaptive Sharpening (CAS) is a low overhead adaptive sharpening algorithm with optional up-sampling. The technique is developed by Timothy Lottes (creator of FXAA) and was created to provide natural sharpness without artifacts.
 

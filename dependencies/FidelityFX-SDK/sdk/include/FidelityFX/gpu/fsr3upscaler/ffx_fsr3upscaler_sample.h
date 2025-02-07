@@ -169,6 +169,24 @@ FFX_MIN16_F Lanczos2ApproxSqNoClamp(FFX_MIN16_F x2)
     FFX_MIN16_F b = FFX_MIN16_F(1.0f / 4.0f) * x2 - FFX_MIN16_F(1);
     return (FFX_MIN16_F(25.0f / 16.0f) * a * a - FFX_MIN16_F(25.0f / 16.0f - 1)) * (b * b);
 }
+
+#if defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+FFX_MIN16_F2 PairedLanczos2ApproxSqNoClamp(FFX_MIN16_F2 x2)
+{
+    // Xbox ATG (Pavel):
+    // 
+    //     2.0 * x2 - 5.0     25.0           25.0 - 16.0     (2.0 * x2 - 5.0)^2 - (3.0)^2    (2.0 * x2 - 8.0) * (2.0 * x2 - 2.0)   (x2 - 4.0) * (x2 - 1.0)
+    // a = -------------- ==> ---- * a^2 - -------------- = ----------------------------- =  ---------------------------------- =  ----------------------- = b * (x2 - 1.0)
+    //           5.0          16.0              16.0                16.0                                     16.0                            4.0
+    //
+    // so we need to compute just (b * b) * (b * x2 - b), so we should get four packed instructions: 2 fma + 2 mul
+    //
+
+    FFX_MIN16_F2 b = (0.25 * x2 - 1.0);
+    return (b * b) * (b * x2 - b);
+}
+#endif
+
 #endif //FFX_HALF
 
 FfxFloat32 Lanczos2ApproxSq(FfxFloat32 x2)
@@ -183,6 +201,14 @@ FFX_MIN16_F Lanczos2ApproxSq(FFX_MIN16_F x2)
     x2 = ffxMin(x2, FFX_MIN16_F(4.0f));
     return Lanczos2ApproxSqNoClamp(x2);
 }
+
+#if defined(__XBOX_SCARLETT) && defined(__XBATG_EXTRA_16_BIT_OPTIMISATION) && (__XBATG_EXTRA_16_BIT_OPTIMISATION == 1)
+FFX_MIN16_F2 PairedLanczos2ApproxSq(FFX_MIN16_F2 x2)
+{
+    x2 = ffxMin(x2, FFX_MIN16_F2(4.0, 4.0));
+    return PairedLanczos2ApproxSqNoClamp(x2);
+}
+#endif
 #endif //FFX_HALF
 
 FfxFloat32 Lanczos2ApproxNoClamp(FfxFloat32 x)

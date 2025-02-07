@@ -167,7 +167,7 @@ FfxFloat32x2 FFX_SSSR_GetMipResolution(FfxFloat32x2 screen_dimensions, FfxInt32 
 // Requires origin and direction of the ray to be in screen space [0, 1] x [0, 1]
 FfxFloat32x3 FFX_SSSR_HierarchicalRaymarch(FfxFloat32x3 origin, FfxFloat32x3 direction, FfxBoolean is_mirror, FfxFloat32x2 screen_size, FfxInt32 most_detailed_mip, FfxUInt32 min_traversal_occupancy, FfxUInt32 max_traversal_intersections, FFX_PARAMETER_OUT FfxBoolean valid_hit) 
 {
-    const FfxFloat32x3 inv_direction = direction != FFX_SELECT(FfxFloat32x3(0.0f, 0.0f, 0.0f), FfxFloat32x3(1.0f, 1.0f, 1.0f) / direction, FfxFloat32x3(FFX_SSSR_FLOAT_MAX, FFX_SSSR_FLOAT_MAX, FFX_SSSR_FLOAT_MAX));
+    const FfxFloat32x3 inv_direction = FFX_SELECT(direction != FfxFloat32x3(0.0f, 0.0f, 0.0f), FfxFloat32x3(1.0f, 1.0f, 1.0f) / direction, FfxFloat32x3(FFX_SSSR_FLOAT_MAX, FFX_SSSR_FLOAT_MAX, FFX_SSSR_FLOAT_MAX));
 
     // Start on mip with highest detail.
     FfxInt32 current_mip = most_detailed_mip;

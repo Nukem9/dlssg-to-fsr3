@@ -830,7 +830,7 @@ static FfxErrorCode brixelizerGICreate(FfxBrixelizerGIContext_Private* pContext,
     memcpy(&pContext->contextDescription, pContextDescription, sizeof(FfxBrixelizerGIContextDescription));
 
     // Create the device.
-    FfxErrorCode errorCode = pContext->contextDescription.backendInterface.fpCreateBackendContext(&pContext->contextDescription.backendInterface, nullptr, &pContext->effectContextId);
+    FfxErrorCode errorCode = pContext->contextDescription.backendInterface.fpCreateBackendContext(&pContext->contextDescription.backendInterface, FFX_EFFECT_BRIXELIZER_GI, nullptr, &pContext->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     // call out for device caps.

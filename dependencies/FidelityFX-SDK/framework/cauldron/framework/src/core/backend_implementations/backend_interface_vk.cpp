@@ -206,23 +206,6 @@ FfxResource ffxGetFrameinterpolationTexture(FfxSwapchain ffxSwapChain)
     return s_pFfxGetFrameinterpolationTextureFunc(ffxSwapChain);
 }
 
-VkResult GraphicsQueueSubmit(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
-{
-    return cauldron::GetDevice()->GetImpl()->SubmitPassthrough(cauldron::RequestedQueue::Graphics, submitCount, pSubmits, fence);
-}
-VkResult AsyncComputeQueueSubmit(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
-{
-    return cauldron::GetDevice()->GetImpl()->SubmitPassthrough(cauldron::RequestedQueue::FIAsyncCompute, submitCount, pSubmits, fence);
-}
-VkResult PresentQueueSubmit(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
-{
-    return cauldron::GetDevice()->GetImpl()->SubmitPassthrough(cauldron::RequestedQueue::FIPresent, submitCount, pSubmits, fence);
-}
-VkResult ImageAcquireQueueSubmit(uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
-{
-    return cauldron::GetDevice()->GetImpl()->SubmitPassthrough(cauldron::RequestedQueue::FIImageAcquire, submitCount, pSubmits, fence);
-}
-
 void ffxSetupFrameInterpolationSwapChain()
 {
     CAULDRON_ASSERT(s_pFfxGetSwapchainFunc);
@@ -230,6 +213,12 @@ void ffxSetupFrameInterpolationSwapChain()
     CAULDRON_ASSERT(s_pFfxReplaceSwapchainForFrameinterpolationFunc);
     CAULDRON_ASSERT(s_pFfxGetVKSwapchainFunc);
     CAULDRON_ASSERT(s_pFfxGetSwapchainReplacementFunctionsFunc);
+
+    const cauldron::FIQueue* pAsyncComputeQueue = cauldron::GetDevice()->GetImpl()->GetFIAsyncComputeQueue();
+    const cauldron::FIQueue* pPresentQueue      = cauldron::GetDevice()->GetImpl()->GetFIPresentQueue();
+    const cauldron::FIQueue* pImageAcquireQueue = cauldron::GetDevice()->GetImpl()->GetFIImageAcquireQueue();
+    cauldron::CauldronAssert(cauldron::ASSERT_CRITICAL, pPresentQueue->queue != VK_NULL_HANDLE, L"Cannot create FI Swapchain because there is no present queue.");
+    cauldron::CauldronAssert(cauldron::ASSERT_CRITICAL, pImageAcquireQueue->queue != VK_NULL_HANDLE, L"Cannot create FI Swapchain because there is no image acquire queue.");
 
     // Create frameinterpolation swapchain
     cauldron::SwapChain* pSwapchain   = cauldron::GetFramework()->GetSwapChain();
@@ -245,27 +234,20 @@ void ffxSetupFrameInterpolationSwapChain()
     frameInterpolationInfo.physicalDevice              = cauldron::GetDevice()->GetImpl()->VKPhysicalDevice();
     frameInterpolationInfo.pAllocator                  = nullptr;
     frameInterpolationInfo.gameQueue.queue             = cauldron::GetDevice()->GetImpl()->VKCmdQueue(cauldron::CommandQueue::Graphics);
-    frameInterpolationInfo.gameQueue.familyIndex       = cauldron::GetDevice()->GetImpl()->GetQueueFamilies().familyIndices[cauldron::RequestedQueue::Graphics];
+    frameInterpolationInfo.gameQueue.familyIndex       = cauldron::GetDevice()->GetImpl()->VKCmdQueueFamily(cauldron::CommandQueue::Graphics);
     frameInterpolationInfo.gameQueue.submitFunc        = nullptr;  // this queue is only used in vkQueuePresentKHR, hence doesn't need a callback
-    frameInterpolationInfo.asyncComputeQueue.queue           = cauldron::GetDevice()->GetImpl()->GetFIAsyncComputeQueue()->queue;
-    frameInterpolationInfo.asyncComputeQueue.familyIndex     = cauldron::GetDevice()->GetImpl()->GetQueueFamilies().familyIndices[cauldron::RequestedQueue::FIAsyncCompute];
-    if (cauldron::GetDevice()->GetImpl()->GetFIAsyncComputeQueue()->shared)
-        frameInterpolationInfo.asyncComputeQueue.submitFunc = AsyncComputeQueueSubmit;
-    else
-        frameInterpolationInfo.asyncComputeQueue.submitFunc = nullptr; 
-    frameInterpolationInfo.presentQueue.queue = cauldron::GetDevice()->GetImpl()->GetFIPresentQueue()->queue;
-    frameInterpolationInfo.presentQueue.familyIndex = cauldron::GetDevice()->GetImpl()->GetQueueFamilies().familyIndices[cauldron::RequestedQueue::FIPresent];
-    if (cauldron::GetDevice()->GetImpl()->GetFIPresentQueue()->shared)
-        frameInterpolationInfo.presentQueue.submitFunc = PresentQueueSubmit;
-    else
-        frameInterpolationInfo.presentQueue.submitFunc = nullptr;
-    frameInterpolationInfo.imageAcquireQueue.queue = cauldron::GetDevice()->GetImpl()->GetFIImageAcquireQueue()->queue;
-    frameInterpolationInfo.imageAcquireQueue.familyIndex =
-        cauldron::GetDevice()->GetImpl()->GetQueueFamilies().familyIndices[cauldron::RequestedQueue::FIImageAcquire];
-    if (cauldron::GetDevice()->GetImpl()->GetFIImageAcquireQueue()->shared)
-        frameInterpolationInfo.imageAcquireQueue.submitFunc = ImageAcquireQueueSubmit;
-    else
-        frameInterpolationInfo.imageAcquireQueue.submitFunc = nullptr;
+
+    frameInterpolationInfo.asyncComputeQueue.queue       = pAsyncComputeQueue->queue;
+    frameInterpolationInfo.asyncComputeQueue.familyIndex = pAsyncComputeQueue->family;
+    frameInterpolationInfo.asyncComputeQueue.submitFunc  = nullptr;
+
+    frameInterpolationInfo.presentQueue.queue       = pPresentQueue->queue;
+    frameInterpolationInfo.presentQueue.familyIndex = pPresentQueue->family;
+    frameInterpolationInfo.presentQueue.submitFunc  = nullptr;
+
+    frameInterpolationInfo.imageAcquireQueue.queue       = pImageAcquireQueue->queue;
+    frameInterpolationInfo.imageAcquireQueue.familyIndex = pImageAcquireQueue->family;
+    frameInterpolationInfo.imageAcquireQueue.submitFunc  = nullptr;
 
     VkSwapchainCreateInfoKHR createInfo = *cauldron::GetFramework()->GetSwapChain()->GetImpl()->GetCreateInfo();
     FfxErrorCode             errorCode  = s_pFfxReplaceSwapchainForFrameinterpolationFunc(ffxGameQueue, ffxSwapChain, &createInfo, &frameInterpolationInfo);

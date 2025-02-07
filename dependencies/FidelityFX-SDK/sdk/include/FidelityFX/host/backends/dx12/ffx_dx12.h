@@ -87,6 +87,9 @@ typedef struct BackendContext_DX12 {
 
     typedef struct alignas(32) EffectContext {
 
+        // Effect identifier -- used for various resource callbacks to application
+        FfxEffect           effectId;
+
         // Resource allocation
         uint32_t            nextStaticResource;
         uint32_t            nextDynamicResource;
@@ -398,6 +401,40 @@ FFX_API FfxResource ffxGetFrameinterpolationTextureDX12(FfxSwapchain gameSwapCha
 ///
 /// @ingroup DX12FrameInterpolation
 FFX_API FfxErrorCode ffxSetFrameGenerationConfigToSwapchainDX12(FfxFrameGenerationConfig const* config);
+
+//enum value matches enum FfxApiConfigureFrameGenerationSwapChainKeyDX12
+typedef enum FfxFrameInterpolationSwapchainConfigureKey
+{
+    FFX_FI_SWAPCHAIN_CONFIGURE_KEY_WAITCALLBACK = 0,
+    FFX_FI_SWAPCHAIN_CONFIGURE_KEY_FRAMEPACINGTUNING = 2,
+} FfxFrameInterpolationSwapchainConfigureKey;
+
+/// Configures <c><i>FfxSwapchain</i></c> via KeyValue API post <c><i>FfxSwapchain</i></c> context creation
+///
+/// @param [in] gameSwapChain           The <c><i>FfxSwapchain</i></c> to configure via KeyValue API
+/// @param [in] key                     The <c><i>FfxFrameInterpolationSwapchainConfigureKey</i></c> is key
+/// @param [in] valuePtr                The <c><i><void *></i></c> pointer to value. What this pointer deference to depends on key.
+/// 
+/// @retval
+/// FFX_OK                              The operation completed successfully.
+/// @retval
+/// FFX_ERROR_INVALID_ARGUMENT          Could not query the interface for the frame interpolation swap chain.
+///
+/// @ingroup DX12FrameInterpolation
+FFX_API FfxErrorCode ffxConfigureFrameInterpolationSwapchainDX12(FfxSwapchain gameSwapChain, FfxFrameInterpolationSwapchainConfigureKey key, void* valuePtr);
+
+/// Query how much GPU memory created by <c><i>FfxSwapchain</i></c>. This excludes GPU memory created by DXGI (ie. size of DXGI swapchaim backbuffers).
+///
+/// @param [in] gameSwapChain           The <c><i>FfxSwapchain</i></c> to configure via KeyValue API
+/// @param [in out] vramUsage           The <c><i>FfxEffectMemoryUsage</i></c> is the GPU memory created by FrameInterpolationSwapchain
+/// 
+/// @retval
+/// FFX_OK                              The operation completed successfully.
+/// @retval
+/// FFX_ERROR_INVALID_ARGUMENT          Could not query the interface for the frame interpolation swap chain.
+///
+/// @ingroup DX12FrameInterpolation
+FFX_API FfxErrorCode ffxFrameInterpolationSwapchainGetGpuMemoryUsageDX12(FfxSwapchain gameSwapChain, FfxEffectMemoryUsage* vramUsage);
 
 struct FfxFrameInterpolationContext;
 typedef FfxErrorCode (*FfxCreateFiSwapchain)(FfxFrameInterpolationContext* fiContext, FfxDevice device, FfxCommandQueue gameQueue, FfxSwapchain& swapchain);

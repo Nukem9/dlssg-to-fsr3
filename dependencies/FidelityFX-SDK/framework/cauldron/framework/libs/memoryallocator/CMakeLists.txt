@@ -38,6 +38,7 @@ if (SUPPORT_RUNTIME_SHADER_RECOMPILE EQUAL 1)
 	
 	if (CAULDRON_VK)
 		add_library(memoryallocator_vk SHARED ${files_vk})
+		target_compile_definitions(memoryallocator_vk PRIVATE VMA_EXPORTS)
 	endif()
 	
 	if (CAULDRON_DX12)

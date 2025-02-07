@@ -71,6 +71,8 @@ typedef struct Fsr3UpscalerConstants {
     float                       deltaPreExposure;
     float                       viewSpaceToMetersFactor;    
     float                       frameIndex;
+
+    float                       velocityFactor;
 } Fsr3UpscalerConstants;
 
 struct FfxFsr3UpscalerContextDescription;

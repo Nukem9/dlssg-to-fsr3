@@ -4,21 +4,21 @@
 
 All of the FidelityFX SDK samples are written in C++ and use the [Cauldron](../../framework/cauldron) sample framework.
 
-- [FidelityFX Blur 1.0](blur.md)
+- [FidelityFX Blur 1.1](blur.md)
 - [FidelityFX Breadcrumbs 1.0](breadcrumbs.md)
 - [FidelityFX Brixelizer 1.0](brixelizer-gi.md)
-- [FidelityFX Combined Adaptive Compute Ambient Occlusion 1.3](combined-adaptive-compute-ambient-occlusion.md)
-- [FidelityFX Contrast Adaptive Sharpening 1.1](contrast-adaptive-sharpening.md)
-- [FidelityFX Depth of Field 1.0](depth-of-field.md)
-- [FidelityFX Hybrid Reflections 1.1](hybrid-reflections.md)
-- [FidelityFX Hybrid Shadows 1.1](hybrid-shadows.md)
-- [FidelityFX Lens 1.0](lens.md)
-- [FidelityFX Luminance Preserving Mapper 1.3](luminance-preserving-mapper.md)
-- [FidelityFX Parallel Sort 1.2](parallel-sort.md)
-- [FidelityFX Single Pass Downsampler 2.1](single-pass-downsampler.md)
-- [FidelityFX Stochastic Screen-Space Reflections 1.4](stochastic-screen-space-reflections.md)
-- [FidelityFX Super Resolution 1.1 & 2.2 & 3.0.4](super-resolution.md)
-- [FidelityFX Variable Shading 1.1](variable-shading.md)
+- [FidelityFX Combined Adaptive Compute Ambient Occlusion 1.4](combined-adaptive-compute-ambient-occlusion.md)
+- [FidelityFX Contrast Adaptive Sharpening 1.2](contrast-adaptive-sharpening.md)
+- [FidelityFX Depth of Field 1.1](depth-of-field.md)
+- [FidelityFX Hybrid Reflections 1.3](hybrid-reflections.md)
+- [FidelityFX Hybrid Shadows 1.3](hybrid-shadows.md)
+- [FidelityFX Lens 1.1](lens.md)
+- [FidelityFX Luminance Preserving Mapper 1.4](luminance-preserving-mapper.md)
+- [FidelityFX Parallel Sort 1.3](parallel-sort.md)
+- [FidelityFX Single Pass Downsampler 2.2](single-pass-downsampler.md)
+- [FidelityFX Stochastic Screen-Space Reflections 1.5](stochastic-screen-space-reflections.md)
+- [FidelityFX Super Resolution 1.2 & 2.3.2 & 3.1.1](super-resolution.md)
+- [FidelityFX Variable Shading 1.2](variable-shading.md)
 
 <!-- - @subpage page_samples_combined-adaptive-compute-ambient-occlusion "Combined Adaptive Compute Ambient Occlusion" -->
 <!-- - @subpage page_samples_contrast-adaptive-sharpening "Contrast Adaptive Sharpening" -->

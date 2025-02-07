@@ -226,6 +226,15 @@ namespace cauldron
         {}
 
         /**
+         * @brief   Constructor. Creates the UI button.
+         */
+        UIButton(uint64_t id, const char* text, std::function<void(void)> callback, bool shown = true, bool sameLine = false)
+            : UIElement(id, UIElementType::Button, text, AlwaysEnable, shown, sameLine)
+            , m_Callback(std::move(callback))
+        {
+        }
+
+        /**
          * @brief   Destructor. Destroys the UI button.
          */
         virtual ~UIButton() = default;

@@ -27,41 +27,8 @@ float FilterShadow(Texture2D shadowMap, SamplerComparisonState samShadow, float3
 {
     float shadow = 0.0;
 
-    static const int kernelLevel = 2;
-    static const int kernelWidth = 2 * kernelLevel + 1;
-#ifdef _VK
-    // this code is temporary because there is a bug in dxc compiler
-    // https://github.com/microsoft/DirectXShaderCompiler/issues/4374
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-2, -2)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-2, -1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-2,  0)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-2,  1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-2,  2)).r;
-
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-1, -2)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-1, -1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-1,  0)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-1,  1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(-1,  2)).r;
-
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 0, -2)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 0, -1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 0,  0)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 0,  1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 0,  2)).r;
-
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 1, -2)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 1, -1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 1,  0)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 1,  1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 1,  2)).r;
-
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 2, -2)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 2, -1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 2,  0)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 2,  1)).r;
-    shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2( 2,  2)).r;
-#else
+    const int kernelLevel = 2;
+    const int kernelWidth = 2 * kernelLevel + 1;
     [unroll] for (int i = -kernelLevel; i <= kernelLevel; i++)
     {
         [unroll] for (int j = -kernelLevel; j <= kernelLevel; j++)
@@ -69,7 +36,6 @@ float FilterShadow(Texture2D shadowMap, SamplerComparisonState samShadow, float3
             shadow += shadowMap.SampleCmpLevelZero(samShadow, uv.xy, uv.z, int2(i, j)).r;
         }
     }
-#endif
 
     shadow /= (kernelWidth*kernelWidth);
     return shadow;

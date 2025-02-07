@@ -79,10 +79,11 @@ const char* ffxProvider_FSR3Upscale::GetVersionName() const
 
 struct InternalFsr3UpscalerUContext
 {
-    InternalContextHeader header;
-    FfxInterface backendInterface;
-    FfxFsr3UpscalerContext context;
-    ffxApiMessage fpMessage;
+    InternalContextHeader   header;
+    FfxInterface            backendInterface;
+    FfxResourceInternal     sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_COUNT];
+    FfxFsr3UpscalerContext  context;
+    ffxApiMessage           fpMessage;
 };
 
 ffxReturnCode_t ffxProvider_FSR3Upscale::CreateContext(ffxContext* context, ffxCreateContextDescHeader* header, Allocator& alloc) const
@@ -122,6 +123,38 @@ ffxReturnCode_t ffxProvider_FSR3Upscale::CreateContext(ffxContext* context, ffxC
         // Create the FSR3UPSCALER context
         TRY2(ffxFsr3UpscalerContextCreate(&internal_context->context, &initializationParameters));
 
+        // set up FSR3Upscaler "shared" resources (no resource sharing in the upscaler provider though, since providers are fully independent and we can't guarantee all upscale providers will be compatible with other effects)
+        {
+            FfxFsr3UpscalerSharedResourceDescriptions fs3UpscalerResourceDescs = {};
+            TRY2(ffxFsr3UpscalerGetSharedResourceDescriptions(&internal_context->context, &fs3UpscalerResourceDescs));
+
+            {
+                FfxCreateResourceDescription dilD = fs3UpscalerResourceDescs.dilatedDepth;
+                dilD.name = fs3UpscalerResourceDescs.dilatedDepth.name;
+                TRY2(internal_context->backendInterface.fpCreateResource(
+                    &internal_context->backendInterface,
+                    &dilD,
+                    0,
+                    &internal_context->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0]));
+
+                FfxCreateResourceDescription dilMVs = fs3UpscalerResourceDescs.dilatedMotionVectors;
+                dilD.name   = fs3UpscalerResourceDescs.dilatedMotionVectors.name;
+                TRY2(internal_context->backendInterface.fpCreateResource(
+                    &internal_context->backendInterface,
+                    &dilMVs,
+                    0,
+                    &internal_context->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0]));
+
+                FfxCreateResourceDescription recND = fs3UpscalerResourceDescs.reconstructedPrevNearestDepth;
+                recND.name = fs3UpscalerResourceDescs.reconstructedPrevNearestDepth.name;
+                TRY2(internal_context->backendInterface.fpCreateResource(
+                    &internal_context->backendInterface,
+                    &recND,
+                    0,
+                    &internal_context->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0]));
+            }
+        }
+
         *context = internal_context;
         return FFX_API_RETURN_OK;
     }
@@ -138,6 +171,12 @@ ffxReturnCode_t ffxProvider_FSR3Upscale::DestroyContext(ffxContext* context, All
 
     InternalFsr3UpscalerUContext* internal_context = reinterpret_cast<InternalFsr3UpscalerUContext*>(*context);
     
+    for (FfxUInt32 i = 0; i < FFX_FSR3_RESOURCE_IDENTIFIER_COUNT; i++)
+    {
+        TRY2(internal_context->backendInterface.fpDestroyResource(
+            &internal_context->backendInterface, internal_context->sharedResources[i], 0));
+    }
+
     TRY2(ffxFsr3UpscalerContextDestroy(&internal_context->context));
 
     alloc.dealloc(internal_context->backendInterface.scratchBuffer);
@@ -146,9 +185,24 @@ ffxReturnCode_t ffxProvider_FSR3Upscale::DestroyContext(ffxContext* context, All
     return FFX_API_RETURN_OK;
 }
 
-ffxReturnCode_t ffxProvider_FSR3Upscale::Configure(ffxContext*, const ffxConfigureDescHeader*) const
+ffxReturnCode_t ffxProvider_FSR3Upscale::Configure(ffxContext* context, const ffxConfigureDescHeader* header) const
 {
-    return FFX_API_RETURN_ERROR_PARAMETER;
+    VERIFY(context, FFX_API_RETURN_ERROR_PARAMETER);
+    VERIFY(*context, FFX_API_RETURN_ERROR_PARAMETER);
+    VERIFY(header, FFX_API_RETURN_ERROR_PARAMETER);
+    InternalFsr3UpscalerUContext* internal_context = reinterpret_cast<InternalFsr3UpscalerUContext*>(*context);
+    switch (header->type)
+    {
+    case FFX_API_CONFIGURE_DESC_TYPE_UPSCALE_KEYVALUE:
+    {
+        auto desc = reinterpret_cast<const ffxConfigureDescUpscaleKeyValue*>(header);
+        TRY2(ffxFsr3UpscalerSetConstant(&internal_context->context, static_cast<FfxFsr3UpscalerConfigureKey>(desc->key), desc->ptr));
+        break;
+    }
+    default:
+        return FFX_API_RETURN_ERROR_UNKNOWN_DESCTYPE;
+    }
+    return FFX_API_RETURN_OK;
 }
 
 ffxReturnCode_t ffxProvider_FSR3Upscale::Query(ffxContext* context, ffxQueryDescHeader* header) const
@@ -220,6 +274,14 @@ ffxReturnCode_t ffxProvider_FSR3Upscale::Query(ffxContext* context, ffxQueryDesc
         }
         break;
     }
+    case FFX_API_QUERY_DESC_TYPE_UPSCALE_GPU_MEMORY_USAGE:
+    {
+        InternalFsr3UpscalerUContext* internal_context = reinterpret_cast<InternalFsr3UpscalerUContext*>(*context);
+        auto desc = reinterpret_cast<ffxQueryDescUpscaleGetGPUMemoryUsage*>(header);
+        
+        TRY2(ffxFsr3UpscalerContextGetGpuMemoryUsage(&internal_context->context, reinterpret_cast <FfxEffectMemoryUsage*> (desc->gpuMemoryUsageUpscaler)));
+        break;
+    }
     default:
         return FFX_API_RETURN_ERROR_UNKNOWN_DESCTYPE;
     }
@@ -272,6 +334,11 @@ ffxReturnCode_t ffxProvider_FSR3Upscale::Dispatch(ffxContext* context, const ffx
         dispatchParameters.cameraNear                 = desc->cameraNear;
         dispatchParameters.viewSpaceToMetersFactor    = desc->viewSpaceToMetersFactor;
         dispatchParameters.flags = 0;
+
+        dispatchParameters.dilatedDepth                     = internal_context->backendInterface.fpGetResource( &internal_context->backendInterface, internal_context->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0]);
+        dispatchParameters.dilatedMotionVectors             = internal_context->backendInterface.fpGetResource( &internal_context->backendInterface, internal_context->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0]);
+        dispatchParameters.reconstructedPrevNearestDepth    = internal_context->backendInterface.fpGetResource( &internal_context->backendInterface, internal_context->sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0]);
+
         if (desc->flags & FFX_UPSCALE_FLAG_DRAW_DEBUG_VIEW)
         {
             dispatchParameters.flags |= FFX_FSR3UPSCALER_DISPATCH_DRAW_DEBUG_VIEW;

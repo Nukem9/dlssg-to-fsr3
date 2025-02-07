@@ -1,7 +1,7 @@
 :: This file is part of the FidelityFX SDK.
 ::
 :: Copyright (C) 2024 Advanced Micro Devices, Inc.
-:: 
+::
 :: Permission is hereby granted, free of charge, to any person obtaining a copy
 :: of this software and associated documentation files(the "Software"), to deal
 :: in the Software without restriction, including without limitation the rights
@@ -33,12 +33,14 @@ set samples_build_options=-DRUNTIME_SHADER_RECOMPILE=0
 set sdk_build_options=-DFFX_AUTO_COMPILE_SHADERS=1
 
 set build_as_dll=
-set /P build_as_dll=Build the SDK as DLL [y/n]? 
+set /P build_as_dll=Build the SDK as DLL [y/n]?
 
 if /i "%build_as_dll%" == "Y" (
     set sdk_build_options=-DFFX_AUTO_COMPILE_SHADERS=1 -DFFX_BUILD_AS_DLL=1
     set samples_build_options=-DFFX_BUILD_AS_DLL=1
 )
+
+:select_component
 
 ECHO 1. ALL
 ECHO 2. BLUR
@@ -58,7 +60,7 @@ ECHO 15. SSSR
 ECHO 16. VRS
 ECHO.
 
-set /P samples=Enter numbers of which samples to build [space delimitted]: 
+set /P samples=Enter numbers of which samples to build [space delimitted]:
 :loop
 for /f "tokens=1*" %%a in ("%samples%") do (
    if %%a == 1 (
@@ -91,7 +93,6 @@ for /f "tokens=1*" %%a in ("%samples%") do (
    )
    if %%a == 8 (
     set samples_build_options=-DFFX_FSR=ON %samples_build_options%
-	:: Only need to build FSR1 which is brought in via lib import, ffx api has FSR2/3 built into dll
     set sdk_build_options=-DFFX_FSR1=ON %sdk_build_options%
    )
    if %%a == 9 (
@@ -130,18 +131,31 @@ for /f "tokens=1*" %%a in ("%samples%") do (
 )
 if defined samples goto :loop
 
+:: determine architecture
+if /i "%PROCESSOR_ARCHITECTURE%" == "ARM64" (
+    set arch=ARM64
+    set samples_build_options=-AARM64 -DCMAKE_GENERATOR_PLATFORM=ARM64 %samples_build_options%
+    set sdk_build_options=-AARM64 -DCMAKE_GENERATOR_PLATFORM=ARM64 %sdk_build_options%
+) else (
+    set arch=X64
+    set samples_build_options=-Ax64 -DCMAKE_GENERATOR_PLATFORM=x64 %samples_build_options%
+    set sdk_build_options=-Ax64 -DCMAKE_GENERATOR_PLATFORM=x64 %sdk_build_options%
+)
+echo architecture %arch% detected
+echo.
+
 set build_type=-DBUILD_TYPE=SAMPLES_DX12
-set sdk_build_options=-DFFX_API_BACKEND=DX12_X64 %sdk_build_options%
+set sdk_build_options=-DFFX_API_BACKEND=DX12_%arch% %sdk_build_options%
 
 :: Start by building the backend SDK
-echo Building native x64 backends: %sdk_build_options%
+echo Building native %arch% backends: %sdk_build_options%
 cd sdk
 call BuildFidelityFXSDK.bat %sdk_build_options%
 cd ..
 
 :: Check directories exist and create if not
 if not exist build\ (
-    mkdir build 
+    mkdir build
 )
 
 cd build
@@ -154,10 +168,10 @@ if exist CMakeCache.txt (
 )
 
 echo.
-echo Building SDK sample solutions %samples_build_options% 
+echo Building SDK sample solutions %samples_build_options%
 echo.
 
-cmake -A x64 .. %build_type% %samples_build_options% 
+cmake .. %build_type% %samples_build_options%
 
 :: Come back to root level
 cd ..

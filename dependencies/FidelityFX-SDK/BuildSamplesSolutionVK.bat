@@ -40,6 +40,8 @@ if /i "%build_as_dll%" == "Y" (
     set samples_build_options=-DFFX_BUILD_AS_DLL=1
 )
 
+:select_component
+
 ECHO 1. ALL
 ECHO 2. BLUR
 ECHO 3. BREADCRUMBS
@@ -91,7 +93,6 @@ for /f "tokens=1*" %%a in ("%samples%") do (
    )
    if %%a == 8 (
     set samples_build_options=-DFFX_FSR=ON %samples_build_options%
-    :: Only need to build FSR1 which is brought in via lib import, ffx api has FSR2/3 built into dll
     set sdk_build_options=-DFFX_FSR1=ON %sdk_build_options%
    )
    if %%a == 9 (

@@ -29,6 +29,7 @@
 #include "render/vk/commandlist_vk.h"
 #include "render/vk/device_vk.h"
 #include "render/vk/gpuresource_vk.h"
+#include "render/vk/helpers.h"
 #include "render/vk/resourceviewallocator_vk.h"
 #include "render/vk/swapchain_vk.h"
 #include "render/vk/texture_vk.h"
@@ -107,56 +108,56 @@ namespace cauldron
         }
     }
 
-    std::unordered_map<DisplayMode, VkSurfaceFormatKHR> GetAvailableFormats(const std::vector<VkSurfaceFormat2KHR>& surfaceFormats2)
+    std::unordered_map<DisplayMode, VkSurfaceFormatKHR> GetAvailableFormats(const std::vector<VkSurfaceFormat2KHR>& surfaceFormats2, VkFormat preferredFormat)
     {
         std::unordered_map<DisplayMode, VkSurfaceFormatKHR> modes;
+
+        // small utility
+        auto addSurfaceFormatToMode = [preferredFormat, &modes](const VkSurfaceFormatKHR surfaceFormat, DisplayMode mode, VkFormat expectedFormat) {
+            if (surfaceFormat.format == preferredFormat)
+            {
+                modes[mode] = surfaceFormat;
+            }
+            else if (surfaceFormat.format == expectedFormat)
+            {
+                auto found = modes.find(mode);
+                if (found == modes.end() || found->second.format != preferredFormat)
+                {
+                    // add only if the preferred format hasn't been added yet
+                    modes[mode] = surfaceFormat;
+                }
+            }
+        };
+
         for (const auto& surfaceFormat2 : surfaceFormats2)
         {
-            VkSurfaceFormatKHR surfaceFormat = surfaceFormat2.surfaceFormat;
-            if (surfaceFormat.format == VK_FORMAT_R8G8B8A8_UNORM && surfaceFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            VkSurfaceFormatKHR surfaceFormat     = surfaceFormat2.surfaceFormat;
+            bool               isPreferredFormat = (surfaceFormat.format == preferredFormat);
+
+            if (surfaceFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
             {
-                modes[DisplayMode::DISPLAYMODE_LDR] = surfaceFormat;
+                addSurfaceFormatToMode(surfaceFormat, DisplayMode::DISPLAYMODE_LDR, VK_FORMAT_R8G8B8A8_UNORM);
+                addSurfaceFormatToMode(surfaceFormat, DisplayMode::DISPLAYMODE_LDR, VK_FORMAT_B8G8R8A8_UNORM);
             }
-            else if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_UNORM && surfaceFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            else if (surfaceFormat.colorSpace == VK_COLOR_SPACE_DISPLAY_NATIVE_AMD)
             {
-                modes[DisplayMode::DISPLAYMODE_LDR] = surfaceFormat;
+                // no override possible here because colorspace and format are linked
+                if (surfaceFormat.format == VK_FORMAT_A2B10G10R10_UNORM_PACK32)
+                    modes[DisplayMode::DISPLAYMODE_FSHDR_2084] = surfaceFormat;
+                else if (surfaceFormat.format == VK_FORMAT_R16G16B16A16_SFLOAT)
+                    modes[DisplayMode::DISPLAYMODE_FSHDR_SCRGB] = surfaceFormat;
             }
-            else if (surfaceFormat.format == VK_FORMAT_A2B10G10R10_UNORM_PACK32
-                && surfaceFormat.colorSpace == VK_COLOR_SPACE_DISPLAY_NATIVE_AMD)
+            else if (surfaceFormat.colorSpace == VK_COLOR_SPACE_HDR10_ST2084_EXT)
             {
-                modes[DisplayMode::DISPLAYMODE_FSHDR_2084] = surfaceFormat;
+                addSurfaceFormatToMode(surfaceFormat, DisplayMode::DISPLAYMODE_HDR10_2084, VK_FORMAT_A2B10G10R10_UNORM_PACK32);
             }
-            else if (surfaceFormat.format == VK_FORMAT_R16G16B16A16_SFLOAT && surfaceFormat.colorSpace == VK_COLOR_SPACE_DISPLAY_NATIVE_AMD)
+            else if (surfaceFormat.colorSpace == VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT)
             {
-                modes[DisplayMode::DISPLAYMODE_FSHDR_SCRGB] = surfaceFormat;
-            }
-            else if (surfaceFormat.format == VK_FORMAT_A2B10G10R10_UNORM_PACK32
-                && surfaceFormat.colorSpace == VK_COLOR_SPACE_HDR10_ST2084_EXT)
-            {
-                // NOTE: we don't have any preference for the format between the two
-                modes[DisplayMode::DISPLAYMODE_HDR10_2084] = surfaceFormat;
-            }
-            else if (surfaceFormat.format == VK_FORMAT_R16G16B16A16_SFLOAT && surfaceFormat.colorSpace == VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT)
-            {
-                modes[DisplayMode::DISPLAYMODE_HDR10_SCRGB] = surfaceFormat;
+                addSurfaceFormatToMode(surfaceFormat, DisplayMode::DISPLAYMODE_HDR10_SCRGB, VK_FORMAT_R16G16B16A16_SFLOAT);
             }
         }
 
         return modes;
-    }
-
-    VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
-    {
-        for (const auto& availableFormat : availableFormats)
-        {
-            if (availableFormat.format == VK_FORMAT_R8G8B8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-                return availableFormat;
-        }
-
-        VkSurfaceFormatKHR errorFormat;
-        errorFormat.format = VK_FORMAT_UNDEFINED;
-        errorFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-        return errorFormat;
     }
 
     VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes, bool vsync)
@@ -246,6 +247,8 @@ namespace cauldron
             return ResourceFormat::BGRA8_SRGB;
         case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
             return ResourceFormat::RGB10A2_UNORM;
+        case VK_FORMAT_E5B9G9R9_UFLOAT_PACK32:
+            return ResourceFormat::RGB9E5_SHAREDEXP;
         case VK_FORMAT_R16G16_SFLOAT:
             return ResourceFormat::RG16_FLOAT;
         case VK_FORMAT_R32_SFLOAT:
@@ -678,7 +681,14 @@ namespace cauldron
 
         const CauldronConfig* pConfig = GetConfig();
 
-        std::unordered_map<DisplayMode, VkSurfaceFormatKHR> modes = GetAvailableFormats(formats2);
+        // get the requested override swapchain format
+        VkFormat overrideFormat = VK_FORMAT_UNDEFINED;
+        if (pConfig->SwapChainFormat != ResourceFormat::Unknown)
+        {
+            overrideFormat = GetVkFormat(pConfig->SwapChainFormat);
+        }
+
+        std::unordered_map<DisplayMode, VkSurfaceFormatKHR> modes = GetAvailableFormats(formats2, overrideFormat);
 
         for (const auto& it : modes)
         {
@@ -694,6 +704,10 @@ namespace cauldron
         m_CurrentDisplayMode = found->first;
         m_SurfaceFormat      = found->second;
 
+        CauldronAssert(ASSERT_WARNING,
+                       overrideFormat == VK_FORMAT_UNDEFINED || m_SurfaceFormat.format == overrideFormat,
+                       L"The requested swapchain format from the config file cannot be used for present/display. Override is ignored.");
+        
         // Set format based on display mode
         m_SwapChainFormat = ConvertFormat(m_SurfaceFormat.format);
     }

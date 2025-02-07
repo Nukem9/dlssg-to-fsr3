@@ -24,6 +24,16 @@
 #include <cmath>        // for fabs, abs, sinf, sqrt, etc.
 #include <string.h>     // for memset
 #include <cfloat>       // for FLT_EPSILON
+
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wsign-compare"
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(disable : 4505)
+#endif
+
 #include <FidelityFX/host/ffx_fsr2.h>
 #define FFX_CPU
 #include <FidelityFX/gpu/ffx_core.h>
@@ -34,10 +44,6 @@
 #include <ffx_object_management.h>
 
 #include "ffx_fsr2_maximum_bias.h"
-
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wunused-variable"
-#endif
 
 // max queued frames for descriptor management
 static const uint32_t FSR2_MAX_QUEUED_FRAMES = 16;
@@ -373,7 +379,12 @@ static uint32_t getPipelinePermutationFlags(uint32_t contextFlags, FfxFsr2Pass p
     flags |= (passId == FFX_FSR2_PASS_ACCUMULATE_SHARPEN) ? FSR2_SHADER_PERMUTATION_ENABLE_SHARPENING : 0;
     flags |= (useLut) ? FSR2_SHADER_PERMUTATION_USE_LANCZOS_TYPE : 0;
     flags |= (force64) ? FSR2_SHADER_PERMUTATION_FORCE_WAVE64 : 0;
+#if defined(_GAMING_XBOX)
+    /** On Xbox we enable 16-bit math, and use 32-bit within the shader only where it's necessary. */
+    flags |= (fp16) ? FSR2_SHADER_PERMUTATION_ALLOW_FP16 : 0;
+#else
     flags |= (fp16 && (passId != FFX_FSR2_PASS_RCAS)) ? FSR2_SHADER_PERMUTATION_ALLOW_FP16 : 0;
+#endif // defined(_GAMING_XBOX)
     return flags;
 }
 
@@ -489,7 +500,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
 
     // Setup constant buffer sizes.
     context->constantBuffers[0].num32BitEntries = sizeof(Fsr2Constants) / sizeof(uint32_t);
@@ -499,7 +510,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
 
     // Create the context.
     FfxErrorCode errorCode =
-        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId);
+        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_FSR2, nullptr, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
     // call out for device caps.
@@ -537,7 +548,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
         {FFX_FSR2_RESOURCE_IDENTIFIER_PREPARED_INPUT_COLOR,
          L"FSR2_PreparedInputColor",
          FFX_RESOURCE_TYPE_TEXTURE2D,
-         FFX_RESOURCE_USAGE_UAV,
+         (FfxResourceUsage)(FFX_RESOURCE_USAGE_UAV | FFX_RESOURCE_USAGE_DCC_RENDERTARGET),
          FFX_SURFACE_FORMAT_R16G16B16A16_FLOAT,
          contextDescription->maxRenderSize.width,
          contextDescription->maxRenderSize.height,
@@ -559,7 +570,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
         {FFX_FSR2_RESOURCE_IDENTIFIER_INTERNAL_DILATED_MOTION_VECTORS_1,
          L"FSR2_InternalDilatedVelocity1",
          FFX_RESOURCE_TYPE_TEXTURE2D,
-         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV),
+         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV | FFX_RESOURCE_USAGE_DCC_RENDERTARGET),
          FFX_SURFACE_FORMAT_R16G16_FLOAT,
          contextDescription->maxRenderSize.width,
          contextDescription->maxRenderSize.height,
@@ -570,7 +581,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
         {FFX_FSR2_RESOURCE_IDENTIFIER_INTERNAL_DILATED_MOTION_VECTORS_2,
          L"FSR2_InternalDilatedVelocity2",
          FFX_RESOURCE_TYPE_TEXTURE2D,
-         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV),
+         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV | FFX_RESOURCE_USAGE_DCC_RENDERTARGET),
          FFX_SURFACE_FORMAT_R16G16_FLOAT,
          contextDescription->maxRenderSize.width,
          contextDescription->maxRenderSize.height,
@@ -636,7 +647,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
         {FFX_FSR2_RESOURCE_IDENTIFIER_INTERNAL_UPSCALED_COLOR_1,
          L"FSR2_InternalUpscaled1",
          FFX_RESOURCE_TYPE_TEXTURE2D,
-         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV),
+         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV | FFX_RESOURCE_USAGE_DCC_RENDERTARGET),
          FFX_SURFACE_FORMAT_R16G16B16A16_FLOAT,
          contextDescription->displaySize.width,
          contextDescription->displaySize.height,
@@ -647,7 +658,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
         {FFX_FSR2_RESOURCE_IDENTIFIER_INTERNAL_UPSCALED_COLOR_2,
          L"FSR2_InternalUpscaled2",
          FFX_RESOURCE_TYPE_TEXTURE2D,
-         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV),
+         (FfxResourceUsage)(FFX_RESOURCE_USAGE_RENDERTARGET | FFX_RESOURCE_USAGE_UAV | FFX_RESOURCE_USAGE_DCC_RENDERTARGET),
          FFX_SURFACE_FORMAT_R16G16B16A16_FLOAT,
          contextDescription->displaySize.width,
          contextDescription->displaySize.height,
@@ -702,7 +713,7 @@ static FfxErrorCode fsr2Create(FfxFsr2Context_Private* context, const FfxFsr2Con
         {FFX_FSR2_RESOURCE_IDENTIFIER_DILATED_REACTIVE_MASKS,
          L"FSR2_DilatedReactiveMasks",
          FFX_RESOURCE_TYPE_TEXTURE2D,
-         FFX_RESOURCE_USAGE_UAV,
+         (FfxResourceUsage)(FFX_RESOURCE_USAGE_UAV | FFX_RESOURCE_USAGE_DCC_RENDERTARGET),
          FFX_SURFACE_FORMAT_R8G8_UNORM,
          contextDescription->maxRenderSize.width,
          contextDescription->maxRenderSize.height,

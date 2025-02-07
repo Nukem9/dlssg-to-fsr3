@@ -175,6 +175,10 @@ void GBufferRenderModule::Execute(double deltaTime, CommandList* pCmdList)
     SetViewportScissorRect(pCmdList, 0, 0, width, height, 0.f, 1.f);
     SetPrimitiveTopology(pCmdList, PrimitiveTopology::TriangleList);
 
+    //Early instantiate to prevent realloc in loops.
+    std::vector<BufferAddressInfo> vertexBuffers;
+    std::vector<BufferAddressInfo> perObjectBufferInfos;
+    std::vector<BufferAddressInfo> textureIndicesBufferInfos;
     // Render all surfaces by pipeline groupings
     {
         std::lock_guard<std::mutex> paramsLock(m_CriticalSection);  // Can't change parameter set data while we are updating/binding for render
@@ -182,6 +186,21 @@ void GBufferRenderModule::Execute(double deltaTime, CommandList* pCmdList)
         {
             // Set the pipeline to use for all render calls
             SetPipelineState(pCmdList, pipelineGroup.m_Pipeline);
+
+            uint32_t activeCount = 0;
+
+            for (auto& pipelineSurfaceInfo : pipelineGroup.m_RenderSurfaces)
+                if (pipelineSurfaceInfo.pOwner->IsActive())
+                    activeCount++;
+
+            perObjectBufferInfos.clear();
+            perObjectBufferInfos.resize(activeCount);
+            GetDynamicBufferPool()->BatchAllocateConstantBuffer(sizeof(InstanceInformation), activeCount, perObjectBufferInfos.data());
+            textureIndicesBufferInfos.clear();
+            textureIndicesBufferInfos.resize(activeCount);
+            GetDynamicBufferPool()->BatchAllocateConstantBuffer(sizeof(TextureIndices), activeCount, textureIndicesBufferInfos.data());
+            uint32_t currentSurface = 0;
+
 
             for (auto& pipelineSurfaceInfo : pipelineGroup.m_RenderSurfaces)
             {
@@ -215,8 +234,13 @@ void GBufferRenderModule::Execute(double deltaTime, CommandList* pCmdList)
                     }
 
                     // Update root constants
-                    BufferAddressInfo perObjectBufferInfo = GetDynamicBufferPool()->AllocConstantBuffer(sizeof(InstanceInformation), &instanceInfo);
-                    BufferAddressInfo textureIndicesBufferInfo = GetDynamicBufferPool()->AllocConstantBuffer(sizeof(TextureIndices), &pipelineSurfaceInfo.TextureIndices);
+                    BufferAddressInfo& perObjectBufferInfo = perObjectBufferInfos[currentSurface];
+                    GetDynamicBufferPool()->InitializeConstantBuffer(perObjectBufferInfo, sizeof(InstanceInformation), &instanceInfo);
+
+                    BufferAddressInfo& textureIndicesBufferInfo = textureIndicesBufferInfos[currentSurface];
+                    GetDynamicBufferPool()->InitializeConstantBuffer(textureIndicesBufferInfo, sizeof(TextureIndices), &pipelineSurfaceInfo.TextureIndices);
+
+                    currentSurface++;
 
                     m_pParameterSet->UpdateRootConstantBuffer(&perObjectBufferInfo, 1);
                     m_pParameterSet->UpdateRootConstantBuffer(&textureIndicesBufferInfo, 2);
@@ -225,13 +249,13 @@ void GBufferRenderModule::Execute(double deltaTime, CommandList* pCmdList)
                     // Bind for rendering
                     m_pParameterSet->Bind(pCmdList, pipelineGroup.m_Pipeline);
 
-                    std::vector<BufferAddressInfo> vertexBuffers;
+                    vertexBuffers.clear();
                     for (uint32_t attribute = 0; attribute < static_cast<uint32_t>(VertexAttributeType::Count); ++attribute)
                     {
                         // Check if the attribute is present
                         if (pipelineGroup.m_UsedAttributes & (0x1 << attribute))
                         {
-                            vertexBuffers.push_back(pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).pBuffer->GetAddressInfo());
+                            vertexBuffers.emplace_back(pSurface->GetVertexBuffer(static_cast<VertexAttributeType>(attribute)).pBuffer->GetAddressInfo());
                         }
                     }
 

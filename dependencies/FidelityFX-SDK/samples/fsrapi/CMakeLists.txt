@@ -30,19 +30,19 @@ project(FFX_API_FSR)
 # Import SDK libs
 add_library(amd_fidelityfx SHARED IMPORTED)
 set_target_properties(amd_fidelityfx PROPERTIES
-					  INTERFACE_INCLUDE_DIRECTORIES "${API_ROOT}/include"
-					  IMPORTED_LOCATION_RELEASEDX12 "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_dx12.dll"
-					  IMPORTED_LOCATION_RELWITHDEBINFODX12 "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_dx12.dll"
-					  IMPORTED_LOCATION_DEBUGDX12 "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_dx12.dll"
-					  IMPORTED_LOCATION_RELEASEVK "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_vk.dll"
-					  IMPORTED_LOCATION_RELWITHDEBINFOVK "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_vk.dll"
-					  IMPORTED_LOCATION_DEBUGVK "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_vk.dll"
-					  IMPORTED_IMPLIB_RELEASEDX12 "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_dx12.lib"
-					  IMPORTED_IMPLIB_RELWITHDEBINFODX12 "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_dx12.lib"
-					  IMPORTED_IMPLIB_DEBUGDX12 "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_dx12.lib"
-					  IMPORTED_IMPLIB_RELEASEVK "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_vk.lib"
-					  IMPORTED_IMPLIB_RELWITHDEBINFOVK "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_vk.lib"
-					  IMPORTED_IMPLIB_DEBUGVK "${PREBUILT_SIGNED_DLL_ROOT}/amd_fidelityfx_vk.lib")
+					  INTERFACE_INCLUDE_DIRECTORIES 		"${API_ROOT}/include"
+					  IMPORTED_LOCATION_RELEASEDX12 		"${FFX_API_PATHNAME_DX12}.dll"
+					  IMPORTED_LOCATION_RELWITHDEBINFODX12 	"${FFX_API_PATHNAME_DX12DREL}.dll"
+					  IMPORTED_LOCATION_DEBUGDX12 			"${FFX_API_PATHNAME_DX12D}.dll"
+					  IMPORTED_LOCATION_RELEASEVK 			"${FFX_API_PATHNAME_VK}.dll"
+					  IMPORTED_LOCATION_RELWITHDEBINFOVK 	"${FFX_API_PATHNAME_VKDREL}.dll"
+					  IMPORTED_LOCATION_DEBUGVK 			"${FFX_API_PATHNAME_VKD}.dll"
+					  IMPORTED_IMPLIB_RELEASEDX12 			"${FFX_API_PATHNAME_DX12}.lib"
+					  IMPORTED_IMPLIB_RELWITHDEBINFODX12 	"${FFX_API_PATHNAME_DX12DREL}.lib"
+					  IMPORTED_IMPLIB_DEBUGDX12 			"${FFX_API_PATHNAME_DX12D}.lib"
+					  IMPORTED_IMPLIB_RELEASEVK 			"${FFX_API_PATHNAME_VK}.lib"
+					  IMPORTED_IMPLIB_RELWITHDEBINFOVK 		"${FFX_API_PATHNAME_VKDREL}.lib"
+					  IMPORTED_IMPLIB_DEBUGVK 				"${FFX_API_PATHNAME_VKD}.lib")
 
 # FSR render module files
 set(fsr_api_src ${CMAKE_CURRENT_SOURCE_DIR}/fsrapirendermodule.h ${CMAKE_CURRENT_SOURCE_DIR}/fsrapirendermodule.cpp)
@@ -68,7 +68,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 						OUTPUT_NAME_RELWITHDEBINFOVK "${EXE_OUT_NAME}drelVK"
 						VS_DEBUGGER_WORKING_DIRECTORY "${BIN_OUTPUT}")
 
-file(GLOB api_dlls ${PREBUILT_SIGNED_DLL_ROOT}/*.dll)
+file(GLOB api_dlls ${FFX_API_ROOTPATH}/*.dll)
 
 # Copy amd_fidelityfx dll to output. Relies on it being built before this project is configured!
 # TODO: remove tech debt from build system....
@@ -77,7 +77,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 	${api_dlls} ${BIN_OUTPUT})
 
 # Add compile definitions to identify the sample
-target_compile_definitions(${PROJECT_NAME} PRIVATE SampleName=L"FidelityFX FSR FFXAPI v1.0"
+target_compile_definitions(${PROJECT_NAME} PRIVATE SampleName=L"FidelityFX FSR FFXAPI v1.3"
 										   ConfigFileName=L"configs/fsrapiconfig.json"
 										   ConfigSampleName="FidelityFX FSR FFXAPI"
 										   RenderModuleName=FSRApi)

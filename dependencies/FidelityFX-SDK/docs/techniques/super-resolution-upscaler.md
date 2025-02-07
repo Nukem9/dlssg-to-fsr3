@@ -1,6 +1,6 @@
-<!-- @page page_techniques_super-resolution-upscaler FidelityFX Super Resolution 3.0 Upscaler -->
+<!-- @page page_techniques_super-resolution-upscaler FidelityFX Super Resolution 3.1.3 Upscaler -->
 
-<h1>FidelityFX Super Resolution 3.1.0 (FSR3) - Upscaler</h1>
+<h1>FidelityFX Super Resolution 3.1.3 (FSR3) - Upscaler</h1>
 
 ![Screenshot](media/super-resolution-temporal/fsr3-sample_resized.jpg "A screenshot showcasing the final output of the effect")
 

@@ -1,6 +1,6 @@
-<!-- @page page_techniques_depth-of-field FidelityFX Depth of Field 1.0 -->
+<!-- @page page_techniques_depth-of-field FidelityFX Depth of Field 1.1 -->
 
-<h1>FidelityFX Depth of Field 1.0</h1>
+<h1>FidelityFX Depth of Field 1.1</h1>
 
 ![Screenshot](media/depth-of-field/screenshot.jpg "A screenshot showcasing the final output of the effect")
 

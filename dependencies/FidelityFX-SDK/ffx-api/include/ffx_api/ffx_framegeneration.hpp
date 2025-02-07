@@ -36,6 +36,11 @@ struct struct_type<ffxCreateContextDescFrameGeneration> : std::integral_constant
 struct CreateContextDescFrameGeneration : public InitHelper<ffxCreateContextDescFrameGeneration> {};
 
 template<>
+struct struct_type<ffxCreateContextDescFrameGenerationHudless> : std::integral_constant<uint64_t, FFX_API_CREATE_CONTEXT_DESC_TYPE_FRAMEGENERATION_HUDLESS> {};
+
+struct CreateContextDescFrameGenerationHudless : public InitHelper<ffxCreateContextDescFrameGenerationHudless> {};
+
+template<>
 struct struct_type<ffxConfigureDescFrameGeneration> : std::integral_constant<uint64_t, FFX_API_CONFIGURE_DESC_TYPE_FRAMEGENERATION> {};
 
 struct ConfigureDescFrameGeneration : public InitHelper<ffxConfigureDescFrameGeneration> {};
@@ -54,5 +59,15 @@ template<>
 struct struct_type<ffxConfigureDescFrameGenerationKeyValue> : std::integral_constant<uint64_t, FFX_API_CONFIGURE_DESC_TYPE_FRAMEGENERATION_KEYVALUE> {};
 
 struct ConfigureDescFrameGenerationKeyValue : public InitHelper<ffxConfigureDescFrameGenerationKeyValue> {};
+
+template<>
+struct struct_type<ffxQueryDescFrameGenerationGetGPUMemoryUsage> : std::integral_constant<uint64_t, FFX_API_QUERY_DESC_TYPE_FRAMEGENERATION_GPU_MEMORY_USAGE> {};
+
+struct QueryDescFrameGenerationGetGPUMemoryUsage : public InitHelper<ffxQueryDescFrameGenerationGetGPUMemoryUsage> {};
+
+template<>
+struct struct_type<ffxConfigureDescFrameGenerationRegisterDistortionFieldResource> : std::integral_constant<uint64_t, FFX_API_CONFIGURE_DESC_TYPE_FRAMEGENERATION_REGISTERDISTORTIONRESOURCE> {};
+
+struct ConfigureDescFrameGenerationRegisterDistortionFieldResource : public InitHelper<ffxConfigureDescFrameGenerationRegisterDistortionFieldResource> {};
 
 }

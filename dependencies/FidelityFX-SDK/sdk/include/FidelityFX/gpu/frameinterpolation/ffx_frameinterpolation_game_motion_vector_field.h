@@ -35,20 +35,25 @@ FfxUInt32 getPriorityFactorFromViewSpaceDepth(FfxFloat32 fViewSpaceDepthInMeters
 void computeGameFieldMvs(FfxInt32x2 iPxPos)
 {
     const FfxFloat32x2 fUvInScreenSpace            = (FfxFloat32x2(iPxPos) + 0.5f) / RenderSize();
+
+    const FfxFloat32x2 fDistortionFieldUv          = SampleDistortionField(fUvInScreenSpace);
+    FfxInt32x2 iDistortionPixelOffset              = FfxInt32x2(fDistortionFieldUv.xy * RenderSize());
+
     const FfxFloat32x2 fUvInInterpolationRectStart = FfxFloat32x2(InterpolationRectBase()) / DisplaySize();
     const FfxFloat32x2 fUvLetterBoxScale           = FfxFloat32x2(InterpolationRectSize()) / DisplaySize();
     const FfxFloat32x2 fUvInInterpolationRect      = fUvInInterpolationRectStart + fUvInScreenSpace * fUvLetterBoxScale;
 
-    const FfxFloat32 fDepthSample = LoadDilatedDepth(iPxPos);
-    const FfxFloat32x2 fGameMotionVector = LoadDilatedMotionVector(iPxPos);
+    const FfxFloat32 fDepthSample = LoadDilatedDepth(iPxPos + iDistortionPixelOffset);
+    const FfxFloat32x2 fGameMotionVector = LoadDilatedMotionVector(iPxPos + iDistortionPixelOffset);
     const FfxFloat32x2 fMotionVectorHalf = fGameMotionVector * 0.5f;
     const FfxFloat32x2 fInterpolatedLocationUv = fUvInScreenSpace + fMotionVectorHalf;
 
     const FfxFloat32 fViewSpaceDepth = ConvertFromDeviceDepthToViewSpace(fDepthSample);
     const FfxUInt32 uHighPriorityFactorPrimary = getPriorityFactorFromViewSpaceDepth(fViewSpaceDepth);
 
-    FfxFloat32x3 prevBackbufferCol = SamplePreviousBackbuffer(fUvInInterpolationRect).xyz;
-    FfxFloat32x3 curBackbufferCol  = SamplePreviousBackbuffer(fUvInInterpolationRect + fGameMotionVector * fUvLetterBoxScale).xyz;
+    // pixel position in current frame + Game Motion Vector -> pixel position in previous frame
+    FfxFloat32x3 prevBackbufferCol = SamplePreviousBackbuffer(fUvInInterpolationRect+ fGameMotionVector * fUvLetterBoxScale).xyz; // returns previous backbuffer color of current frame pixel position in previous frame
+    FfxFloat32x3 curBackbufferCol  = SampleCurrentBackbuffer(fUvInInterpolationRect).xyz; // returns current backbuffer color at current frame pixel position
     FfxFloat32   prevLuma          = 0.001f + RawRGBToLuminance(prevBackbufferCol);
     FfxFloat32   currLuma          = 0.001f + RawRGBToLuminance(curBackbufferCol);
 

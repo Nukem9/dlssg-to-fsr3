@@ -41,13 +41,13 @@ struct InternalFgScContext
 
 uint64_t ffxProvider_FrameGenerationSwapChain_DX12::GetId() const
 {
-    // FG SwapChain DX12, version 1.0.0
-    return 0xF65C'DD12'01'000'000ui64;
+    // FG SwapChain DX12, version 1.1.2
+    return 0xF65C'DD12'01'001'002ui64;
 }
 
 const char* ffxProvider_FrameGenerationSwapChain_DX12::GetVersionName() const
 {
-    return "1.0";
+    return "1.1.2";
 }
 
 ffxReturnCode_t ffxProvider_FrameGenerationSwapChain_DX12::CreateContext(ffxContext* context,
@@ -135,6 +135,12 @@ ffxReturnCode_t ffxProvider_FrameGenerationSwapChain_DX12::Configure(ffxContext*
 
         return FFX_API_RETURN_OK;
     }
+    else if (auto desc = ffx::DynamicCast<ffxConfigureDescFrameGenerationSwapChainKeyValueDX12>(header))
+    {
+        TRY2(ffxConfigureFrameInterpolationSwapchainDX12(ffxGetSwapchainDX12(internal_context->fiSwapChain), static_cast <FfxFrameInterpolationSwapchainConfigureKey> (desc->key), desc->ptr));
+
+        return FFX_API_RETURN_OK;
+    }
     else
     {
         return FFX_API_RETURN_ERROR_PARAMETER;
@@ -160,6 +166,11 @@ ffxReturnCode_t ffxProvider_FrameGenerationSwapChain_DX12::Query(ffxContext* con
     {
         *desc->pOutTexture = Convert(ffxGetFrameinterpolationTextureDX12(ffxGetSwapchainDX12(internal_context->fiSwapChain)));
         
+        return FFX_API_RETURN_OK;
+    }
+    else if (auto desc = ffx::DynamicCast<ffxQueryFrameGenerationSwapChainGetGPUMemoryUsageDX12>(header))
+    {
+        TRY2(ffxFrameInterpolationSwapchainGetGpuMemoryUsageDX12(ffxGetSwapchainDX12(internal_context->fiSwapChain), reinterpret_cast <FfxEffectMemoryUsage*> (desc->gpuMemoryUsageFrameGenerationSwapchain)));
         return FFX_API_RETURN_OK;
     }
     else

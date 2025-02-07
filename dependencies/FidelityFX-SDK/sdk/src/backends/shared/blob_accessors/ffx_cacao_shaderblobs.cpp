@@ -954,7 +954,7 @@ FfxErrorCode cacaoGetPermutationBlobByIndex(
     }
 
     // return an empty blob
-    memset(&outBlob, 0, sizeof(FfxShaderBlob));
+    memset(outBlob, 0, sizeof(FfxShaderBlob));
     return FFX_OK;
 }
 

@@ -134,6 +134,29 @@ namespace cauldron
         return bufferInfo;
     }
 
+    void DynamicBufferPoolInternal::BatchAllocateConstantBuffer(uint32_t size, uint32_t count, BufferAddressInfo* pBufferAddressInfos)
+    {
+        uint32_t alignedSize = AlignUp(size, m_Alignment);
+        uint32_t offset;
+        CauldronAssert(ASSERT_CRITICAL, InternalAlloc(alignedSize * count, &offset), L"DynamicBufferPool has run out of memory. Please increase the allocation size.");
+        for (uint32_t i = 0; i < count; i++)
+        {
+            BufferAddressInfoInternal* pInfo = (BufferAddressInfoInternal*)(&(pBufferAddressInfos[i]));
+            pInfo->Buffer                    = m_pResource->GetImpl()->GetBuffer();
+            pInfo->SizeInBytes               = static_cast<VkDeviceSize>(alignedSize);
+            pInfo->Offset                    = static_cast<VkDeviceSize>(offset + (i * alignedSize));
+        }
+    }
+
+    void DynamicBufferPoolInternal::InitializeConstantBuffer(const BufferAddressInfo& bufferAddressInfo, uint32_t size, const void* pInitData)
+    {
+        const BufferAddressInfoInternal* pInfo = bufferAddressInfo.GetImpl();
+        CauldronAssert(ASSERT_CRITICAL, size <= pInfo->SizeInBytes, L"Constant buffer too small to inialize with provided data.");
+        void* pBuffer = (void*)(m_pData + pInfo->Offset);
+        memcpy(pBuffer, pInitData, size);
+    }
+
+
     BufferAddressInfo DynamicBufferPoolInternal::AllocVertexBuffer(uint32_t vertexCount, uint32_t vertexStride, void** pBuffer)
     {
         uint32_t size = AlignUp(vertexCount * vertexStride, m_Alignment);

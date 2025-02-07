@@ -43,6 +43,7 @@ namespace cauldron
 
     bool IsSRGB(ResourceFormat format);
     bool IsDepth(ResourceFormat format);
+
     ResourceFormat ToGamma(ResourceFormat format);
     ResourceFormat FromGamma(ResourceFormat format);
     uint32_t GetResourceFormatStride(ResourceFormat format);

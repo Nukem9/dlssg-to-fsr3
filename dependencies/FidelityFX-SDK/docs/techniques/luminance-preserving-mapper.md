@@ -1,6 +1,6 @@
-<!-- @page page_techniques_lpm FidelityFX Luminance Preserving Mapper 1.3 -->
+<!-- @page page_techniques_lpm FidelityFX Luminance Preserving Mapper 1.4 -->
 
-<h1>FidelityFX Luminance Preserving Mapper 1.3</h1>
+<h1>FidelityFX Luminance Preserving Mapper 1.4</h1>
 
 <h2>What is FidelityFX Luminance Preserving Mapper?</h2>
 

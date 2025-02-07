@@ -128,8 +128,9 @@ namespace cauldron
             }
         }
 
-        QueueFamilies families = pDevice->GetQueueFamilies();
-        bool needsQueueOwnershipTransfer = (families.familyIndices[RequestedQueue::Graphics] != families.familyIndices[RequestedQueue::Copy]);
+        uint32_t             graphicsFamily              = pDevice->VKCmdQueueFamily(CommandQueue::Graphics);
+        uint32_t             copyFamily                  = pDevice->VKCmdQueueFamily(CommandQueue::Copy);
+        bool                 needsQueueOwnershipTransfer = (graphicsFamily != copyFamily);
         VkImageMemoryBarrier imageMemoryBarrier = {};
         if (needsQueueOwnershipTransfer)
         {
@@ -140,8 +141,8 @@ namespace cauldron
             imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-            imageMemoryBarrier.srcQueueFamilyIndex = families.familyIndices[RequestedQueue::Copy];
-            imageMemoryBarrier.dstQueueFamilyIndex = families.familyIndices[RequestedQueue::Graphics];
+            imageMemoryBarrier.srcQueueFamilyIndex = copyFamily;
+            imageMemoryBarrier.dstQueueFamilyIndex = graphicsFamily;
             imageMemoryBarrier.image = m_pResource->GetImpl()->GetImage();
             imageMemoryBarrier.subresourceRange.aspectMask = GetImageAspectMask(m_pResource->GetImpl()->GetImageCreateInfo().format);
             imageMemoryBarrier.subresourceRange.baseMipLevel = 0;

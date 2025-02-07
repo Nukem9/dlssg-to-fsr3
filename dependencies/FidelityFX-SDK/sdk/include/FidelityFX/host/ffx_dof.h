@@ -58,7 +58,7 @@
 /// The size of the context specified in 32bit values.
 ///
 /// @ingroup ffxDof
-#define FFX_DOF_CONTEXT_SIZE  (45664)
+#define FFX_DOF_CONTEXT_SIZE  (45674)
 
 #if defined(__cplusplus)
 extern "C" {

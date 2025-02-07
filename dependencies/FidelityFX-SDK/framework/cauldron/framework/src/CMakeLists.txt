@@ -115,8 +115,8 @@ file(GLOB rendermodules_fpslimiter
     ${CMAKE_CURRENT_SOURCE_DIR}/render/rendermodules/fpslimiter/*.cpp)
 
 file(GLOB rendermodules_runtimeshaderrecompiler
-    ${CMAKE_CURRENT_SOURCE_DIR}/render/rendermodules/runtimeshaderrecompiler/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/render/rendermodules/runtimeshaderrecompiler/*.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/render/rendermodules/rsr/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/render/rendermodules/rsr/*.cpp)
 
 file(GLOB shaderfiles
 	${CMAKE_CURRENT_SOURCE_DIR}/../inc/shaders/*.h
@@ -202,7 +202,7 @@ target_compile_definitions(backend_interface_dynamic PRIVATE SUPPORT_RUNTIME_SHA
 add_library(backend_interface_stub INTERFACE)
 
 # Runtime shader recompiler render module uses the backend_shader_reloader library
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/render/rendermodules/runtimeshaderrecompiler/backend_shader_reloader)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/render/backend_shader_reloader)
 
 target_link_libraries(backend_interface_static PUBLIC backend_shader_reloader_stub ffx_backend_native)
 target_link_libraries(backend_interface_dynamic PUBLIC backend_shader_reloader_impl)

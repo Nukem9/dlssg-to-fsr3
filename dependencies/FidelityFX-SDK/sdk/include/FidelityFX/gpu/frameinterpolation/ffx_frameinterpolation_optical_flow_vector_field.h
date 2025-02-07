@@ -30,10 +30,9 @@ void computeOpticalFlowFieldMvs(FfxUInt32x2 dtID, FfxFloat32x2 fOpticalFlowVecto
     const FfxFloat32 scaleFactor = 1.0f;
     FfxFloat32x2 fMotionVectorHalf = fOpticalFlowVector * 0.5f;
 
-    FfxFloat32 fDilatedDepth = ConvertFromDeviceDepthToViewSpace(LoadDilatedDepth(FfxInt32x2(dtID)));
-
-    FfxFloat32x3 prevBackbufferCol = SamplePreviousBackbuffer(fUv).xyz;
-    FfxFloat32x3 curBackbufferCol  = SampleCurrentBackbuffer(fUv + fOpticalFlowVector).xyz;
+    // pixel position in current frame + fOpticalFlowVector-> pixel position in previous frame
+    FfxFloat32x3 prevBackbufferCol = SamplePreviousBackbuffer(fUv + fOpticalFlowVector).xyz; // returns previous backbuffer color of current frame pixel position in previous frame
+    FfxFloat32x3 curBackbufferCol  = SampleCurrentBackbuffer(fUv).xyz; // returns current backbuffer color at current frame pixel position
 
     FfxFloat32 prevLuma = 0.001f + RawRGBToLuminance(prevBackbufferCol);
     FfxFloat32 currLuma = 0.001f + RawRGBToLuminance(curBackbufferCol);

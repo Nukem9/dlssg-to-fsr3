@@ -427,13 +427,13 @@ static FfxErrorCode classifierCreate(FfxClassifierContext_Private* context, cons
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
 
     context->classifierConstants.num32BitEntries = sizeof(ClassifierConstants) / sizeof(uint32_t);
     context->reflectionsConstants.num32BitEntries = sizeof(ClassifierReflectionsConstants) / sizeof(uint32_t);
 
     // Create the context.
-    FFX_VALIDATE(context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId));
+    FFX_VALIDATE(context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_CLASSIFIER, nullptr, &context->effectContextId));
 
     // Call out for device caps.
     FFX_VALIDATE(context->contextDescription.backendInterface.fpGetDeviceCapabilities(

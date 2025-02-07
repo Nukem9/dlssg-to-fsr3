@@ -71,6 +71,8 @@ namespace cauldron
         // Allocate the resource using the memory allocator
         m_pResource = GPUResource::CreateGPUResource(pDesc->Name.c_str(), customOwner, initialState, &initParams, m_ResizeFn != nullptr);
         CauldronAssert(ASSERT_ERROR, m_pResource != nullptr, L"Could not create GPU resource for buffer %ls", pDesc->Name.c_str());
+
+        InitAddressInfo();
     }
 
     void BufferInternal::CopyData(const void* pData, size_t size)
@@ -133,29 +135,6 @@ namespace cauldron
 
     BufferAddressInfo BufferInternal::GetAddressInfo() const
     {
-        BufferAddressInfo addressInfo;
-        BufferAddressInfoInternal* pInfo = (BufferAddressInfoInternal*)(&addressInfo);
-        pInfo->GPUBufferView = m_pResource->GetImpl()->DX12Resource()->GetGPUVirtualAddress();
-        pInfo->SizeInBytes = static_cast<UINT>(m_BufferDesc.Size);
-        switch (m_BufferDesc.Type)
-        {
-        case BufferType::Vertex:
-            pInfo->StrideInBytes = static_cast<UINT>(m_BufferDesc.Stride);
-            break;
-        case BufferType::Index:
-            pInfo->Format = GetDXGIFormat(m_BufferDesc.Format);
-            break;
-        case BufferType::AccelerationStructure:
-            pInfo->StrideInBytes = 1;
-            break;
-        case BufferType::Data:
-            break;
-
-        default:
-            CauldronCritical(L"Unknown buffer type");
-            break;
-        }
-
         return addressInfo;
     }
 
@@ -174,7 +153,35 @@ namespace cauldron
 
         // Recreate the resource
         m_pResource->GetImpl()->RecreateResource(ResourceDesc, D3D12_HEAP_TYPE_DEFAULT, m_pResource->GetCurrentResourceState());
+        InitAddressInfo();
     }
+
+    void BufferInternal::InitAddressInfo()
+    {
+        addressInfo                      = {};
+        BufferAddressInfoInternal* pInfo = (BufferAddressInfoInternal*)(&addressInfo);
+        pInfo->GPUBufferView             = m_pResource->GetImpl()->DX12Resource()->GetGPUVirtualAddress();
+        pInfo->SizeInBytes               = static_cast<UINT>(m_BufferDesc.Size);
+        switch (m_BufferDesc.Type)
+        {
+        case BufferType::Vertex:
+            pInfo->StrideInBytes = static_cast<UINT>(m_BufferDesc.Stride);
+            break;
+        case BufferType::Index:
+            pInfo->Format = GetDXGIFormat(m_BufferDesc.Format);
+            break;
+        case BufferType::AccelerationStructure:
+            pInfo->StrideInBytes = 1;
+            break;
+        case BufferType::Data:
+            break;
+
+        default:
+            CauldronCritical(L"Unknown buffer type");
+            break;
+        }
+    }
+
 
 } // namespace cauldron
 

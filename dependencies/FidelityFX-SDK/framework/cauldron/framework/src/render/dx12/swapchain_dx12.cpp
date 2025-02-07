@@ -71,6 +71,24 @@ namespace cauldron
         // Set format based on display mode
         m_SwapChainFormat = GetFormat(m_CurrentDisplayMode);
 
+        // If config file provides a swapchainformat override, try to use it
+        if (pConfig->SwapChainFormat != ResourceFormat::Unknown && pConfig->SwapChainFormat != m_SwapChainFormat)
+        {
+            D3D12_FEATURE_DATA_D3D12_OPTIONS FeatureData;
+            ZeroMemory(&FeatureData, sizeof(FeatureData));
+            DXGI_FORMAT requestedSwapchainFormat = GetDXGIFormat(pConfig->SwapChainFormat);
+            D3D12_FEATURE_DATA_FORMAT_SUPPORT FormatSupport = {requestedSwapchainFormat, D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE};
+            HRESULT hr = GetDevice()->GetImpl()->DX12Device()->CheckFeatureSupport(D3D12_FEATURE_FORMAT_SUPPORT, &FormatSupport, sizeof(FormatSupport));
+            if (SUCCEEDED(hr) && (FormatSupport.Support1 & D3D12_FORMAT_SUPPORT1_DISPLAY) != 0)
+            {
+                m_SwapChainFormat = pConfig->SwapChainFormat;
+            }
+            else
+            {
+                CauldronWarning(L"The requested swapchain format from the config file cannot be used for present/display. Override is ignored.");
+            }
+        }
+
         // Set primaries based on display mode
         PopulateHDRMetadataBasedOnDisplayMode();
 

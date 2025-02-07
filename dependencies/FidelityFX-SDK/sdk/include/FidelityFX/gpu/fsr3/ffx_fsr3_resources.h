@@ -27,11 +27,25 @@
 #include "../frameinterpolation/ffx_frameinterpolation_resources.h"
 
 #if defined(FFX_CPU) || defined(FFX_GPU)
+#define FFX_FSR3_RESOURCE_IDENTIFIER_NULL                                           0
 
-#define FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR                            0
-#define FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT                        1
+#define FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_VECTOR                            1
+#define FFX_FSR3_RESOURCE_IDENTIFIER_OPTICAL_FLOW_SCD_OUTPUT                        2
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_0                                5
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_0                       6
+#define FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_0         7
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_1                                8
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_1                       9
+#define FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_1         10
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_2                                11
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_2                       12
+#define FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_2         13
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_DEPTH_3                                14
+#define FFX_FSR3_RESOURCE_IDENTIFIER_DILATED_MOTION_VECTORS_3                       15
+#define FFX_FSR3_RESOURCE_IDENTIFIER_RECONSTRUCTED_PREVIOUS_NEAREST_DEPTH_3         16
 
-#define FFX_FSR3_RESOURCE_IDENTIFIER_COUNT                                          2
+#define FFX_FSR3_RESOURCE_IDENTIFIER_COUNT                                          17
+#define FFX_FSR3_RESOURCE_IDENTIFIER_UPSCALED_COUNT                                 3
 #endif // #if defined(FFX_CPU) || defined(FFX_GPU)
 
 #endif //!defined( FFX_FSR2_RESOURCES_H )

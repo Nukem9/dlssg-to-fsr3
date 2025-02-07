@@ -91,6 +91,8 @@ namespace cauldron
             return VK_FORMAT_A2B10G10R10_UNORM_PACK32;
         case ResourceFormat::RG11B10_FLOAT:
             return VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+        case ResourceFormat::RGB9E5_SHAREDEXP:
+            return VK_FORMAT_E5B9G9R9_UFLOAT_PACK32;
         case ResourceFormat::RG16_SINT:
             return VK_FORMAT_R16G16_SINT;
         case ResourceFormat::RG16_UINT:
@@ -194,6 +196,8 @@ namespace cauldron
         case ResourceFormat::RGB10A2_UNORM:
         case ResourceFormat::RG16_FLOAT:
         case ResourceFormat::R32_FLOAT:
+        case ResourceFormat::RG11B10_FLOAT:
+        case ResourceFormat::RGB9E5_SHAREDEXP:
             return 4;
 
             // 64-bit

@@ -24,6 +24,11 @@
 #include <cmath>     // cos, sin
 #include <stdexcept>
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wsign-compare"
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
+
 #include <FidelityFX/host/ffx_cacao.h>
 #include <FidelityFX/gpu/ffx_core.h>
 #include <ffx_object_management.h>
@@ -456,7 +461,6 @@ static FfxErrorCode createPipelineStates(FfxCacaoContext_Private* context)
     pipelineDescription.rootConstants           = &rootConstantDesc;
 
     // Query device capabilities
-    const FfxDevice             device = context->contextDescription.backendInterface.device;
     FfxDeviceCapabilities capabilities;
     context->contextDescription.backendInterface.fpGetDeviceCapabilities(&context->contextDescription.backendInterface, &capabilities);
 
@@ -601,13 +605,13 @@ static FfxErrorCode cacaoCreate(FfxCacaoContext_Private* context, const FfxCacao
 
     // Check version info - make sure we are linked with the right backend version
     FfxVersionNumber version = context->contextDescription.backendInterface.fpGetSDKVersion(&context->contextDescription.backendInterface);
-    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 0), FFX_ERROR_INVALID_VERSION);
+    FFX_RETURN_ON_ERROR(version == FFX_SDK_MAKE_VERSION(1, 1, 2), FFX_ERROR_INVALID_VERSION);
     
     context->constantBuffer.num32BitEntries = sizeof(FfxCacaoConstants) / sizeof(uint32_t);
 
     // Create the device
     FfxErrorCode errorCode =
-        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, nullptr, &context->effectContextId);
+        context->contextDescription.backendInterface.fpCreateBackendContext(&context->contextDescription.backendInterface, FFX_EFFECT_CACAO, nullptr, &context->effectContextId);
     FFX_RETURN_ON_ERROR(errorCode == FFX_OK, errorCode);
 
 #ifdef FFX_CACAO_ENABLE_PROFILING
@@ -1088,7 +1092,7 @@ static FfxErrorCode cacaoDispatch(FfxCacaoContext_Private* context,
             dispatchDepth  = 1;
             break;
         default:
-            throw std::runtime_error("Unsupported quality setting: " + context->settings.qualityLevel);
+            return FFX_ERROR_INVALID_ENUM;
         }
 
         dispatchDepth *= (context->settings.qualityLevel == FFX_CACAO_QUALITY_LOWEST) ? 2 : 4;  // 2 layers for lowest, 4 for all others
@@ -1218,7 +1222,6 @@ FfxErrorCode ffxCacaoContextCreate(FfxCacaoContext* context, const FfxCacaoConte
     }
 
     // ensure the context is large enough for the internal context.
-    auto test = sizeof(FfxCacaoContext);
     FFX_STATIC_ASSERT(sizeof(FfxCacaoContext) >= sizeof(FfxCacaoContext_Private));
 
     // create the context.

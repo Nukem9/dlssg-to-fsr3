@@ -99,9 +99,18 @@ struct ffxConfigureDescFrameGenerationSwapChainKeyValueVK
     void*                  ptr;        ///< Pointer to set or pointer to value to set.
 };
 
+//enum value matches enum FfxFrameInterpolationSwapchainConfigureKey
 enum FfxApiConfigureFrameGenerationSwapChainKeyVK
 {
-    // No values.
+    FFX_API_CONFIGURE_FG_SWAPCHAIN_KEY_WAITCALLBACK = 0,                     ///< Sets FfxWaitCallbackFunc
+    FFX_API_CONFIGURE_FG_SWAPCHAIN_KEY_FRAMEPACINGTUNING = 2,                ///< Sets FfxApiSwapchainFramePacingTuning casted from ptr
+};
+
+#define FFX_API_QUERY_DESC_TYPE_FRAMEGENERATIONSWAPCHAIN_GPU_MEMORY_USAGE_VK 0x00040009u
+struct ffxQueryFrameGenerationSwapChainGetGPUMemoryUsageVK
+{
+    ffxQueryDescHeader header;
+    struct FfxApiEffectMemoryUsage* gpuMemoryUsageFrameGenerationSwapchain;
 };
 
 /// Function to get the number of presents. This is useful when using frame interpolation
@@ -124,12 +133,21 @@ struct ffxQueryDescSwapchainReplacementFunctionsVK
     PFN_getLastPresentCountFFXAPI pOutGetLastPresentCountFFXAPI;  ///< Additional function to get the number of times present has been called since the swapchain creation.
 };
 
+#define FFX_API_CREATE_CONTEXT_DESC_TYPE_FGSWAPCHAIN_MODE_VK 0x40010u
+struct ffxCreateContextDescFrameGenerationSwapChainModeVK
+{
+    ffxCreateContextDescHeader header;
+    bool                       composeOnPresentQueue;  ///< flags indicating that composition will happen on the present queue
+};
+
 static inline uint32_t ffxApiGetSurfaceFormatVK(VkFormat fmt)
 {
     switch (fmt)
     {
     case VK_FORMAT_R32G32B32A32_SFLOAT:
         return FFX_API_SURFACE_FORMAT_R32G32B32A32_FLOAT;
+    case VK_FORMAT_R32G32B32_SFLOAT:
+        return FFX_API_SURFACE_FORMAT_R32G32B32_FLOAT;
     case VK_FORMAT_R32G32B32A32_UINT:
         return FFX_API_SURFACE_FORMAT_R32G32B32A32_UINT;
     case VK_FORMAT_R16G16B16A16_SFLOAT:
@@ -137,6 +155,8 @@ static inline uint32_t ffxApiGetSurfaceFormatVK(VkFormat fmt)
     case VK_FORMAT_R32G32_SFLOAT:
         return FFX_API_SURFACE_FORMAT_R32G32_FLOAT;
     case VK_FORMAT_R32_UINT:
+    case VK_FORMAT_D24_UNORM_S8_UINT:
+    case VK_FORMAT_X8_D24_UNORM_PACK32:
         return FFX_API_SURFACE_FORMAT_R32_UINT;
     case VK_FORMAT_R8G8B8A8_UNORM:
         return FFX_API_SURFACE_FORMAT_R8G8B8A8_UNORM;
@@ -163,21 +183,26 @@ static inline uint32_t ffxApiGetSurfaceFormatVK(VkFormat fmt)
     case VK_FORMAT_R16_UINT:
         return FFX_API_SURFACE_FORMAT_R16_UINT;
     case VK_FORMAT_R16_UNORM:
+    case VK_FORMAT_D16_UNORM:
+    case VK_FORMAT_D16_UNORM_S8_UINT:
         return FFX_API_SURFACE_FORMAT_R16_UNORM;
     case VK_FORMAT_R16_SNORM:
         return FFX_API_SURFACE_FORMAT_R16_SNORM;
     case VK_FORMAT_R8_UNORM:
         return FFX_API_SURFACE_FORMAT_R8_UNORM;
     case VK_FORMAT_R8_UINT:
+    case VK_FORMAT_S8_UINT:
         return FFX_API_SURFACE_FORMAT_R8_UINT;
     case VK_FORMAT_R8G8_UNORM:
         return FFX_API_SURFACE_FORMAT_R8G8_UNORM;
     case VK_FORMAT_R8G8_UINT:
         return FFX_API_SURFACE_FORMAT_R8G8_UINT;
     case VK_FORMAT_R32_SFLOAT:
-        return FFX_API_SURFACE_FORMAT_R32_FLOAT;
     case VK_FORMAT_D32_SFLOAT:
+    case VK_FORMAT_D32_SFLOAT_S8_UINT:
         return FFX_API_SURFACE_FORMAT_R32_FLOAT;
+    case VK_FORMAT_E5B9G9R9_UFLOAT_PACK32:
+        return FFX_API_SURFACE_FORMAT_R9G9B9E5_SHAREDEXP;
     case VK_FORMAT_UNDEFINED:
         return FFX_API_SURFACE_FORMAT_UNKNOWN;
 
@@ -198,6 +223,38 @@ static inline uint32_t ffxApiGetSurfaceFormatToGamma(uint32_t fmt)
         return FFX_API_SURFACE_FORMAT_B8G8R8A8_SRGB;
     default:
         return fmt;
+    }
+}
+
+static inline bool ffxApiIsDepthFormat(VkFormat fmt)
+{
+    switch (fmt)
+    {
+    case VK_FORMAT_D16_UNORM:
+    case VK_FORMAT_X8_D24_UNORM_PACK32:
+    case VK_FORMAT_D32_SFLOAT:
+    case VK_FORMAT_D16_UNORM_S8_UINT:
+    case VK_FORMAT_D24_UNORM_S8_UINT:
+    case VK_FORMAT_D32_SFLOAT_S8_UINT:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+static inline bool ffxApiIsStencilFormat(VkFormat fmt)
+{
+    switch (fmt)
+    {
+    case VK_FORMAT_S8_UINT:
+    case VK_FORMAT_D16_UNORM_S8_UINT:
+    case VK_FORMAT_D24_UNORM_S8_UINT:
+    case VK_FORMAT_D32_SFLOAT_S8_UINT:
+        return true;
+
+    default:
+        return false;
     }
 }
 
@@ -242,12 +299,13 @@ static inline FfxApiResourceDescription ffxApiGetImageResourceDescriptionVK(cons
 
     // Set flags properly for resource registration
     resourceDescription.flags = FFX_API_RESOURCE_FLAGS_NONE;
+    resourceDescription.usage = FFX_API_RESOURCE_USAGE_READ_ONLY;
 
-    // Check for depth use
-    if ((createInfo.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) != 0)
-        resourceDescription.usage = FFX_API_RESOURCE_USAGE_DEPTHTARGET;
-    else
-        resourceDescription.usage = FFX_API_RESOURCE_USAGE_READ_ONLY;
+    // Check for depth stencil use
+    if (ffxApiIsDepthFormat(createInfo.format))
+        resourceDescription.usage |= FFX_API_RESOURCE_USAGE_DEPTHTARGET;
+    if (ffxApiIsStencilFormat(createInfo.format))
+        resourceDescription.usage |= FFX_API_RESOURCE_USAGE_STENCILTARGET;
 
     // Unordered access use
     if ((createInfo.usage & VK_IMAGE_USAGE_STORAGE_BIT) != 0)

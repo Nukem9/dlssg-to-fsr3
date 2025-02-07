@@ -35,20 +35,28 @@
 // Actually this is only a container for Upscaler+Frameinterpolation+OpticalFlow
 typedef struct FfxFsr3Context_Private {
     FfxFsr3ContextDescription               description;
+    FfxInterface                            backendInterfaceSharedResources;
     FfxInterface                            backendInterfaceUpscaling;
     FfxInterface                            backendInterfaceFrameInterpolation;
     FfxFsr3UpscalerContext                  upscalerContext;
     FfxOpticalflowContext                   ofContext;
     FfxFrameInterpolationContext            fiContext;
-    FfxResourceInternal                     fiSharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_COUNT];
+    FfxResourceInternal                     sharedResources[FFX_FSR3_RESOURCE_IDENTIFIER_COUNT];
+    FfxUInt32                               effectContextIdSharedResources;
     FfxUInt32                               effectContextIdFrameGeneration;
     float                                   deltaTime;
+    bool                                    upscalingOnly;
+    bool                                    interpolationOnly;
     bool                                    asyncWorkloadSupported;
+    FfxUInt32                               sharedResourceCount;
     FfxDimensions2D                         renderSize;  ///< The dimensions used to render game content, dilatedDepth, dilatedMotionVectors are expected to be of ths size.
 
     FfxResource                             HUDLess_color;
+    FfxResource                             dilatedDepth;
+    FfxResource                             dilatedMotionVectors;
+    FfxResource                             reconstructedPrevNearestDepth;
 
     bool                                    frameGenerationEnabled;
     int32_t                                 frameGenerationFlags;
-    FfxFrameInterpolationPrepareDescription fgPrepareDescriptions[2];
+    FfxFrameInterpolationPrepareDescription fgPrepareDescriptions[FSR3_MAX_QUEUED_FRAMES];
 } FfxFsr3Context_Private;
