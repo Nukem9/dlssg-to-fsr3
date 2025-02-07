@@ -316,16 +316,72 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	desc.DepthInverted = NGXParameters->GetUIntOrDefault("DLSSG.DepthInverted", 0) != 0;
 	desc.Reset = NGXParameters->GetUIntOrDefault("DLSSG.Reset", 0) != 0;
 
-	// Games require a deg2rad fixup because...reasons
-	// TODO: RTX Remix games pass in a FOV of 0. FSR FG doesn't care.
-	desc.CameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0);
+	auto loadCameraMatrix = [&]()
+	{
+		const bool isOrthographicProjection = NGXParameters->GetUIntOrDefault("DLSSG.OrthoProjection", 0) != 0;
 
-	if (desc.CameraFovAngleVertical > 10.0f)
-		desc.CameraFovAngleVertical *= std::numbers::pi_v<float> / 180.0f;
+		if (isOrthographicProjection)
+			return false;
 
-	desc.CameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0);
-	desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0);
-	desc.ViewSpaceToMetersFactor = 1.0f;
+		float(*cameraViewToClip)[4] = nullptr;
+		NGXParameters->GetVoidPointer("DLSSG.CameraViewToClip", reinterpret_cast<void **>(&cameraViewToClip));
+
+		if (!cameraViewToClip)
+			return false;
+
+		float projMatrix[4][4];
+		memcpy(projMatrix, cameraViewToClip, sizeof(projMatrix));
+
+		// a 0 0 0
+		// 0 b 0 0
+		// 0 0 c e
+		// 0 0 d 0
+		const double b = projMatrix[1][1];
+		const double c = projMatrix[2][2];
+		const double d = projMatrix[3][2];
+		const double e = projMatrix[2][3];
+
+		if (e < 0.0)
+		{
+			desc.CameraNear = static_cast<float>((c == 0.0) ? 0.0 : (d / c));
+			desc.CameraFar = static_cast<float>(d / (c + 1.0));
+		}
+		else
+		{
+			desc.CameraNear = static_cast<float>((c == 0.0) ? 0.0 : (-d / c));
+			desc.CameraFar = static_cast<float>(-d / (c - 1.0));
+		}
+
+		if (desc.DepthInverted)
+			std::swap(desc.CameraNear, desc.CameraFar);
+
+		desc.CameraFovAngleVertical = static_cast<float>(2.0 * std::atan(1.0 / b));
+		desc.ViewSpaceToMetersFactor = 1.0f;
+		return true;
+	};
+
+	if (!loadCameraMatrix())
+	{
+		// Some games pass in CameraFOV as degrees. Some games pass in CameraFOV as radians. Which is
+		// correct? Who knows. I sure as hell don't.
+		desc.CameraFovAngleVertical = NGXParameters->GetFloatOrDefault("DLSSG.CameraFOV", 0.0f);
+
+		if (desc.CameraFovAngleVertical > 10.0f)
+			desc.CameraFovAngleVertical *= std::numbers::pi_v<float> / 180.0f;
+
+		desc.CameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0.0f);
+		desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0.0f);
+		desc.ViewSpaceToMetersFactor = 1.0f;
+	}
+
+	if (desc.CameraNear != 0.0f && desc.CameraFar == 0.0f)
+	{
+		// A CameraFar value of zero indicates an infinite far plane. Due to a bug in FSR's
+		// setupDeviceDepthToViewSpaceDepthParams function, CameraFar must always be greater than
+		// CameraNear when in use.
+		desc.DepthPlaneInfinite = true;
+		desc.CameraFar = desc.CameraNear + 1.0f;
+	}
 
 	desc.MinMaxLuminance = m_HDRLuminanceRange;
 
