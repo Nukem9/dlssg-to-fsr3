@@ -347,6 +347,16 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 		if (isEmptyOrIdentityMatrix)
 			return false;
 
+		// BUG: Indiana Jones and the Great Circle passes in what appears to be column-major matrices.
+		// Streamline expects row-major and so do we.
+		const static bool isTheGreatCircle = GetModuleHandleW(L"TheGreatCircle.exe") != nullptr;
+
+		for (int i = 0; i < 4 && isTheGreatCircle; i++)
+		{
+			for (int j = i + 1; j < 4; j++)
+				std::swap(projMatrix[i][j], projMatrix[j][i]);
+		}
+
 		// a 0 0 0
 		// 0 b 0 0
 		// 0 0 c e
