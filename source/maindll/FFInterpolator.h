@@ -13,6 +13,7 @@ struct FFInterpolatorDispatchParameters
     FfxResource InputHUDLessColorBuffer;
     FfxResource InputDepth;
     FfxResource InputMotionVectors;
+	FfxResource InputDistortionField;
 
     FfxResource InputOpticalFlowVector;
     FfxResource InputOpticalFlowSceneChangeDetection;
@@ -38,7 +39,6 @@ struct FFInterpolatorDispatchParameters
     float CameraNear;
 	float CameraFar;
 	float CameraFovAngleVertical;
-    float ViewSpaceToMetersFactor;
 	FfxFloatCoords2D MinMaxLuminance;
 };
 

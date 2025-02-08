@@ -292,16 +292,45 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 	if (!LoadTextureFromNGXParameters(NGXParameters, "DLSSG.MVecs", &desc.InputMotionVectors, FFX_RESOURCE_STATE_COPY_DEST))
 		return false;
 
+	if (LoadTextureFromNGXParameters(NGXParameters, "DLSSG.BidirectionalDistortionField", &desc.InputDistortionField, FFX_RESOURCE_STATE_COPY_DEST))
+	{
+		const bool isLowRes = NGXParameters->GetUIntOrDefault("DLSSG.BidirectionalDistortionFieldLowPrecision.IsLowPrecision", 0) != 0;
+
+		if (isLowRes)
+		{
+			desc.InputDistortionField = {};
+
+			const static bool once = []()
+			{
+				// Not going to bother until I find a game using linear transforms
+				spdlog::warn("Attempted to use an unsupported low precision distortion field resource. Discarding.");
+				return true;
+			}();
+		}
+
+		// Subrect extents are skipped because FFX doesn't actually support them
+		// DLSSG.BidirectionalDistortionFieldSubrectWidth, DLSSG.BidirectionalDistortionFieldSubrectHeight
+	}
+
 	desc.InputOpticalFlowVector = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowVector);
 	desc.InputOpticalFlowSceneChangeDetection = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowSCD);
 
 	desc.OpticalFlowScale = { 1.0f / m_PostUpscaleRenderWidth, 1.0f / m_PostUpscaleRenderHeight };
 	desc.OpticalFlowBlockSize = 8;
 
-	const FfxDimensions2D mvecExtents = {
-		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectWidth", desc.InputMotionVectors.description.width),
-		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectHeight", desc.InputMotionVectors.description.height),
+	FfxDimensions2D mvecExtents = {
+		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectWidth", 0),
+		NGXParameters->GetUIntOrDefault("DLSSG.MVecsSubrectHeight", 0),
 	};
+
+	if (mvecExtents.width == 0 ||
+		mvecExtents.width > desc.InputMotionVectors.description.width ||
+		mvecExtents.height == 0 ||
+		mvecExtents.height > desc.InputMotionVectors.description.height)
+	{
+		mvecExtents.width = desc.InputMotionVectors.description.width;
+		mvecExtents.height = desc.InputMotionVectors.description.height;
+	}
 
 	desc.MotionVectorsFullResolution = m_PostUpscaleRenderWidth == mvecExtents.width && m_PostUpscaleRenderHeight == mvecExtents.height;
 	desc.MotionVectorJitterCancellation = NGXParameters->GetUIntOrDefault("DLSSG.MvecJittered", 0) != 0;
@@ -386,7 +415,6 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 			std::swap(desc.CameraNear, desc.CameraFar);
 
 		desc.CameraFovAngleVertical = static_cast<float>(2.0 * std::atan(1.0 / b));
-		desc.ViewSpaceToMetersFactor = 1.0f;
 		return true;
 	};
 
@@ -405,7 +433,6 @@ bool FFFrameInterpolator::BuildFrameInterpolationParameters(
 
 		desc.CameraNear = NGXParameters->GetFloatOrDefault("DLSSG.CameraNear", 0.0f);
 		desc.CameraFar = NGXParameters->GetFloatOrDefault("DLSSG.CameraFar", 0.0f);
-		desc.ViewSpaceToMetersFactor = 1.0f;
 	}
 
 	if (desc.CameraNear != 0.0f && desc.CameraFar == 0.0f)

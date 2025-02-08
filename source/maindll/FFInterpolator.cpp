@@ -55,7 +55,7 @@ FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Pa
 		dispatchDesc.cameraNear = Parameters.CameraNear;
 		dispatchDesc.cameraFar = Parameters.CameraFar;
 		dispatchDesc.cameraFovAngleVertical = Parameters.CameraFovAngleVertical;
-		dispatchDesc.viewSpaceToMetersFactor = Parameters.ViewSpaceToMetersFactor;
+		dispatchDesc.viewSpaceToMetersFactor = 1.0f;
 
 		dispatchDesc.frameTimeDelta = 1000.0f / 60.0f; // Unused
 		dispatchDesc.reset = Parameters.Reset;
@@ -70,7 +70,7 @@ FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Pa
 		dispatchDesc.dilatedDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_DilatedDepth);
 		dispatchDesc.dilatedMotionVectors = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_DilatedMotionVectors);
 		dispatchDesc.reconstructedPrevDepth = m_SharedBackendInterface.fpGetResource(&m_SharedBackendInterface, *m_ReconstructedPrevDepth);
-		dispatchDesc.distortionField = {};
+		dispatchDesc.distortionField = Parameters.InputDistortionField;
 	}
 
 	FfxFrameInterpolationPrepareDescription prepareDesc = {};
@@ -84,7 +84,7 @@ FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Pa
 		prepareDesc.frameTimeDelta = dispatchDesc.frameTimeDelta;
 		prepareDesc.cameraNear = dispatchDesc.cameraNear;
 		prepareDesc.cameraFar = dispatchDesc.cameraFar;
-		prepareDesc.viewSpaceToMetersFactor = dispatchDesc.viewSpaceToMetersFactor;
+		prepareDesc.viewSpaceToMetersFactor = 1.0f;
 		prepareDesc.cameraFovAngleVertical = dispatchDesc.cameraFovAngleVertical;
 
 		prepareDesc.depth = Parameters.InputDepth;
