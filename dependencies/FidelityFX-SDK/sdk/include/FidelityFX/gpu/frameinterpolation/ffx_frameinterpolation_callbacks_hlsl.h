@@ -511,10 +511,10 @@ FfxFloat32x2 LoadInputMotionVector(FfxInt32x2 iPxDilatedMotionVectorPos)
 #endif
 
 #if defined(FFX_FRAMEINTERPOLATION_BIND_SRV_DISTORTION_FIELD)
-    Texture2D<FfxFloat32x2> r_input_distortion_field : FFX_DECLARE_SRV(FFX_FRAMEINTERPOLATION_BIND_SRV_DISTORTION_FIELD);
+    Texture2D<FfxFloat32x4> r_input_distortion_field : FFX_DECLARE_SRV(FFX_FRAMEINTERPOLATION_BIND_SRV_DISTORTION_FIELD);
     FfxFloat32x2 SampleDistortionField(FFX_PARAMETER_IN FfxFloat32x2 fUv)
     {
-        return r_input_distortion_field.SampleLevel(s_LinearClamp, fUv, 0);
+        return r_input_distortion_field.SampleLevel(s_LinearClamp, fUv, 0).xy * MotionVectorScale();
     }
 #endif
 
