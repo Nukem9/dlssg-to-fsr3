@@ -98,6 +98,9 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_VULKAN_EvaluateFeature(VkCommandBuffer CommandL
 
 	switch (status)
 	{
+	case FFX_EOF:
+		return NGX_INVALID_PARAMETER;
+
 	case FFX_OK:
 	{
 		static bool once = [&]()

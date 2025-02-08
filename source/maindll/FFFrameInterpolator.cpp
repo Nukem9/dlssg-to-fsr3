@@ -72,8 +72,19 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 		return FFX_OK;
 	}();
 
-	if (dispatchStatus == FFX_OK && gameRealOutputResource.resource && gameBackBufferResource.resource)
-		CopyTexture(GetActiveCommandList(), &gameRealOutputResource, &gameBackBufferResource);
+	if ((dispatchStatus == FFX_OK || dispatchStatus == FFX_EOF) && gameBackBufferResource.resource)
+	{
+		if (gameRealOutputResource.resource)
+			CopyTexture(GetActiveCommandList(), &gameRealOutputResource, &gameBackBufferResource);
+
+		if (dispatchStatus == FFX_EOF) // Flush required and no commands were queued. Still have to prevent flickering.
+		{
+			FfxResource outputInterp = {};
+
+			if (LoadTextureFromNGXParameters(NGXParameters, "DLSSG.OutputInterpolated", &outputInterp, FFX_RESOURCE_STATE_UNORDERED_ACCESS))
+				CopyTexture(GetActiveCommandList(), &outputInterp, &gameBackBufferResource);
+		}
+	}
 
  	return dispatchStatus;
 }

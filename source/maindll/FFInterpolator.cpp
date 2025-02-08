@@ -105,9 +105,6 @@ FfxErrorCode FFInterpolator::Dispatch(const FFInterpolatorDispatchParameters& Pa
 
 FfxErrorCode FFInterpolator::CreateContextDeferred(const FFInterpolatorDispatchParameters& Parameters)
 {
-	if (m_FSRContext)
-		return FFX_OK;
-
 	FfxFrameInterpolationContextDescription desc = {};
 	desc.backendInterface = m_BackendInterface;
 
@@ -138,7 +135,20 @@ FfxErrorCode FFInterpolator::CreateContextDeferred(const FFInterpolatorDispatchP
 	if (Parameters.InputHUDLessColorBuffer.resource)
 		desc.previousInterpolationSourceFormat = Parameters.InputHUDLessColorBuffer.description.format;
 
-	auto status = ffxFrameInterpolationContextCreate(&m_FSRContext.emplace(), &desc);
+	if (std::exchange(m_ContextFlushPending, false))
+		DestroyContext();
+
+	if (m_FSRContext)
+	{
+		if (memcmp(&desc, &m_ContextDescription, sizeof(m_ContextDescription)) == 0)
+			return FFX_OK;
+
+		m_ContextFlushPending = true;
+		return FFX_EOF; // Description changed. Return fake status to request a flush from our parent.
+	}
+
+	m_ContextDescription = desc;
+	auto status = ffxFrameInterpolationContextCreate(&m_FSRContext.emplace(), &m_ContextDescription);
 
 	if (status != FFX_OK)
 	{
@@ -213,4 +223,9 @@ void FFInterpolator::DestroyContext()
 
 	if (m_ReconstructedPrevDepth)
 		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_ReconstructedPrevDepth, m_SharedEffectContextId);
+
+	m_FSRContext.reset();
+	m_DilatedDepth.reset();
+	m_DilatedMotionVectors.reset();
+	m_ReconstructedPrevDepth.reset();
 }

@@ -52,7 +52,10 @@ private:
 	FfxInterface m_SharedBackendInterface;
 	FfxUInt32 m_SharedEffectContextId = {};
 
+	FfxFrameInterpolationContextDescription m_ContextDescription = {};
 	std::optional<FfxFrameInterpolationContext> m_FSRContext;
+	bool m_ContextFlushPending = false;
+
 	std::optional<FfxResourceInternal> m_DilatedDepth;
 	std::optional<FfxResourceInternal> m_DilatedMotionVectors;
 	std::optional<FfxResourceInternal> m_ReconstructedPrevDepth;

@@ -86,6 +86,9 @@ NGXDLLEXPORT NGXResult NVSDK_NGX_D3D12_EvaluateFeature(ID3D12GraphicsCommandList
 
 	switch (status)
 	{
+	case FFX_EOF:
+		return NGX_INVALID_PARAMETER;
+
 	case FFX_OK:
 	{
 		static bool once = [&]()
