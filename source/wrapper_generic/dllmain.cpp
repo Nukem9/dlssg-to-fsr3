@@ -104,12 +104,9 @@ std::wstring_view RemapStreamlinePluginPath(const wchar_t *Path)
 
 std::optional<HMODULE> LoadReplacementImplementationLibrary()
 {
-	if (char *p; _dupenv_s(&p, nullptr, "DLSSGTOFSR3_SKIP_REPLACEMENT") == 0)
+	if (wchar_t v[2]; GetEnvironmentVariableW(L"DLSSGTOFSR3_SkipReplacement", v, std::size(v)) == 1)
 	{
-		const bool skipReplacement = p && p[0] == '1';
-		free(p);
-
-		if (skipReplacement)
+		if (v[0] == L'1')
 			return std::nullopt;
 	}
 

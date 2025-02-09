@@ -60,13 +60,8 @@ namespace Util
 		wchar_t envKey[256];
 		swprintf_s(envKey, L"DLSSGTOFSR3_%s", Key);
 
-		if (wchar_t *p; _wdupenv_s(&p, nullptr, envKey) == 0 && p)
-		{
-			const bool isEnabled = p[0] == L'1';
-			free(p);
-
-			return isEnabled;
-		}
+		if (wchar_t v[2]; GetEnvironmentVariableW(envKey, v, std::size(v)) == 1)
+			return v[0] == L'1';
 
 		const static auto iniPath = GetThisDllPath() + L"\\dlssg_to_fsr3.ini";
 		return GetPrivateProfileIntW(L"Debug", Key, DefaultValue, iniPath.c_str()) != 0;
