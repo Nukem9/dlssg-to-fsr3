@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <array>
 #include "NvNGX.h"
 
 __declspec(noinline) void *GetImplementationDll()
