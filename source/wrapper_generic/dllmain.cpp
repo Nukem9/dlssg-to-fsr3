@@ -19,6 +19,7 @@ bool EnableAggressiveHooking;
 constinit std::mutex HookedModuleLock;
 std::unordered_set<HMODULE> HookedModuleList;
 
+void *TryResolveNGXLibrary();
 bool TryInterceptNvAPIFunction(void *ModuleHandle, const void *FunctionName, void **FunctionPointer);
 bool TryRemapModule(const wchar_t *Path, HMODULE *ModuleHandle);
 bool TryPatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle);
@@ -198,6 +199,59 @@ bool TryPatchImportsForModule(const wchar_t *Path, HMODULE ModuleHandle)
 	return true;
 }
 
+void ApplyAggressiveHookingWorkarounds()
+{
+	// Prevent EGS's overlay from loading
+	TargetLibrariesToHook.push_back(TargetEGSServicesDll);
+	LoadLibraryW(TargetEGSServicesDll);
+
+	// NvRemixBridge doesn't use Streamline. Use nvngx.dll in lieu of sl.interposer.dll.
+	if (GetModuleHandleW(L"NvRemixBridge.exe"))
+		TryResolveNGXLibrary();
+
+	//
+	// Force SL's interposer to load early. It's not always present in the local directory. A bit of guesswork
+	// is required.
+	//
+	// "Dying Light 2\                  ph\work\bin\x64\DyingLightGame_x64_rwdi.exe"
+	// "Returnal\         Returnal\     Binaries\Win64\Returnal-Win64-Shipping.exe"
+	// "Hogwarts Legacy\  Phoenix\      Binaries\Win64\HogwartsLegacy.exe"
+	// "SW Jedi Survivor\ SwGame\       Binaries\Win64\JediSurvivor.exe"
+	// "Atomic Heart\     AtomicHeart\  Binaries\Win64\AtomicHeart-Win64-Shipping.exe"
+	// "MMS\              MidnightSuns\ Binaries\Win64\MidnightSuns-Win64-Shipping.exe"
+	// "The Great Circle\               TheGreatCircle.exe"
+	//
+	// "Dying Light 2\    ph\work\bin\x64\sl.interposer.dll"
+	// "Returnal\         Engine\Plugins\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+	// "Hogwarts Legacy\  Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+	// "SW Jedi Survivor\ Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+	// "Atomic Heart\     Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+	// "MMS\              Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
+	// "The Great Circle\ streamline\sl.interposer.dll"
+	//
+	constinit static const wchar_t *bruteInterposerPaths[] = {
+		L"sl.interposer.dll",
+		L"..\\..\\..\\Engine\\Plugins\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll",
+		L"..\\..\\..\\Engine\\Plugins\\Runtime\\Nvidia\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll",
+		L"streamline\\sl.interposer.dll",
+	};
+
+	if (!LoadLibraryW(bruteInterposerPaths[0]))
+	{
+		for (auto interposer : bruteInterposerPaths)
+		{
+			wchar_t path[2048];
+			if (!Util::GetModulePath(path, true, GetModuleHandleW(nullptr)))
+				break;
+
+			wcscat_s(path, interposer);
+
+			if (LoadLibraryExW(path, nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS))
+				break;
+		}
+	}
+}
+
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	if (fdwReason == DLL_PROCESS_ATTACH)
@@ -211,52 +265,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 		}
 
 		if (EnableAggressiveHooking)
-		{
-			TargetLibrariesToHook.push_back(TargetEGSServicesDll);
-			LoadLibraryW(TargetEGSServicesDll);
-
-			//
-			// Aggressive hooking tries to force SL's interposer to load early. It's not always present
-			// in the local directory. A bit of guesswork is required.
-			//
-			// "Dying Light 2\                  ph\work\bin\x64\DyingLightGame_x64_rwdi.exe"
-			// "Returnal\         Returnal\     Binaries\Win64\Returnal-Win64-Shipping.exe"
-			// "Hogwarts Legacy\  Phoenix\      Binaries\Win64\HogwartsLegacy.exe"
-			// "SW Jedi Survivor\ SwGame\       Binaries\Win64\JediSurvivor.exe"
-			// "Atomic Heart\     AtomicHeart\  Binaries\Win64\AtomicHeart-Win64-Shipping.exe"
-			// "MMS\              MidnightSuns\ Binaries\Win64\MidnightSuns-Win64-Shipping.exe"
-			// "The Great Circle\               TheGreatCircle.exe"
-			//
-			// "Dying Light 2\    ph\work\bin\x64\sl.interposer.dll"
-			// "Returnal\         Engine\Plugins\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
-			// "Hogwarts Legacy\  Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
-			// "SW Jedi Survivor\ Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
-			// "Atomic Heart\     Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
-			// "MMS\              Engine\Plugins\Runtime\Nvidia\Streamline\Binaries\ThirdParty\Win64\sl.interposer.dll"
-			// "The Great Circle\ streamline\sl.interposer.dll"
-			//
-			constinit static const wchar_t *bruteInterposerPaths[] = {
-				L"sl.interposer.dll",
-				L"..\\..\\..\\Engine\\Plugins\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll",
-				L"..\\..\\..\\Engine\\Plugins\\Runtime\\Nvidia\\Streamline\\Binaries\\ThirdParty\\Win64\\sl.interposer.dll",
-				L"streamline\\sl.interposer.dll",
-			};
-
-			if (!LoadLibraryW(bruteInterposerPaths[0]))
-			{
-				for (auto interposer : bruteInterposerPaths)
-				{
-					wchar_t path[2048];
-					if (!Util::GetModulePath(path, true, GetModuleHandleW(nullptr)))
-						break;
-
-					wcscat_s(path, interposer);
-
-					if (LoadLibraryExW(path, nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS))
-						break;
-				}
-			}
-		}
+			ApplyAggressiveHookingWorkarounds();
 
 		// We probably loaded after sl.interposer.dll and sl.common.dll. Try patching them up front.
 		bool anyPatched = std::ranges::count_if(
