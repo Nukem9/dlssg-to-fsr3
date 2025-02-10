@@ -16,10 +16,10 @@ namespace Util
 				reinterpret_cast<LPCWSTR>(&GetThisDllPath),
 				&thisModuleHandle);
 
-			if (GetModuleFileNameW(thisModuleHandle, path, ARRAYSIZE(path)))
+			if (GetModuleFileNameW(thisModuleHandle, path, std::size(path)))
 			{
 				// Chop off the file name
-				for (auto i = (ptrdiff_t)wcslen(path) - 1; i > 0; i--)
+				for (auto i = static_cast<ptrdiff_t>(wcslen(path)) - 1; i > 0; i--)
 				{
 					if (path[i] == L'\\' || path[i] == L'/')
 					{
