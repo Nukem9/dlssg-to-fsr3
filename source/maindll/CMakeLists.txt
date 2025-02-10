@@ -39,7 +39,7 @@ add_library(
 target_precompile_headers(
 	${CURRENT_PROJECT}
     PRIVATE
-        pch.h
+        PCH.h
 )
 
 target_include_directories(
