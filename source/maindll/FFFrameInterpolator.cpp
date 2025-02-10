@@ -28,6 +28,16 @@ FFFrameInterpolator::~FFFrameInterpolator()
 
 FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParameters *NGXParameters)
 {
+	if (NGXParameters->GetUIntOrDefault("DLSSG.MultiFrameCount", 0) > 1 ||
+		NGXParameters->GetUIntOrDefault("DLSSG.MultiFrameIndex", 0) > 1)
+	{
+		const static bool once = []()
+		{
+			spdlog::error("Generating multiple interpolated frames is unsupported.");
+			return true;
+		}();
+	}
+
 	FfxResource gameBackBufferResource = {};
 	FfxResource gameRealOutputResource = {};
 
