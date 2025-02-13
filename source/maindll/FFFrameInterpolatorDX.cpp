@@ -12,8 +12,8 @@ FFFrameInterpolatorDX::FFFrameInterpolatorDX(
 	: m_Device(Device),
 	  FFFrameInterpolator(OutputWidth, OutputHeight)
 {
-	m_Device->AddRef();
 	FFFrameInterpolator::Create(NGXParameters);
+	m_Device->AddRef();
 }
 
 FFFrameInterpolatorDX::~FFFrameInterpolatorDX()

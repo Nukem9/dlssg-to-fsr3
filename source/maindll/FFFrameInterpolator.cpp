@@ -102,10 +102,16 @@ FfxErrorCode FFFrameInterpolator::Dispatch(void *CommandList, NGXInstanceParamet
 void FFFrameInterpolator::Create(NGXInstanceParameters *NGXParameters)
 {
 	if (CreateBackend(NGXParameters) != FFX_OK)
+	{
+		Destroy();
 		throw std::runtime_error("Failed to create backend context.");
+	}
 
 	if (CreateOpticalFlowContext() != FFX_OK)
+	{
+		Destroy();
 		throw std::runtime_error("Failed to create optical flow context.");
+	}
 
 	m_FrameInterpolatorContext.emplace(
 		m_FrameInterpolationBackendInterface,
@@ -503,11 +509,12 @@ void FFFrameInterpolator::DestroyBackend()
 {
 	if (m_SharedEffectContextId)
 		m_SharedBackendInterface.fpDestroyBackendContext(&m_SharedBackendInterface, *m_SharedEffectContextId);
+
+	m_SharedEffectContextId.reset();
 }
 
 FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 {
-	// Set up configuration for optical flow
 	FfxOpticalflowContextDescription fsrOfDescription = {
 		.backendInterface = m_FrameInterpolationBackendInterface,
 		.flags = 0,
@@ -526,7 +533,10 @@ FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 	status = ffxOpticalflowGetSharedResourceDescriptions(&m_OpticalFlowContext.value(), &fsrOfSharedDescriptions);
 
 	if (status != FFX_OK)
+	{
+		DestroyOpticalFlowContext();
 		return status;
+	}
 
 	status = m_SharedBackendInterface.fpCreateResource(
 		&m_SharedBackendInterface,
@@ -537,6 +547,8 @@ FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 	if (status != FFX_OK)
 	{
 		m_TexSharedOpticalFlowVector.reset();
+		DestroyOpticalFlowContext();
+
 		return status;
 	}
 
@@ -549,6 +561,8 @@ FfxErrorCode FFFrameInterpolator::CreateOpticalFlowContext()
 	if (status != FFX_OK)
 	{
 		m_TexSharedOpticalFlowSCD.reset();
+		DestroyOpticalFlowContext();
+
 		return status;
 	}
 
@@ -565,4 +579,8 @@ void FFFrameInterpolator::DestroyOpticalFlowContext()
 
 	if (m_TexSharedOpticalFlowSCD)
 		m_SharedBackendInterface.fpDestroyResource(&m_SharedBackendInterface, *m_TexSharedOpticalFlowSCD, *m_SharedEffectContextId);
+
+	m_OpticalFlowContext.reset();
+	m_TexSharedOpticalFlowVector.reset();
+	m_TexSharedOpticalFlowSCD.reset();
 }
