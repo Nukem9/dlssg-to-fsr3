@@ -66,4 +66,32 @@ namespace Util
 		const static auto iniPath = GetThisDllPath() + L"\\dlssg_to_fsr3.ini";
 		return GetPrivateProfileIntW(L"Debug", Key, DefaultValue, iniPath.c_str()) != 0;
 	}
+
+	float GetSetting(const wchar_t *Key, float DefaultValue)
+	{
+		wchar_t envKey[256];
+		swprintf_s(envKey, L"DLSSGTOFSR3_%s", Key);
+
+		wchar_t envValue[64];
+		if (GetEnvironmentVariableW(envKey, envValue, std::size(envValue)) > 0)
+		{
+			wchar_t* endPtr;
+			float result = wcstof(envValue, &endPtr);
+			if (endPtr != envValue)
+				return result;
+		}
+
+		const static auto iniPath = GetThisDllPath() + L"\\dlssg_to_fsr3.ini";
+		
+		wchar_t iniValue[64];
+		if (GetPrivateProfileStringW(L"Debug", Key, nullptr, iniValue, std::size(iniValue), iniPath.c_str()) > 0)
+		{
+			wchar_t* endPtr;
+			float result = wcstof(iniValue, &endPtr);
+			if (endPtr != iniValue)
+				return result;
+		}
+
+		return DefaultValue;
+	}
 }
