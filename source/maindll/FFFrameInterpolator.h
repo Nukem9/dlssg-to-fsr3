@@ -25,8 +25,11 @@ private:
 	const uint32_t m_SwapchainWidth; // Final image presented to the screen dimensions
 	const uint32_t m_SwapchainHeight;
 
-	FfxFloatCoords2D m_HDRLuminanceRange = { 0.0001f, 1000.0f };
 	bool m_HDRLuminanceRangeSet = false;
+	float m_HDRLuminanceMin = 0.0001f;
+	float m_HDRLuminanceMax = 1000.0000f;
+	FfxFloatCoords2D m_HDRLuminanceRange = { m_HDRLuminanceMin, m_HDRLuminanceMax };
+	
 
 	// Transient
 	uint32_t m_PreUpscaleRenderWidth = 0; // GBuffer dimensions

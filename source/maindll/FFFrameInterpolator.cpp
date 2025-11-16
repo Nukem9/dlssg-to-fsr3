@@ -7,12 +7,19 @@
 bool g_EnableDebugOverlay = false;
 bool g_EnableDebugTearLines = false;
 bool g_EnableInterpolatedFramesOnly = false;
+bool g_EnableHDRLuminanceOverride = false;
+float g_HDRLuminanceMin = 0.0001f;
+float g_HDRLuminanceMax = 1000.0000f;
+
 
 extern "C" void __declspec(dllexport) RefreshGlobalConfiguration()
 {
 	g_EnableDebugOverlay = Util::GetSetting(L"EnableDebugOverlay", false);
 	g_EnableDebugTearLines = Util::GetSetting(L"EnableDebugTearLines", false);
 	g_EnableInterpolatedFramesOnly = Util::GetSetting(L"EnableInterpolatedFramesOnly", false);
+	g_EnableHDRLuminanceOverride = Util::GetSetting(L"EnableHDRLuminanceOverride", false);
+	g_HDRLuminanceMin = Util::GetSetting(L"HDRLuminanceMin", g_HDRLuminanceMin);
+	g_HDRLuminanceMax = Util::GetSetting(L"HDRLuminanceMax", g_HDRLuminanceMax);
 }
 
 FFFrameInterpolator::FFFrameInterpolator(uint32_t OutputWidth, uint32_t OutputHeight)
@@ -208,6 +215,25 @@ void FFFrameInterpolator::QueryHDRLuminanceRange(NGXInstanceParameters *NGXParam
 
 	if (m_HDRLuminanceRangeSet)
 		return;
+
+	if (g_EnableHDRLuminanceOverride)
+	{
+		if (g_HDRLuminanceMin != m_HDRLuminanceMin)
+		{
+			m_HDRLuminanceMin = g_HDRLuminanceMin;
+			spdlog::info("Overriding HDR luminance min to {} nits", g_HDRLuminanceMin);
+		}
+
+		if (g_HDRLuminanceMax != m_HDRLuminanceMax)
+		{
+			m_HDRLuminanceMax = g_HDRLuminanceMax;
+			spdlog::info("Overriding HDR luminance max to {} nits", g_HDRLuminanceMax);
+		}
+
+		m_HDRLuminanceRange = { m_HDRLuminanceMin, m_HDRLuminanceMax };
+		m_HDRLuminanceRangeSet = true;
+		return;
+	}
 
 	// Microsoft DirectX 12 HDR sample
 	// https://github.com/microsoft/DirectX-Graphics-Samples/blob/b5f92e2251ee83db4d4c795b3cba5d470c52eaf8/Samples/Desktop/D3D12HDR/src/D3D12HDR.cpp#L1064
