@@ -45,11 +45,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 		spdlog::warn("");
 		spdlog::warn(
-			"dlssg-to-fsr3 v{}.{} loaded. AMD FSR 3.1 Frame Generation will replace Nvidia DLSS-G Frame Generation. Note this does NOT "
-			"represent a native",
+			"dlssg-to-fsr3 v{}.{} loaded. AMD FSR 3.1 Frame Generation will replace Nvidia DLSS-G Frame Generation; supported AMD drivers "
+			"may upgrade the frame-generation provider to FSR 4.",
 			BUILD_VERSION_MAJOR,
 			BUILD_VERSION_MINOR);
-		spdlog::warn("implementation of AMD FSR 3.1.");
 		spdlog::warn("");
 		spdlog::warn("dlssg-to-fsr3 is freely downloadable from https://www.nexusmods.com/site/mods/738 or "
 					 "https://github.com/Nukem9/dlssg-to-fsr3/releases.");

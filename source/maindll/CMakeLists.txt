@@ -126,6 +126,10 @@ target_link_options(
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(${CURRENT_PROJECT} PRIVATE spdlog::spdlog)
 
+# AMD FSR4 provider upgrade hook
+find_package(detours CONFIG REQUIRED)
+target_link_libraries(${CURRENT_PROJECT} PRIVATE detours::detours)
+
 # Vulkan
 find_package(Vulkan REQUIRED)
 target_include_directories(${CURRENT_PROJECT} PRIVATE "$ENV{VULKAN_SDK}/include")
@@ -138,6 +142,7 @@ target_include_directories(
 	PRIVATE
 		"${FIDELITYFX_SDK_DIR}/include"
 		"${FIDELITYFX_SDK_DIR}/src/components"
+		"${PROJECT_DEPENDENCIES_PATH}/FidelityFX-SDK/ffx-api/include"
 )
 
 target_link_libraries(

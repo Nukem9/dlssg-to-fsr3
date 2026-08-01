@@ -1,6 +1,7 @@
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
 #include "NGX/NvNGX.h"
 #include "FFFrameInterpolatorDX.h"
+#include "FSR4FrameInterpolatorDX.h"
 
 D3D12_RESOURCE_STATES ffxGetDX12StateFromResourceState(FfxResourceStates state);
 
@@ -14,6 +15,7 @@ FFFrameInterpolatorDX::FFFrameInterpolatorDX(
 {
 	FFFrameInterpolator::Create(NGXParameters);
 	m_Device->AddRef();
+	m_FSR4 = std::make_unique<FSR4FrameInterpolatorDX>(m_Device, OutputWidth, OutputHeight);
 }
 
 FFFrameInterpolatorDX::~FFFrameInterpolatorDX()
@@ -42,7 +44,21 @@ FfxErrorCode FFFrameInterpolatorDX::Dispatch(void *CommandList, NGXInstanceParam
 	}
 
 	m_ActiveCommandList = ffxGetCommandListDX12(cmdList12);
-	const auto interpolationResult = FFFrameInterpolator::Dispatch(nullptr, NGXParameters);
+	const bool fsr4Dispatched = m_FSR4 && m_FSR4->Dispatch(cmdList12, NGXParameters);
+	const auto interpolationResult = fsr4Dispatched ? FFX_OK : FFFrameInterpolator::Dispatch(nullptr, NGXParameters);
+
+	if (fsr4Dispatched)
+	{
+		// Streamline consumes real and interpolated outputs independently.
+		FfxResource gameBackbuffer = {};
+		FfxResource gameRealOutput = {};
+		if (LoadTextureFromNGXParameters(NGXParameters, "DLSSG.Backbuffer", &gameBackbuffer, FFX_RESOURCE_STATE_COMPUTE_READ) &&
+			LoadTextureFromNGXParameters(NGXParameters, "DLSSG.OutputReal", &gameRealOutput, FFX_RESOURCE_STATE_UNORDERED_ACCESS) &&
+			gameBackbuffer.resource != gameRealOutput.resource)
+		{
+			CopyTexture(m_ActiveCommandList, &gameRealOutput, &gameBackbuffer);
+		}
+	}
 
 	// Finish what we started. Restore the command list to its previous state when necessary.
 	if (!isRecordingCommands)

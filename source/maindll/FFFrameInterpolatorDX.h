@@ -2,6 +2,8 @@
 
 #include "FFFrameInterpolator.h"
 
+class FSR4FrameInterpolatorDX;
+
 struct ID3D12Device;
 
 class FFFrameInterpolatorDX final : public FFFrameInterpolator
@@ -11,6 +13,7 @@ private:
 
 	// Transient
 	FfxCommandList m_ActiveCommandList = {};
+	std::unique_ptr<FSR4FrameInterpolatorDX> m_FSR4;
 
 public:
 	FFFrameInterpolatorDX(ID3D12Device *Device, uint32_t OutputWidth, uint32_t OutputHeight, NGXInstanceParameters *NGXParameters);
