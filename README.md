@@ -29,6 +29,18 @@ The FSR 4 FG path has been tested successfully in:
 
 Other DLSS-G games are expected to use the same input path but are unverified. Compatibility, image quality, and stability are game-dependent.
 
+## Path Reference
+
+The following archived screenshots document the two relevant paths. The filenames are preserved from the original files:
+
+- `DLSSG_Input&FSRFG_Output.png` — DLSS-G input with FSR FG output.
+
+  ![DLSSG input and FSR FG output](docs/images/DLSSG_Input%26FSRFG_Output.png)
+
+- `FSR4Version_Nukem_Input&Output.png` — the FSR4-enabled Nukem input/output path.
+
+  ![FSR4 Nukem input and output](docs/images/FSR4Version_Nukem_Input%26Output.png)
+
 ## License
 
 The project is licensed under [GPLv3](LICENSE.md). Existing third-party notices for the original project are retained in [resources/binary_dist_license.txt](resources/binary_dist_license.txt). AMD-signed runtime binaries are not redistributed by this repository.
